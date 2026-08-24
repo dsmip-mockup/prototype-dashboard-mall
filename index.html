@@ -141,7 +141,10 @@
 /* Rata kanan berhenti di kiri gridline-nya, tengahnya sejajar gridline. `left` + translate,
    bukan `right`: koordinat yang dihitung chart.js koordinat KIRI di sistem viewBox-nya. */
 .pr-ax-y { transform: translate(-100%, -50%); padding-right: 2px; }
-.pr-ax-x { margin-top: 3px; }
+/* Satu BARIS pembawa posisi tegak; tiap label di dalamnya hanya membawa posisi mendatarnya.
+   Susunan itu yang memungkinkan penjarangan `:nth-last-child` di bawah. */
+.pr-ax-x-baris { position: absolute; left: 0; right: 0; margin-top: 3px; }
+.pr-ax-x { top: 0; }
 /* Kedua ujung dijangkarkan KE DALAM supaya tidak terpotong tepi kanvas — perilaku yang sama
    dengan `text-anchor: start/end` yang dipakai versi SVG-nya. */
 .pr-ax-x-tengah { transform: translateX(-50%); }
@@ -422,7 +425,7 @@ select.ds-input:read-only { padding-right: 2.25rem; }
    ambang 530 px milik kartu akan ikut menyembunyikan varian sempit di dalam wadah kolom. */
 .pr-kanvas-kolom { container: kanvaskolom / inline-size; min-width: 0; }
 .pr-kanvas-kartu { container: kanvaskartu / inline-size; min-width: 0; }
-.pr-kanvas-lebar { display: none; }
+.pr-kanvas-lebar, .pr-kanvas-hp { display: none; }
 @container kanvaskolom (min-width: 1130px) {
   .pr-kanvas-sempit { display: none; }
   .pr-kanvas-lebar { display: block; }
@@ -430,6 +433,49 @@ select.ds-input:read-only { padding-right: 2.25rem; }
 @container kanvaskartu (min-width: 530px) {
   .pr-kanvas-sempit { display: none; }
   .pr-kanvas-lebar { display: block; }
+}
+/* Varian ketiga, untuk layar HP. Dilaporkan pemilik 24 Agustus sesudah menguji di Android dan
+   iPhone: chart telusur tampil PIPIH — kanvas 730x165 (rasio 0,226) pada lebar 350 px memberi
+   tinggi 79 px. Yang salah rasionya, bukan skalanya, jadi yang menjawab hanya viewBox yang
+   berbeda: 340x190 (0,559) memberi ~195 px pada lebar yang sama. */
+@container kanvaskolom (max-width: 480px) {
+  .pr-kanvas-sempit, .pr-kanvas-lebar { display: none; }
+  .pr-kanvas-hp { display: block; }
+}
+
+/* ── Kerapatan label bulan menyesuaikan lebar KANVASNYA dan JUMLAH labelnya ─────────────
+   Cacat yang dilaporkan pemilik 24 Agustus sesudah menguji di Android dan iPhone: kedua belas
+   label bulan tertulis semua di layar 390 px sehingga bertumpuk jadi "Ags 2Sep 2Okt 2…". Ia
+   konsekuensi langsung label sumbu jadi HTML — ukurannya kini TETAP 12 px, jadi berapa label yang
+   muat tergantung lebar render dalam PIKSEL, bukan satuan viewBox lagi. `langkahLabel` di
+   chart.js hanya kerapatan DASAR, dan itu dikalibrasi untuk lebar laptop.
+
+   Wadah query-nya `.pr-kanvas-bungkus` — kanvas ITU SENDIRI, bukan kolom di luarnya. Percobaan
+   pertama memakai wadah luar (`kanvaskolom`/`kanvaskartu`) dan itu terukur salah dua kali: pada
+   wadah 642 px dan 304 px labelnya masih bertumpuk, karena lebar kolom bukan lebar kanvas.
+
+   Dan penjarangannya JUGA bergantung jumlah label, lewat `:has()`. Tanpa itu satu aturan lebar
+   memotong chart yang labelnya memang sudah sedikit: kartu kecil hanya punya 3 label, dan aturan
+   "sisakan tiap keempat" menyisakan SATU. Ambangnya: label "Ags 25" pada 12 px selebar ~44 px,
+   jadi tiap label butuh ~48 px.
+
+   `:nth-last-child`, DIHITUNG DARI BELAKANG — sama seperti langkah label di chart.js, dan
+   alasannya sama: bulan terakhir adalah periode yang sedang dilihat, jadi ia yang tidak boleh
+   hilang. `:nth-child` justru membuang label itu.
+
+   Catatan dukungan: `:has()` ada di Safari 15.4+ dan Chrome 105+. Di browser yang lebih tua
+   aturannya diabaikan dan labelnya kembali rapat — jelek, tetapi tidak merusak apa pun. */
+.pr-kanvas-bungkus { container: kanvas / inline-size; }
+@container kanvas (max-width: 700px) {
+  /* 12 label butuh ~576 px. Hanya untuk chart yang labelnya >= 7 — yang lebih sedikit masih muat
+     dan tidak boleh ikut dijarangkan. */
+  .pr-ax-x-baris:has(> .pr-ax-x:nth-child(7)) > .pr-ax-x:nth-last-child(even) { display: none; }
+}
+@container kanvas (max-width: 360px) {
+  /* Lebar HP: sisakan tiap label keempat dari belakang. Hanya untuk yang labelnya >= 5. */
+  .pr-ax-x-baris:has(> .pr-ax-x:nth-child(5)) > .pr-ax-x:not(:nth-last-child(4n+1)) {
+    display: none;
+  }
 }
 /* Panel chart telusur diberi permukaan kartu (24 Agustus). Bukan hiasan: garis Aktual
    (--pr-c-1) terukur 2,91 (light) / 2,84 (warm) terhadap latar HALAMAN, di bawah ambang 3:1
@@ -2816,16 +2862,28 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
    *  sebelumnya setiap kali jumlah titik tidak habis dibagi langkahnya — 12 titik dengan
    *  langkah 2 memberi 'Jun 26' dan 'Jul 26' bersebelahan, dan pada kanvas kartu keduanya
    *  bertumpuk. Terukur di browser 24 Agustus. */
+  /*  Labelnya dibungkus SATU baris (`.pr-ax-x-baris`) yang membawa posisi tegaknya, dan tiap
+   *  label hanya membawa posisi mendatarnya. Itu yang memungkinkan CSS menjarangkan label dengan
+   *  `:nth-last-child` — dan penjarangan itu yang memperbaiki cacat yang dilaporkan pemilik
+   *  24 Agustus dari HP: kedua belas label bulan tertulis semua di layar 390 px sehingga
+   *  bertumpuk jadi "Ags 2Sep 2Okt 2…".
+   *
+   *  Sebabnya konsekuensi langsung label sumbu jadi HTML: ukurannya kini TETAP 12 px, jadi
+   *  berapa label yang muat tergantung lebar render dalam PIKSEL — bukan lagi satuan viewBox.
+   *  `langkahLabel` di sini hanya kerapatan DASAR (yang benar untuk lebar laptop); yang
+   *  menyesuaikannya ke lebar sempit container query di prototype.css. Dihitung dari BELAKANG
+   *  di kedua tempat, supaya bulan terakhir — periode yang sedang dilihat — tidak pernah hilang. */
   const labelX = (labels, { w, h, padBawah, x, langkahLabel }) => {
     const langkah = Math.max(1, Math.round(langkahLabel));
-    return labels.map((l, i) => {
+    const isi = labels.map((l, i) => {
       if ((labels.length - 1 - i) % langkah !== 0) return '';
       const jangkar = i === 0 ? 'pr-ax-x-awal'
         : (i === labels.length - 1 ? 'pr-ax-x-akhir' : 'pr-ax-x-tengah');
       return `<span class="pr-ax pr-ax-x ${jangkar}" ` +
-        `style="left:${bulat((x(i) / w) * 100)}%;top:${bulat(((h - padBawah) / h) * 100)}%">` +
-        `${esc(l)}</span>`;
+        `style="left:${bulat((x(i) / w) * 100)}%">${esc(l)}</span>`;
     }).join('');
+    return `<div class="pr-ax-x-baris" style="top:${bulat(((h - padBawah) / h) * 100)}%">` +
+      `${isi}</div>`;
   };
 
   const kosongKanvas = (w, h, label) => bungkusKanvas(
@@ -3837,7 +3895,15 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
    *  membesar lagi — jendela 1600 px atau lebih dengan sidebar tertutup. Penawarnya bukan varian
    *  ketiga melainkan memindahkan label sumbu keluar dari SVG jadi HTML, pola yang sudah dipakai
    *  kartu `kuartal`/`komposisi` di berkas ini. Belum dikerjakan; lihat RINGKASAN 2i. */
+  /*  Varian KETIGA (`hp`) ditambahkan 24 Agustus sesudah pemilik mengujinya di Android dan
+   *  iPhone. Bukan soal ukuran teks — itu sudah selesai sejak label sumbu jadi HTML — melainkan
+   *  RASIO: kanvas 730x165 (0,226) pada lebar 350 px memberi chart setinggi **79 px**, pipih
+   *  seperti garis. Rasio yang benar untuk layar sempit jauh lebih tegak, dan itu tidak bisa
+   *  dicapai dengan menskala kanvas yang sama — rasio viewBox-nya yang harus berbeda.
+   *
+   *  Ambangnya 480 px: di bawah itu satu kolom penuh berarti layar HP. */
   const KANVAS_KOLOM = { kelas: 'pr-kanvas-kolom', langkahLabel: 1,
+                         hp: { w: 340, h: 190 },
                          sempit: { w: 730, h: 165 }, lebar: { w: 920, h: 165 } };
 
   /** Pasangan kedua, untuk kartu chart yang **dua per baris** (permintaan pemilik 24 Agustus:
@@ -3867,6 +3933,7 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
    *  ambang container query di CSS dihitung dari kedua angka itu. */
   const kanvasDuaVarian = (ukuran, gambar) =>
     `<div class="${ukuran.kelas}">` +
+      (ukuran.hp ? `<div class="pr-kanvas-hp">${gambar(ukuran.hp)}</div>` : '') +
       `<div class="pr-kanvas-sempit">${gambar(ukuran.sempit)}</div>` +
       `<div class="pr-kanvas-lebar">${gambar(ukuran.lebar)}</div>` +
     `</div>`;
