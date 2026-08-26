@@ -61,6 +61,44 @@
   --pr-c-3: var(--color-secondary-600);
 }
 
+/* ── Slot KATEGORI untuk donut komposisi (26 Agustus 2026) ──────────────────────
+   Dipakai HANYA oleh donut Laporan Pendukung. Chart lain tetap memakai --pr-c-*: di sana warna
+   menyandikan PERAN (aktual / lawan / acuan), dan slot di bawah ini menyandikan identitas
+   kategori. Dua sistem yang berbeda pekerjaannya; mencampurnya membuat keduanya kehilangan arti.
+
+   Sama seperti palet di atas, tidak ada satu pun warna baru — seluruhnya langkah ramp portal-ui.
+   Yang baru cuma dua ramp yang sebelumnya tidak pernah dipakai sebagai warna seri: danger dan
+   satu langkah lagi dari info & primary. Alasannya diukur, bukan selera: seluruh ramp portal-ui
+   hanya memuat EMPAT keluarga rona (oranye, hijau, biru, merah), dan tujuh irisan berbeda tidak
+   bisa dibuat tanpa memakai keempatnya. **Konsekuensinya harus diketahui pemilik**: merah dan
+   hijau di prototype ini sudah berarti arah VAR%/YoY, dan di donut ini keduanya TIDAK berarti
+   baik/buruk — tiap irisan berlabel namanya sendiri, dan donut ini tidak memuat VAR% sama sekali.
+
+   URUTAN slotnya bagian dari keamanannya, bukan kosmetik. Ia dicari dengan menjalankan validator
+   palet skill `dataviz` atas SELURUH urutan yang mungkin dari kolam calon, dan yang dipakai
+   satu-satunya yang lolos di kedua tema sekaligus — termasuk pasangan LINGKAR (irisan terakhir
+   bersebelahan dengan irisan pertama, karena donut itu cincin). Hasilnya, kedua tema:
+   pemisahan CVD terburuk dE 10,1 (protan; ambang 8), penglihatan normal dE 24,6 (ambang 15),
+   pita terang PASS di pita light MAUPUN pita dark yang lebih sempit. Kontras terhadap permukaan
+   >= 3:1 di tema terang; di tema dark ada TIGA slot di bawahnya (2,2-2,9) dan itu sebabnya
+   donutnya WAJIB disertai legenda berlabel + tabel penuh — aturan relief panduan dataviz.
+   **Menukar urutan atau menambah slot tanpa menjalankan validator itu lagi membatalkan angka
+   di atas.**
+
+   Slot ke-8 netral dan hanya untuk irisan "Lainnya": ia memang tidak boleh membawa identitas,
+   dan kromanya sengaja di bawah ambang kategori — satu-satunya pemeriksaan validator yang
+   tidak dilewatinya, dan itu disengaja. */
+#smra-wrapper {
+  --pr-cat-1: var(--color-primary-600);
+  --pr-cat-2: var(--color-secondary-600);
+  --pr-cat-3: var(--color-danger-700);
+  --pr-cat-4: var(--color-info-500);
+  --pr-cat-5: var(--color-primary-700);
+  --pr-cat-6: var(--color-info-700);
+  --pr-cat-7: var(--color-danger-500);
+  --pr-cat-8: var(--color-neutral-500);
+}
+
 /* ── Ukuran huruf: satu langkah lebih besar ─────────────────────────────────────
    Permintaan Tim Manajemen lewat pemilik, 24 Agustus, sesudah mockup ini dipresentasikan
    di Zoom: *"tulisan/font di halaman Dashboard Management kurang besar contoh di Overview
@@ -282,10 +320,10 @@ select.ds-input:read-only { padding-right: 2.25rem; }
    pada layar lebar dan memecah pasangan yang sengaja diletakkan bersebelahan.
    minmax(0, 1fr), bukan 1fr: tanpa itu isi kartu yang tak bisa dipendekkan memaksa kolomnya
    melebar melampaui pembagian dan memunculkan scroll horizontal. */
-.pr-kartu-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
+.pr-kartu-grid, .pr-pd-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
                  gap: var(--space-3); }
-@media (max-width: 1199px) { .pr-kartu-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (max-width: 640px) { .pr-kartu-grid { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 1199px) { .pr-kartu-grid, .pr-pd-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 640px) { .pr-kartu-grid, .pr-pd-grid { grid-template-columns: minmax(0, 1fr); } }
 .pr-kartu { border: 1px solid var(--t-border); border-radius: var(--radius-lg);
             background: var(--t-surf); padding: var(--space-4); min-width: 0;
             display: flex; flex-direction: column; gap: var(--space-3); }
@@ -332,7 +370,7 @@ select.ds-input:read-only { padding-right: 2.25rem; }
    pemilik lebih memilih lurus sempurna, naikkan angka di bawah ke 4.05em.
    Ditaruh pada nama, bukan pada `.pr-k-atas`, supaya `align-items: center` di baris itu tetap
    memusatkan ikonnya terhadap kotak nama — bukan terhadap satu baris teks di dalamnya. */
-.pr-kartu-grid .pr-k-nama { min-height: 2.7em; }
+.pr-kartu-grid .pr-k-nama, .pr-pd-grid .pr-k-nama { min-height: 2.7em; }
 .pr-k-angka { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-1) var(--space-3); }
 /* Pasangan label-nilai jatuh jadi satu kolom pada kartu sempit — BUKAN dengan mengembalikan
    auto-fill pada gridnya, karena empat kolom itu permintaan eksplisit pemilik dan ada
@@ -499,9 +537,107 @@ select.ds-input:read-only { padding-right: 2.25rem; }
 .pr-dr-bisa:focus-visible { outline: 2px solid var(--smra-orange); outline-offset: -2px; }
 .pr-dr-nota { margin: var(--space-2) 0 0; font-size: var(--type-caption-size);
               color: var(--t-text-muted); line-height: 1.6; }
+/* ── Penanda bantu VAR% / YoY% (26 Agustus 2026) ────────────────────────────────
+   Muncul saat disentuh, di-hover, ATAU difokus keyboard. Ketiganya perlu: `title` telanjang
+   tidak pernah tampil di layar sentuh, dan sebagian besar Tim Manajemen membuka prototipe ini
+   dari ponsel. Isinya dari atribut `data-bantu`, digambar CSS — nol JavaScript, jadi tidak ada
+   penangan yang bisa lepas setiap kali halaman digambar ulang.
+
+   Kotaknya `position: absolute` terhadap penandanya sendiri, dan penandanya di dalam sel tabel
+   yang bisa digulir — jadi wadahnya diberi `overflow: visible` di bawah, kalau tidak kotaknya
+   terpotong tepi tabel. */
+/* Keterangan VAR%/YoY% di kaki tabel — SELALU terlihat, tidak bergantung hover maupun fokus,
+   dan tidak berada di dalam wadah gulir yang bisa memotongnya. Lihat KAKI_VARYOY di render.js
+   untuk alasan lengkapnya. */
+.pr-varyoy { margin-top: var(--space-2); }
+.pr-bantu { position: relative; display: inline-block; cursor: help;
+            color: var(--t-text-muted); font-size: .9em; vertical-align: baseline; }
+.pr-bantu:focus-visible { outline: 2px solid var(--pr-c-1); outline-offset: 2px;
+                          border-radius: var(--radius-sm); }
+.pr-bantu::after {
+  content: attr(data-bantu);
+  position: absolute; z-index: 40; left: 50%; bottom: calc(100% + 6px);
+  transform: translateX(-50%);
+  width: max-content; max-width: 17rem;
+  padding: var(--space-2) var(--space-3);
+  background: var(--t-surf); color: var(--t-text);
+  border: 1px solid var(--t-border); border-radius: var(--radius-md);
+  box-shadow: 0 6px 20px rgb(0 0 0 / 18%);
+  font-size: var(--type-caption-size); font-weight: 400; line-height: 1.5;
+  text-align: left; white-space: normal;
+  /* Huruf tabel di prototype ini rata kanan pada kolom angka; keterangannya kalimat, jadi ia
+     harus kembali rata kiri — kalau tidak ia terbaca sebagai deretan angka. */
+  opacity: 0; visibility: hidden; transition: opacity .12s ease;
+  pointer-events: none;
+}
+.pr-bantu:hover::after, .pr-bantu:focus::after, .pr-bantu:focus-within::after {
+  opacity: 1; visibility: visible;
+}
 .pr-porsi { display: block; height: 3px; margin-top: var(--space-1);
             background: var(--t-border); border-radius: var(--radius-full); overflow: hidden; }
 .pr-porsi > i { display: block; height: 100%; background: var(--pr-c-1); }
+
+/* ── Laporan Pendukung · donut komposisi (26 Agustus 2026) ──────────────────────
+   Panelnya BERALAS KARTU, dan itu bukan hiasan: angka kontras palet donut diukur terhadap
+   permukaan kartu (--t-surf), bukan terhadap latar halaman. Alasan yang sama, dan cacat yang
+   sama, dengan .pr-dr-panel 24 Agustus. */
+.pr-donat-panel { display: grid; grid-template-columns: minmax(0, 15rem) minmax(0, 1fr);
+                  gap: var(--space-5); align-items: center;
+                  background: var(--t-surf); border: 1px solid var(--t-border);
+                  border-radius: var(--radius-lg); padding: var(--space-4);
+                  margin-bottom: var(--space-4); }
+@media (max-width: 767px) { .pr-donat-panel { grid-template-columns: minmax(0, 1fr); } }
+/* Kanvasnya dibatasi 15rem walau kolomnya bisa lebih lebar: donut yang membesar tidak menjadi
+   lebih terbaca — porsinya dibaca dari sudut, dan sudut tidak berubah oleh ukuran. Yang berubah
+   hanya ruang yang direbutnya dari legenda dan tabel, dan justru keduanya yang dibaca. */
+.pr-donat-kanvas { position: relative; width: 100%; max-width: 15rem; margin: 0 auto; }
+.pr-donat-kanvas > svg { display: block; width: 100%; height: auto; }
+/* Angka di tengah ditulis sebagai HTML di ATAS kanvas, bukan <text> di dalam viewBox — teks di
+   dalam SVG ikut diskalakan bersama kanvasnya (lihat catatan panjang di chart.js). */
+.pr-donat-inti { position: absolute; inset: 0; display: flex; flex-direction: column;
+                 align-items: center; justify-content: center; gap: 2px;
+                 pointer-events: none; text-align: center; }
+.pr-donat-angka { font-size: var(--type-h4-size, 1.25rem); font-weight: 700;
+                  color: var(--t-text); line-height: 1.1; }
+.pr-donat-satuan { font-size: var(--type-caption-size); color: var(--t-text-muted); }
+/* Lebarnya DIBATASI, dan itu terukur: tanpa batas ini kolom nama menyerap seluruh sisa lebar
+   panel, dan pada 1536 px angka tiap irisan terlempar ~1.000 px dari namanya — mata harus
+   menyeberangi ruang kosong untuk memasangkan keduanya. Batasnya 34rem, cukup untuk nama
+   terpanjang di kamus ("Leisure & Entertainment") tanpa melipat. */
+.pr-donat-legenda { list-style: none; margin: 0; padding: 0; display: grid;
+                    gap: var(--space-1); max-width: 34rem; }
+.pr-donat-legenda > li { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto;
+                         align-items: center; gap: var(--space-2);
+                         font-size: var(--type-caption-size); }
+.pr-donat-kunci { display: block; width: 12px; height: 12px; border-radius: 3px; }
+/* Nama irisan boleh melipat; yang TIDAK boleh melipat angkanya, karena melipatnya membuat baris
+   legenda tidak lagi sejajar dengan baris di sebelahnya. */
+.pr-donat-nama { color: var(--t-text); }
+.pr-donat-nilai { color: var(--t-text); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pr-donat-porsi { color: var(--t-text-muted); font-variant-numeric: tabular-nums;
+                  white-space: nowrap; min-width: 3.5em; text-align: right; }
+.pr-donat .pr-hit-area { cursor: pointer; }
+/* Satuan di sebelah angka besar kartu Laporan Pendukung. Kartu metrik tidak memerlukannya —
+   satuannya sudah tersirat dari nama metriknya — sementara "74.512" tanpa "m2" di sini bisa
+   terbaca sebagai jumlah tenant. */
+.pr-pd-satuan { font-size: var(--type-caption-size); font-weight: 500;
+                color: var(--t-text-muted); }
+/* Bar komposisi di kartu Laporan Pendukung (26 Agustus). Tingginya disamakan dengan bullet di
+   kartu metrik (8 px) supaya kedua jenis kartu berbaris rapi kalau nanti bersebelahan.
+
+   `gap` 2 px, dan itu bukan angka bebas: panduan dataviz meminta pemisah antar potongan berupa
+   PERMUKAAN selebar 2 px, bukan garis tepi berwarna — garis tepi akan salah di tema mana pun
+   yang latarnya bukan warna itu. Potongan memakai `flex` bernilai porsinya, jadi lebarnya
+   proporsional tanpa satu pun persen dihitung di JS. */
+.pr-pd-pita { display: flex; gap: 2px; height: 8px; border-radius: var(--radius-full);
+              overflow: hidden; background: var(--t-border); }
+/* min-width menjaga potongan terkecil tetap TERLIHAT: porsi 0,2% pada kartu 234 px memberi
+   lebar 0,4 px, yang di sebagian layar hilang sama sekali — dan potongan yang hilang membuat
+   jumlah potongan tidak lagi sama dengan jumlah irisan donutnya. */
+.pr-pd-pita > i { display: block; min-width: 2px; }
+/* Baris Vacant diredupkan: ia memang bukan tenant, dan menyamakannya dengan baris kategori
+   membuat "kategori terbesar" terbaca salah di dimensi yang tingkat kosongnya tinggi. */
+.pr-pd-vacant .pr-lp-nama { color: var(--t-text-muted); font-style: italic; }
 /* ── Halaman Financial Performance Detail ───────────────────────────────────────
    Telusurnya TANPA panel bergeser (permintaan pemilik 21 Agustus): breadcrumb + deretan
    pindah-metrik di atas, lalu isi telusurnya. Ruas breadcrumb-nya .pr-dr-sep / .pr-dr-crumb /
@@ -904,7 +1040,7 @@ html, body { overflow-x: hidden; }
        lupa diperbarui, dan cap yang salah lebih buruk daripada tidak ada. -->
   <footer class="main-footer">
     <span>Prototype Dashboard Data Management &middot; PT SMIP &middot; <strong>Seluruh angka pada halaman ini adalah data contoh</strong>, bukan angka riil.</span>
-    <span class="pr-versi">Versi 24 Agustus 2026</span>
+    <span class="pr-versi">Versi 26 Agustus 2026</span>
   </footer>
 </div>
 </div>
@@ -1593,6 +1729,108 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
     },
   };
 
+  // ── Laporan Pendukung · Leasing MALL (26 Agustus 2026) ──────────────────────────────
+  //
+  // Sumbernya berkas pemilik `REKAP_DASHBOARD\MALL\Dashboar_Leasing.xlsx`, Sheet1, berjudul
+  // "DASHBOARD DETAIL KHUSUS DASHBOARD LEASING" — delapan baris Summary dengan daftar Item-nya.
+  // Penomoran di berkas itu MELOMPAT (1,2,3,4,6,7,8,9); urutannya diikuti, nomornya sengaja
+  // tidak dipakai sebagai kode supaya menyisipkan baris tidak memaksa menomori ulang.
+  //
+  // Kedelapan Summary itu sebenarnya EMPAT dimensi dikali DUA ukuran (luas m2 dan jumlah
+  // tenant). Disimpan sebagai empat dimensi, bukan delapan daftar item terpisah: daftar
+  // itemnya memang sama persis untuk kedua ukuran di berkas pemilik, dan menyalinnya dua kali
+  // berarti dua tempat yang bisa diam-diam menyimpang. Kartu yang TAMPIL tetap delapan —
+  // pemilik memilihnya begitu supaya sebaris-sebaris dengan berkasnya.
+  //
+  // `luas`/`jumlah` = bobot porsi tiap item. **Angkanya keputusan Claude, mohon dikoreksi**:
+  // berkas pemilik hanya memuat daftar item, tanpa satu pun angka. Yang lebih penting daripada
+  // angkanya adalah sifatnya — bobot luas dan bobot jumlah tenant sengaja BERBEDA (Anchor:
+  // luas besar, tenant sedikit). Kalau keduanya sama, kedua kartu tiap dimensi akan memajang
+  // pie berbentuk persis sama dan salah satunya jadi mubazir.
+  //
+  // `vacant: true` diperlakukan khusus, dan itu yang menyambungkan angkanya dengan kartu di
+  // atasnya: porsinya BUKAN diundi melainkan diturunkan dari OCCUPANCY RATE %. Akibatnya tiga
+  // dimensi yang punya baris Vacant berjumlah NLA penuh, sementara item selain Vacant selalu
+  // berjumlah luas TERSEWA. Dimensi Area Type di berkas pemilik memang tidak punya baris
+  // Vacant — ia mengklasifikasi tenant yang ADA — jadi ia berjumlah luas tersewa saja.
+  // Perbedaan itu ada di berkas pemilik, bukan ditambahkan di sini.
+  // `singkat` = nama dimensi untuk LABEL TAB di halaman telusurnya (26 Agustus). Dipendekkan
+  // atas pilihan pemilik: delapan tab bernama penuh ("AREA OF TENANT BY MAJOR RETAILER GROUP")
+  // melipat jadi tiga-empat baris dan memakan tinggi layar sebelum donutnya terlihat. Judul
+  // penuhnya tetap tertulis besar di bawah deretan tabnya — pola yang sama dengan halaman
+  // telusur metrik, yang tabnya "EXPENSE" dan judulnya "EXPENSE".
+  const DIMENSI_PENDUKUNG = [
+    { kode: 'areatype', nama: 'Area Type', singkat: 'AREA TYPE', item: [
+      { nama: 'Specialty Store', luas: 38, jumlah: 78 },
+      { nama: 'Large Store', luas: 22, jumlah: 12 },
+      { nama: 'Mini Anchor', luas: 17, jumlah: 7 },
+      { nama: 'Anchor', luas: 23, jumlah: 3 },
+    ] },
+    { kode: 'theme', nama: 'Theme', singkat: 'THEME', item: [
+      { nama: 'Fashion & Lifestyle', luas: 24, jumlah: 31 },
+      { nama: 'Food & Beverage', luas: 18, jumlah: 27 },
+      { nama: 'Services', luas: 7, jumlah: 13 },
+      { nama: 'Leisure & Entertainment', luas: 13, jumlah: 6 },
+      { nama: 'Electronic & Gadget', luas: 8, jumlah: 9 },
+      { nama: 'Hardware & Furniture', luas: 6, jumlah: 5 },
+      { nama: 'Department Store', luas: 14, jumlah: 3 },
+      { nama: 'Supermarket', luas: 10, jumlah: 6 },
+      { nama: 'Vacant', vacant: true },
+    ] },
+    { kode: 'cooperation', nama: 'Cooperation Type', singkat: 'COOPERATION', item: [
+      { nama: 'Fixed Rental', luas: 76, jumlah: 71 },
+      { nama: 'Revenue Sharing', luas: 24, jumlah: 29 },
+      { nama: 'Vacant', vacant: true },
+    ] },
+    { kode: 'retailer', nama: 'Major Retailer Group', singkat: 'RETAILER GROUP', item: [
+      { nama: 'MAP', luas: 9, jumlah: 6 },
+      { nama: 'Erajaya', luas: 5, jumlah: 4 },
+      { nama: 'Kanmo Retail', luas: 4, jumlah: 4 },
+      { nama: 'Fast Retailing', luas: 6, jumlah: 2 },
+      { nama: 'Gill Capital', luas: 3, jumlah: 2 },
+      { nama: 'Kawan Lama', luas: 7, jumlah: 3 },
+      { nama: 'Ismaya', luas: 3, jumlah: 3 },
+      { nama: 'Boga', luas: 3, jumlah: 3 },
+      { nama: 'XXI', luas: 10, jumlah: 1 },
+      { nama: 'Others', luas: 50, jumlah: 72 },
+      { nama: 'Vacant', vacant: true },
+    ] },
+  ];
+
+  /** Kedelapan kartu Laporan Pendukung, urut seperti berkas pemilik.
+   *
+   *  `ukuran` menunjuk medan bobot mana yang dipakai DAN metrik mana yang jadi totalnya:
+   *  `luas` -> NLA (m2), `jumlah` -> TOTAL TENANT (unit). Keduanya metrik yang memang sudah
+   *  ada di kamus Leasing, jadi kalau pie-nya dijumlahkan angkanya cocok dengan kartu di
+   *  halaman yang sama — bukan angka kedua yang hidup sendiri. */
+  const UKURAN_PENDUKUNG = {
+    luas: { metrik: 'NLA', satuan: 'm2', awalan: 'Area of tenant by', singkat: 'AREA' },
+    jumlah: { metrik: 'TOTAL TENANT', satuan: 'unit', awalan: 'Number of tenant by',
+              singkat: 'JUMLAH' },
+  };
+
+  const PENDUKUNG = DIMENSI_PENDUKUNG.flatMap((dim) => ['luas', 'jumlah'].map((ukuran) => ({
+    kode: `${ukuran}-${dim.kode}`,
+    judul: `${UKURAN_PENDUKUNG[ukuran].awalan} ${dim.nama}`,
+    singkat: `${UKURAN_PENDUKUNG[ukuran].singkat} · ${dim.singkat}`,
+    dimensi: dim.kode,
+    ukuran,
+    satuan: UKURAN_PENDUKUNG[ukuran].satuan,
+    metrik: UKURAN_PENDUKUNG[ukuran].metrik,
+  })))
+    // Berkas pemilik mendaftar keduanya per dimensi berurutan (Area lalu Number), bukan
+    // seluruh Area dulu baru seluruh Number. flatMap di atas sudah menghasilkan urutan itu.
+    ;
+
+  /** Seksi Laporan Pendukung hanya dipunyai seksi Leasing — berkas pemilik menyebut dirinya
+   *  "KHUSUS DASHBOARD LEASING". Ditulis sebagai peta seksi -> daftar, bukan `if` di render,
+   *  supaya seksi lain tinggal menambah kuncinya kalau nanti pemilik memintanya. */
+  const PENDUKUNG_SEKSI = { leasing: PENDUKUNG };
+
+  const pendukungUntuk = (kodeSeksi) => PENDUKUNG_SEKSI[kodeSeksi] || [];
+  const pendukungDari = (kode) => PENDUKUNG.find((p) => p.kode === kode) || null;
+  const dimensiPendukung = (kode) => DIMENSI_PENDUKUNG.find((d) => d.kode === kode) || null;
+
   /** Keempat kartu chart satu seksi untuk satu entitas — `KARTU_FINANSIAL` per entitas untuk
    *  seksi Financial Performance, `KARTU_SEKSI` untuk keempat seksi lainnya.
    *
@@ -1835,6 +2073,8 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
     KARTU_FINANSIAL, kartuFinansialUntuk, KARTU_SEKSI, kartuChartSeksi,
     SEKSIDETAIL, judulSeksiDetail, halamanSumberSeksi, urutanKartuAkar,
     KELOMPOK_AKAR, kelompokAkar,
+    DIMENSI_PENDUKUNG, PENDUKUNG, PENDUKUNG_SEKSI, UKURAN_PENDUKUNG,
+    pendukungUntuk, pendukungDari, dimensiPendukung,
   };
 })(globalThis.PROTO = globalThis.PROTO || {});
 
@@ -2628,9 +2868,46 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
       nama: acuan[i].nama,
       satuan: acuan[i].satuan,
       grup: acuan[i].tipe === 'grup',
+      // Jalur indeksnya ikut, supaya barisnya bisa jadi pintu telusur tanpa pemanggil menebak
+      // ulang metrik mana yang ada di baris ke berapa — urutan baris di sini BUKAN urutan kamus
+      // melainkan urutan kartu (urutanKartuAkar), dan menebaknya dari nomor baris akan salah.
+      jalur: [i],
       sel: pohonTahun.map((p) => simpulJalur(p, [i])?.aktual ?? null),
     }));
     return { kolom, baris };
+  }
+
+  /** Perbandingan tiga tahun untuk SATU simpul yang sedang ditelusuri — kembaran berjalur dari
+   *  `matriksTahun()` di atas (26 Agustus 2026).
+   *
+   *  Kembaliannya `{ kolom, baris, node, nilai, satuan }`: `baris` berbentuk sama persis dengan
+   *  `matriksTahun`/`matriksSubUnit` sehingga `blokMatriks()` di render melayani ketiganya tanpa
+   *  tahu bedanya, sementara `nilai` memuat angka SIMPULNYA sendiri per tahun — yang dipakai
+   *  blok angka dan chart batang di kepala halaman telusurnya.
+   *
+   *  Turunannya dicocokkan lewat **INDEKS**, bukan nama. Ketiga pohon dibangun dari kamus yang
+   *  sama sehingga urutannya identik, dan kamus FA memuat 'Listrik'/'Gas'/'Air' serta 'NPAT'
+   *  masing-masing dua kali — mencocokkan lewat nama akan menyandingkan cabang biaya dengan
+   *  cabang pendapatan, dan hasilnya tetap tampak wajar. Jebakan yang sama dengan telusurnya.
+   *
+   *  Daftar turunan diambil dari tahun TERAKHIR: itu keadaan terkini, dan metrik yang baru ada
+   *  belakangan tetap muncul (kolom tahun lamanya kosong) alih-alih hilang sama sekali. */
+  function matriksTahunJalur(kodeHalaman, kodeSubUnit, jalur, tahunList = tigaTahun()) {
+    const kolom = tahunList.map((t) => ({ kode: t, nama: t }));
+    const simpul = tahunList.map((t) =>
+      simpulJalur(pohonMetrikTahun(kodeHalaman, kodeSubUnit, t, { denganYoy: false }), jalur));
+    const node = simpul[simpul.length - 1];
+    if (!node) return null;
+    const anak = node.children || [];
+    const baris = anak.map((c, i) => ({
+      nama: c.nama,
+      satuan: c.satuan,
+      grup: c.tipe === 'grup',
+      jalur: [...jalur, i],
+      sel: simpul.map((s) => s?.children?.[i]?.aktual ?? null),
+    }));
+    return { kolom, baris, node, satuan: node.satuan,
+             nilai: simpul.map((s) => s?.aktual ?? null) };
   }
 
   // ── Versi TAHUNAN dari penyaji berbasis jalur (23 Agustus 2026) ─────────────────────────
@@ -2710,6 +2987,94 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
                       status: 'Final' });
   }
 
+  /** ── Laporan Pendukung Leasing (26 Agustus 2026) ────────────────────────────────────
+   *
+   *  Sebaran tenant menurut satu dimensi (Area Type · Theme · Cooperation Type · Major
+   *  Retailer Group) untuk satu ukuran (luas m2 atau jumlah tenant), pada satu periode dan
+   *  satu sub unit. Bentuk kembaliannya `{ satuan, total, tersewa, kosong, item[] }`.
+   *
+   *  **Angkanya DITURUNKAN dari metrik yang sudah ada, bukan diundi sendiri.** Totalnya NLA
+   *  (untuk luas) atau TOTAL TENANT (untuk jumlah), dan porsi Vacant = 100% - OCCUPANCY
+   *  RATE % — ketiganya metrik kamus Leasing di periode & sub unit yang sama. Kalau diundi
+   *  sendiri, halaman ini akan memajang komposisi yang jumlahnya membantah kartu tepat di
+   *  atasnya: dua angka bertentangan di satu layar, tanpa satu pun error. Yang diundi hanya
+   *  GOYANGAN bobot antar periode, di sekitar bobot tetap di kamus.
+   *
+   *  Pembulatannya memakai sisa terbesar (largest remainder), bukan pembulatan per item:
+   *  membulatkan satu-satu membuat jumlah item meleset dari totalnya sampai beberapa satuan,
+   *  dan justru penjumlahan itulah alasan angka-angka ini diturunkan dari metriknya. Sisa
+   *  pembulatan jatuh ke item dengan pecahan terbesar, jadi tidak ada satu item yang selalu
+   *  menanggungnya. */
+  function pendukung(kodeSummary, kodeSubUnit, kodePeriode) {
+    const def = D.pendukungDari(kodeSummary);
+    if (!def) return null;
+    const dim = D.dimensiPendukung(def.dimensi);
+    if (!dim) return null;
+
+    const pohon = pohonMetrik('leasing', kodeSubUnit, kodePeriode);
+    const total = cariNode(pohon, def.metrik)?.aktual ?? null;
+    const occ = cariNode(pohon, 'OCCUPANCY RATE %')?.aktual ?? null;
+    if (total === null || occ === null || occ <= 0) return null;
+
+    // Luas: NLA itu luas yang BISA disewakan, jadi yang tersewa = NLA x occupancy dan sisanya
+    // Vacant. Jumlah: TOTAL TENANT itu tenant yang ADA — semuanya tersewa — jadi unit kosongnya
+    // dihitung dari occupancy yang sama, dan totalnya bertambah, bukan berkurang.
+    const tersewa = def.ukuran === 'luas' ? (total * occ) / 100 : total;
+    const kosong = def.ukuran === 'luas' ? total - tersewa : (tersewa * (100 - occ)) / occ;
+
+    const adaVacant = dim.item.some((it) => it.vacant);
+    const isi = dim.item.filter((it) => !it.vacant);
+    // Goyangan per periode & sub unit: bobot kamus tetap, tetapi komposisi yang persis sama
+    // di dua belas bulan terbaca seperti angka yang tidak hidup. Rentangnya sengaja sempit —
+    // sebaran tenant memang bergerak lambat.
+    const bobot = isi.map((it) => {
+      const r = acak(benih(`pendukung|${kodeSummary}|${it.nama}|${kodeSubUnit}|${kodePeriode}`));
+      return Math.max(0.01, it[def.ukuran] * antara(r, 0.92, 1.08));
+    });
+    const jumlahBobot = bobot.reduce((s, b) => s + b, 0);
+
+    const mentah = bobot.map((b) => (b / jumlahBobot) * tersewa);
+    if (adaVacant) mentah.push(kosong);
+    const nama = isi.map((it) => it.nama).concat(adaVacant ? ['Vacant'] : []);
+
+    // Totalnya dihitung dari SISI METRIK, bukan dengan menjumlahkan itemnya. Kalau ia
+    // dijumlahkan dari item, "jumlah item = total" menjadi pernyataan yang selalu benar apa
+    // pun cara pembulatannya — dan penjaganya tidak bisa gagal. Terbukti: mengganti sisa
+    // terbesar dengan pembulatan per item tidak menjatuhkan satu pun test waktu total masih
+    // diturunkan dari itemnya.
+    const sasaran = Math.round(tersewa + (adaVacant ? kosong : 0));
+    const nilai = sisaTerbesar(mentah, sasaran);
+    const totalKartu = sasaran;
+    return {
+      satuan: def.satuan,
+      total: totalKartu,
+      tersewa: Math.round(tersewa),
+      kosong: adaVacant ? nilai[nilai.length - 1] : 0,
+      item: nama.map((n, i) => ({
+        nama: n,
+        nilai: nilai[i],
+        // Porsi dihitung dari nilai yang SUDAH dibulatkan, bukan dari nilai mentah: yang
+        // dibaca pemakai adalah angka bulat di tabel, dan porsi yang tidak cocok dengannya
+        // membuat tabelnya tampak salah hitung.
+        porsi: totalKartu ? (nilai[i] / totalKartu) * 100 : null,
+        vacant: n === 'Vacant',
+      })),
+    };
+  }
+
+  /** Membulatkan sederet angka ke bilangan bulat sehingga jumlahnya PERSIS `sasaran`.
+   *  Sasarannya diberikan pemanggil, bukan dihitung dari deretnya sendiri — di sini ia
+   *  angka yang sudah dijanjikan halaman (NLA / TOTAL TENANT), dan itu yang harus dipenuhi. */
+  function sisaTerbesar(mentah, sasaran) {
+    const bawah = mentah.map((v) => Math.floor(v));
+    let sisa = sasaran - bawah.reduce((s, v) => s + v, 0);
+    const urut = mentah
+      .map((v, i) => ({ i, pecahan: v - Math.floor(v) }))
+      .sort((a, b) => b.pecahan - a.pecahan);
+    for (let k = 0; sisa > 0 && urut.length; k++, sisa--) bawah[urut[k % urut.length].i] += 1;
+    return bawah;
+  }
+
   /** Nilai per sub unit untuk halaman Ringkasan: pakai metrik pendapatan utama unit itu. */
   const METRIK_RINGKASAN = { MALL: ['keuangan', 'REVENUE'], HOTEL: ['hotel', 'TOTAL REVENUE'], SPM: ['spm', 'Revenue'] };
 
@@ -2734,9 +3099,9 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
   // dipakai kode ini, bukan ke salinan yang bisa diam-diam menyimpang darinya.
   P.data = { pohonMetrik, pohonOrganisasi, tren12, tren12Jalur, perSubUnit,
              matriksSubUnit, pohonMetrikTahun, bulanTahunan, gabungTahunan,
-             matriksTahun, tigaTahun, pohonOrganisasiTahun,
+             matriksTahun, matriksTahunJalur, tigaTahun, pohonOrganisasiTahun,
              trenTahunJalur, matriksSubUnitTahun,
-             periode12, cariNode, simpulJalur, BASIS };
+             periode12, cariNode, simpulJalur, pendukung, BASIS };
 })(globalThis.PROTO = globalThis.PROTO || {});
 
 /* ── src/js/chart.js ── */
@@ -2776,7 +3141,27 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
     grid: 'var(--t-border)',
     nol: 'var(--t-border-strong)',
     teks: 'var(--t-text-muted)',
-    samar: 'var(--t-text-faint)',
+    /** Penanda "belum ada data" di dalam kanvas. `--t-text-muted`, BUKAN `--t-text-faint`
+     *  (26 Agustus 2026, keputusan pemilik): faint terukur **2,22–2,56** terhadap permukaan
+     *  kartu, jauh di bawah ambang 4,5 untuk teks. Ia satu-satunya teks yang masih tertinggal
+     *  di dalam SVG — label sumbu sudah jadi HTML sejak 24 Agustus dan sudah memakai muted,
+     *  jadi sesudah ini kedua jenis teks kanvas memakai token yang sama.
+     *
+     *  Untuk SVG yang diukur `fill`, bukan `color` — koreksi 24 Agustus; mengukur `color`
+     *  memberi angka warisan yang tidak ada hubungannya dengan yang tergambar. */
+    samar: 'var(--t-text-muted)',
+    /** Slot KATEGORI untuk donut komposisi (26 Agustus 2026). Urutannya bagian dari
+     *  keamanannya, bukan hiasan: ia dicari dengan menjalankan validator palet skill
+     *  `dataviz` atas seluruh urutan yang mungkin, dan yang dipilih satu-satunya yang
+     *  lolus gerbang CVD DAN pita terang di kedua tema sekaligus. **Jangan menukar
+     *  urutannya, dan jangan menambah slot, tanpa menjalankan validator itu lagi** —
+     *  angkanya ada di komentar palet `prototype.css`.
+     *
+     *  Slot ke-8 NETRAL dan hanya untuk irisan "Lainnya": ia memang tidak boleh membawa
+     *  identitas, dan kromanya sengaja di bawah ambang kategori. */
+    kategori: ['var(--pr-cat-1)', 'var(--pr-cat-2)', 'var(--pr-cat-3)', 'var(--pr-cat-4)',
+               'var(--pr-cat-5)', 'var(--pr-cat-6)', 'var(--pr-cat-7)'],
+    lainnya: 'var(--pr-cat-8)',
   };
 
   const F = P.format;
@@ -3191,7 +3576,100 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
     `</svg>`;
   }
 
-  P.chart = { garis, kolom, bar, bullet, WARNA };
+  /** ── Donut komposisi (26 Agustus 2026) ──────────────────────────────────────────────
+   *
+   *  Dipakai Laporan Pendukung Leasing: sebaran tenant menurut satu dimensi. Bentuknya dipilih
+   *  pemilik ("PIE Chart", lalu donut supaya angka totalnya bisa ditulis di tengah).
+   *
+   *  **Yang membuat donut boleh dipakai di sini**, karena umumnya ia bentuk yang buruk:
+   *  angkanya benar-benar BAGIAN DARI SATU KESELURUHAN (jumlah irisan = NLA / TOTAL TENANT,
+   *  bukan sekumpulan angka yang kebetulan bisa dijumlahkan), irisannya dibatasi delapan, dan
+   *  tiap irisan tetap terbaca sebagai ANGKA di tabel di bawahnya. Untuk membandingkan nilai
+   *  yang berdekatan donut memang tidak bisa diandalkan — itu tugas tabelnya, dan tabelnya ada.
+   *
+   *  Teksnya NOL. Seluruh angka dan label ditulis pemanggil sebagai HTML di atas kanvas
+   *  (lihat catatan panjang di bungkusKanvas): kanvas ber-viewBox menskalakan teks di dalamnya
+   *  bersama lebarnya, dan donut ini dipakai di kartu maupun selebar kolom.
+   *
+   *  Celah antar irisan 2 satuan viewBox, dibuat sebagai jarak SUDUT, bukan garis tepi
+   *  berwarna permukaan: tepi berwarna akan salah di tema mana pun yang latarnya bukan warna
+   *  itu, dan panduan dataviz meminta pemisahnya berupa permukaan yang terlihat. */
+  function donat({ item = [], w = 200, tebal = 0.4, judul = 'Komposisi', satuan } = {}) {
+    const pakai = item.filter((it) => angka(it.nilai) && it.nilai > 0);
+    const total = pakai.reduce((s, it) => s + it.nilai, 0);
+    const cx = w / 2; const cy = w / 2;
+    const rLuar = w * 0.46;
+    const rDalam = rLuar * (1 - tebal);
+    if (!pakai.length || total <= 0) {
+      return `<svg viewBox="0 0 ${w} ${w}" role="img" aria-label="Tidak ada data">` +
+        `<circle cx="${cx}" cy="${cy}" r="${bulat((rLuar + rDalam) / 2)}" fill="none" ` +
+          `stroke="${WARNA.grid}" stroke-width="${bulat(rLuar - rDalam)}"/>` +
+        `<text x="${cx}" y="${bulat(cy + 4)}" text-anchor="middle" font-size="12" ` +
+          `fill="${WARNA.samar}">${esc(KOSONG)}</text></svg>`;
+    }
+
+    const titik = (r, sudut) => [bulat(cx + r * Math.cos(sudut)), bulat(cy + r * Math.sin(sudut))];
+    // Cincin penuh tidak bisa digambar sebagai satu busur: titik awal dan titik akhirnya sama,
+    // dan `A` dengan kedua ujung berimpit tidak menggambar apa pun. Dua lingkaran ber-evenodd
+    // yang menggambarnya, bukan busur.
+    const cincinPenuh = (warna) =>
+      `<path fill-rule="evenodd" fill="${warna}" d="M ${bulat(cx - rLuar)} ${cy} ` +
+        `a ${bulat(rLuar)} ${bulat(rLuar)} 0 1 0 ${bulat(rLuar * 2)} 0 ` +
+        `a ${bulat(rLuar)} ${bulat(rLuar)} 0 1 0 ${bulat(-rLuar * 2)} 0 Z ` +
+        `M ${bulat(cx - rDalam)} ${cy} ` +
+        `a ${bulat(rDalam)} ${bulat(rDalam)} 0 1 0 ${bulat(rDalam * 2)} 0 ` +
+        `a ${bulat(rDalam)} ${bulat(rDalam)} 0 1 0 ${bulat(-rDalam * 2)} 0 Z"/>`;
+
+    // Celah sudut dihitung dari BUSUR LUAR supaya lebarnya di layar benar-benar 2 satuan.
+    // Irisan yang lebih sempit daripada celahnya sendiri akan terbalik (sudut akhir mendahului
+    // sudut awal) dan menggambar bentuk yang salah, jadi celahnya dipangkas per irisan.
+    const celah = pakai.length > 1 ? 2 / rLuar : 0;
+    const MULAI = -Math.PI / 2; // jam 12
+    let sudut = MULAI;
+    const iris = [];
+    const hit = [];
+    pakai.forEach((it, i) => {
+      const rentang = (it.nilai / total) * Math.PI * 2;
+      const pad = Math.min(celah, rentang * 0.4);
+      const a1 = sudut + pad / 2;
+      const a2 = sudut + rentang - pad / 2;
+      sudut += rentang;
+      const warna = it.warna || WARNA.kategori[i % WARNA.kategori.length];
+      if (pakai.length === 1) {
+        iris.push(cincinPenuh(warna));
+      } else {
+        const besar = a2 - a1 > Math.PI ? 1 : 0;
+        const [x1, y1] = titik(rLuar, a1); const [x2, y2] = titik(rLuar, a2);
+        const [x3, y3] = titik(rDalam, a2); const [x4, y4] = titik(rDalam, a1);
+        iris.push(`<path fill="${warna}" d="M ${x1} ${y1} ` +
+          `A ${bulat(rLuar)} ${bulat(rLuar)} 0 ${besar} 1 ${x2} ${y2} L ${x3} ${y3} ` +
+          `A ${bulat(rDalam)} ${bulat(rDalam)} 0 ${besar} 0 ${x4} ${y4} Z"/>`);
+      }
+      // Hit target = irisan itu sendiri, dilebarkan sampai pusat dan sedikit ke luar: bidikan
+      // pemakai jatuh di sekitar irisan, bukan tepat di dalam pitanya yang setebal 37 satuan.
+      const [hx1, hy1] = titik(rLuar + 4, a1 - pad / 2);
+      const [hx2, hy2] = titik(rLuar + 4, a2 + pad / 2);
+      const besarHit = (a2 + pad / 2) - (a1 - pad / 2) > Math.PI ? 1 : 0;
+      const d = pakai.length === 1
+        ? `M ${bulat(cx - rLuar - 4)} ${cy} a ${bulat(rLuar + 4)} ${bulat(rLuar + 4)} 0 1 0 ` +
+          `${bulat((rLuar + 4) * 2)} 0 a ${bulat(rLuar + 4)} ${bulat(rLuar + 4)} 0 1 0 ` +
+          `${bulat(-(rLuar + 4) * 2)} 0 Z`
+        : `M ${cx} ${cy} L ${hx1} ${hy1} A ${bulat(rLuar + 4)} ${bulat(rLuar + 4)} 0 ` +
+          `${besarHit} 1 ${hx2} ${hy2} Z`;
+      hit.push(`<g class="pr-hit" data-tt-judul="${esc(it.label)}" ` +
+        `data-tt-label="${esc(['Nilai', 'Porsi'].join('|'))}" ` +
+        `data-tt-nilai="${esc([F.nilai(it.nilai, satuan),
+          F.nilai((it.nilai / total) * 100, 'persen')].join('|'))}" ` +
+        `data-tt-warna="${esc([warna, ''].join('|'))}">` +
+        `<path class="pr-hit-area" fill="transparent" d="${d}"/></g>`);
+    });
+
+    return `<svg viewBox="0 0 ${w} ${w}" class="pr-donat" role="img" ` +
+      `aria-label="${esc(judul)}"${atributKanvas(pakai.length)}>` +
+      iris.join('') + hit.join('') + `</svg>`;
+  }
+
+  P.chart = { garis, kolom, bar, bullet, donat, WARNA };
 })(globalThis.PROTO = globalThis.PROTO || {});
 
 /* ── src/js/render.js ── */
@@ -3252,6 +3730,49 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
    *  `rp_mn` diturunkan dari notasi kamus sendiri, `Rp'mn` (lihat metrik "Employee Costs/Head
    *  (Rp'mn)"), jadi ditulis "Rp jt". Ini satu-satunya label di sini yang merupakan tafsiran;
    *  kalau pemilik memakai satuan lain, ini tempat menggantinya. */
+  /** Keterangan VAR% dan YoY% (26 Agustus 2026). Pemilik sendiri sempat menanyakan bedanya, jadi
+   *  Tim Manajemen hampir pasti juga — dan keduanya memang tidak bisa ditebak dari namanya.
+   *
+   *  Dipasang sebagai **penanda yang bisa difokus keyboard**, bukan atribut `title` telanjang:
+   *  `title` tidak pernah muncul di layar sentuh, dan sebagian besar Tim Manajemen membuka
+   *  prototipe ini dari ponsel. Dengan `tabindex` ia bisa disentuh/di-Tab, dan isinya digambar
+   *  CSS dari `data-bantu` — nol JavaScript, jadi tidak ada penangan baru yang bisa lepas saat
+   *  halaman digambar ulang.
+   *
+   *  Teksnya menyebut PEMBANDINGNYA, karena di situlah bedanya: VAR% terhadap budget periode
+   *  yang sama, YoY% terhadap periode yang sama tahun lalu. Arah warnanya ikut disebut — untuk
+   *  metrik biaya hijau/merah memang dibalik, dan itu bagian yang paling mudah disalahbaca. */
+  const BANTU = {
+    'VAR%': 'Selisih Aktual terhadap BUDGET periode yang sama. '
+      + 'Untuk metrik biaya arah warnanya dibalik: di bawah budget dihitung baik (hijau).',
+    'YoY%': 'Selisih Aktual terhadap PERIODE YANG SAMA TAHUN LALU. '
+      + 'Untuk metrik biaya arah warnanya dibalik: turun dihitung baik (hijau).',
+  };
+  const bantu = (label) => (BANTU[label]
+    ? ` <i class="bi bi-question-circle pr-bantu" data-bantu="${esc(BANTU[label])}" ` +
+      `tabindex="0" role="note" aria-label="${esc(label)}: ${esc(BANTU[label])}"></i>`
+    : '');
+
+  /** Keterangan yang SELALU TERLIHAT, untuk dipasang di kaki tabel berkolom VAR%/YoY%.
+   *
+   *  Penanda bantu di atas TIDAK dipakai di kepala tabel, dan itu bukan pilihan gaya:
+   *   - kepala tabel berada di dalam wadah `overflow: auto` (tabel lebar harus bisa digulir
+   *     sendiri), dan kotak yang muncul di atasnya akan TERPOTONG oleh wadah itu;
+   *   - kolom VAR%/YoY% ada di ujung kanan tabel, tempat kotak itu paling mudah terpotong;
+   *   - dan yang menentukan: tampilnya bergantung `:hover`/`:focus`, dua hal yang TIDAK bisa
+   *     diukur dari mesin ini (jendela Chrome kehilangan fokus tiap kali pengukuran jalan —
+   *     batas yang sudah tercatat sejak 23 Agustus). Menaruh satu-satunya penjelasan di balik
+   *     interaksi yang tidak bisa dibuktikan tampil bukan taruhan yang pantas untuk berkas
+   *     yang dikirim ke Tim Manajemen.
+   *
+   *  Di KARTU penanda bantunya tetap dipakai: di sana tidak ada wadah yang memotong, dan
+   *  ruangnya memang tidak cukup untuk kalimat penuh. */
+  const KAKI_VARYOY =
+    `<div class="pr-dr-nota pr-varyoy"><strong>VAR%</strong> dibanding <strong>budget</strong> ` +
+    `periode yang sama &middot; <strong>YoY%</strong> dibanding <strong>periode yang sama ` +
+    `tahun lalu</strong>. Untuk metrik biaya arah warnanya dibalik: lebih rendah dihitung baik.` +
+    `</div>`;
+
   const SATUAN_LABEL = {
     rp_mn: "Rp jt", rp: 'Rp', rp_m2: 'Rp/m2', m2: 'm2',
     unit: 'unit', orang: 'orang', persen: '%', indeks: 'indeks', rasio: 'rasio',
@@ -3629,7 +4150,7 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
       `<thead><tr><th>${esc(judulKolom)}</th><th>STATUS</th><th class="pr-num">AKTUAL</th>` +
       `<th class="pr-num">BUDGET</th><th class="pr-num">VAR%</th>` +
       `<th class="pr-num">YoY%</th></tr></thead>` +
-      `<tbody>${baris}</tbody></table></div>`;
+      `<tbody>${baris}</tbody></table></div>` + KAKI_VARYOY;
   }
 
   // ── Kartu summary yang bisa ditelusuri ──────────────────────────────────
@@ -3640,7 +4161,7 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
     const v = F.variance(node.aktual, node.budget, !!node.biaya);
     const toneYoy = F.arahDelta(node.yoy, !!node.biaya);
     const sel1 = (label, kode, teks, tone) =>
-      `<div class="pr-k-sel"><span class="pr-k-lbl">${label}</span>` +
+      `<div class="pr-k-sel"><span class="pr-k-lbl">${label}${bantu(label)}</span>` +
       `<span class="pr-k-val${tone ? ` pr-tone-${tone}` : ''}" data-kolom="${kode}">${esc(teks)}</span></div>`;
     return `<div class="pr-k-angka">` +
       sel1('Aktual', 'aktual', F.nilai(node.aktual, node.satuan)) +
@@ -3780,9 +4301,10 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
       // sendiri — kalau tidak, ia yang memaksa SELURUH halaman punya scroll horizontal.
       `<div class="pr-dr-tabel"><table class="ds-table ds-table-sm ds-table-striped">` +
         `<thead><tr><th>NAMA FIELD</th><th>STATUS</th><th class="pr-num">AKTUAL</th>` +
-        `<th class="pr-num">BUDGET</th><th class="pr-num">VAR%</th>` +
+        `<th class="pr-num">BUDGET</th>` +
+        `<th class="pr-num">VAR%</th>` +
         `<th class="pr-num">YoY%</th>${kepalaPorsi}</tr></thead>` +
-        `<tbody>${baris}</tbody></table></div>${nota}</div>`;
+        `<tbody>${baris}</tbody></table></div>${KAKI_VARYOY}${nota}</div>`;
   }
 
   /** Laporan satu seksi: metrik akar jadi BARIS, sub unit jadi KOLOM, satu periode. Bentuk ini
@@ -3806,17 +4328,238 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
     return blokMatriks(m, 'sub unit');
   }
 
+  // ── Laporan Pendukung · Leasing (26 Agustus 2026) ──────────────────────────────────
+  //
+  // Permintaan pemilik: *"Tambahkan Colapse dengan judul laporan pendukung. Untuk Tampilannya
+  // berupa card-card summary. … Di card-card itu yg tampil Summarynya dahulu lalu masing2 ada
+  // telusuri tampilannya nanti berupa PIE Chart dari masing2 Item summary tadi."*
+  //
+  // Bentuknya sengaja MENIRU yang sudah ada, bukan pola baru: kartunya kartu `.pr-kartu` yang
+  // sama dengan kartu metrik, telusurnya HALAMAN (bukan drawer) dengan breadcrumb yang sama,
+  // dan seksinya seksi buka-tutup yang sama. Yang benar-benar baru cuma satu — bentuk donut.
+
+  /** Batas irisan donut. Delapan bukan angka bebas: palet kategori prototipe ini punya tujuh
+   *  slot berwarna + satu slot netral, dan itu batas yang bisa dilewatkan validator palet di
+   *  kedua tema. Item ke-8 dan seterusnya dilipat jadi satu irisan "Lainnya" — daftar
+   *  LENGKAPnya tetap terbaca di tabel di bawah donutnya, jadi tidak ada item yang hilang. */
+  const IRISAN_DONAT = 8;
+
+  /** Item -> irisan donut: tujuh terbesar apa adanya, sisanya satu irisan "Lainnya".
+   *
+   *  Vacant TIDAK diistimewakan di sini walau ia punya arti sendiri: kalau ia dipaksa selalu
+   *  tampil, irisan "Lainnya" bisa memuat item yang lebih besar daripadanya — dan donut yang
+   *  melipat sesuatu yang lebih besar daripada irisan yang tampil membuat urutannya berbohong.
+   *
+   *  Warnanya diberikan DI SINI, dari urutan besar-kecil irisan yang TAMPIL — bukan dari urutan
+   *  item di kamus. Itu satu-satunya tempat prototipe ini mewarnai menurut urutan, dan sebabnya
+   *  donut memang tidak punya identitas yang dipakai di halaman lain: tidak ada kartu, tabel,
+   *  atau chart lain yang menyebut "Fashion & Lifestyle" dengan warna. Kalau nanti ada,
+   *  warnanya harus pindah ke kamus. */
+  function irisanPendukung(item) {
+    const urut = [...item].sort((a, b) => (b.nilai ?? 0) - (a.nilai ?? 0));
+    if (urut.length <= IRISAN_DONAT) {
+      return urut.map((it, i) => ({ ...it, warna: CH.WARNA.kategori[i] }));
+    }
+    const tampil = urut.slice(0, IRISAN_DONAT - 1)
+      .map((it, i) => ({ ...it, warna: CH.WARNA.kategori[i] }));
+    const sisa = urut.slice(IRISAN_DONAT - 1);
+    return tampil.concat([{
+      nama: `Lainnya (${sisa.length})`,
+      nilai: sisa.reduce((s, it) => s + (it.nilai ?? 0), 0),
+      porsi: sisa.reduce((s, it) => s + (it.porsi ?? 0), 0),
+      warna: CH.WARNA.lainnya,
+      lipatan: sisa.map((it) => it.nama),
+    }]);
+  }
+
+  /** Bar komposisi di kartu Laporan Pendukung — permintaan pemilik 26 Agustus, contohnya kartu
+   *  EXPENSE yang memang punya bar di bawah angkanya.
+   *
+   *  **Bentuknya sengaja BUKAN bullet seperti contohnya.** Bullet menjawab "aktual sudah sampai
+   *  mana terhadap budget", dan di sini tidak ada budget; barnya harus berarti sesuatu yang lain.
+   *  Pemilik memilih bar BERTUMPUK: tiap potongan sepanjang porsinya, berwarna sama dengan
+   *  irisan donutnya, sehingga kartu memajang cuplikan donut yang akan dibuka — bukan mengulang
+   *  angka "Terbesar" yang sudah tertulis persis di bawahnya.
+   *
+   *  Irisannya datang dari `irisanPendukung()` yang SAMA dengan yang dipakai donut, jadi kartu
+   *  dan donut tidak bisa berbeda warna maupun berbeda lipatan. Dua penghitung terpisah untuk
+   *  hal yang sama adalah cara dua tampilan mulai berbohong satu sama lain.
+   *
+   *  HTML, bukan SVG: tidak ada teks di dalamnya, dan sebagai HTML celah antar potongan cukup
+   *  `gap` biasa — 2 px permukaan, yang memang diminta panduan dataviz sebagai pemisah. */
+  function pitaPendukung(iris, satuan) {
+    return `<div class="pr-pd-pita" role="img" aria-label="Komposisi: ${esc(iris
+      .map((it) => `${it.nama} ${F.nilai(it.porsi, 'persen')}`).join(', '))}">` +
+      iris.map((it) => `<i style="flex:${(it.porsi || 0).toFixed(3)};background:${it.warna}" ` +
+        `title="${esc(it.nama)} · ${esc(F.nilai(it.nilai, satuan))}"></i>`).join('') +
+    `</div>`;
+  }
+
+  /** Periode yang dipakai Laporan Pendukung. Isinya POSISI (berapa tenant, berapa m2 saat ini),
+   *  bukan aliran — jadi di mode Tahunan yang benar adalah keadaan di bulan TERAKHIR rentang
+   *  tahun itu, bukan penjumlahan dua belas bulan. Aturan yang sama dipakai `D.aturanTahunan()`
+   *  untuk NLA dan TOTAL TENANT, dan memang dari kedua metrik itulah angka di sini diturunkan. */
+  function periodePendukung(state) {
+    if (modePeriode(state, MODE_DETAIL) === 'bulan') return state.periode;
+    const bulan = G.bulanTahunan();
+    return `${state.periode.slice(0, 4)}-${bulan[bulan.length - 1]}`;
+  }
+
+  /** Satu kartu summary Laporan Pendukung. Mukanya: total, jumlah kategori, dan porsi terbesar.
+   *  Porsi terbesar itu yang membuat kartunya bukan cuma angka total yang sama berulang —
+   *  keempat kartu "Area of tenant by …" totalnya memang NLA yang sama persis, dan tanpa
+   *  keterangan kedua itu keempatnya terlihat seperti kartu yang sama dicetak empat kali. */
+  function kartuPendukung(def, hasil) {
+    if (!hasil) {
+      return `<article class="pr-kartu" aria-disabled="true">` +
+        `<div class="pr-k-atas"><span class="pr-k-nama">${esc(def.judul)}</span></div>` +
+        `<div class="pr-k-grup">Belum ada data<span>metrik sumbernya kosong di periode ini` +
+        `</span></div></article>`;
+    }
+    const iris = irisanPendukung(hasil.item);
+    const teratas = iris[0];
+    return `<article class="pr-kartu pr-kartu-bisa" data-pd-kartu="${esc(def.kode)}" ` +
+        `role="button" tabindex="0" aria-label="Buka rincian ${esc(def.judul)}">` +
+      `<div class="pr-k-atas"><span class="pr-k-nama">${esc(def.judul)}</span></div>` +
+      `<div class="pr-k-utama">${esc(F.nilai(hasil.total, hasil.satuan))} ` +
+        `<span class="pr-pd-satuan">${esc(SATUAN_LABEL[hasil.satuan] || hasil.satuan)}</span></div>` +
+      pitaPendukung(iris, hasil.satuan) +
+      (teratas
+        ? `<div class="pr-k-capai">Terbesar: ${esc(teratas.nama)} ` +
+          `${esc(F.nilai(teratas.porsi, 'persen'))}</div>`
+        : '') +
+      `<div class="pr-k-kaki"><span>${hasil.item.length} kategori</span>` +
+        `<span class="pr-k-telusuri">Telusuri <i class="bi bi-chevron-right"></i></span>` +
+      `</div></article>`;
+  }
+
+  /** Isi seksi "Laporan Pendukung": kedelapan kartu summary. */
+  function blokPendukung(state, kodeSeksi, kodeSubUnit) {
+    const daftar = D.pendukungUntuk(kodeSeksi);
+    if (!daftar.length) return '';
+    const periode = periodePendukung(state);
+    const kartu = daftar
+      .map((def) => kartuPendukung(def, G.pendukung(def.kode, kodeSubUnit, periode)))
+      .join('');
+    // Kelasnya `pr-pd-grid`, BUKAN `pr-kartu-grid` yang bentuknya sama persis — dan itu
+    // disengaja. Beberapa penjaga menghitung `pr-kartu-grid` di SELURUH halaman untuk memeriksa
+    // kartu metriknya; memakai kelas yang sama membuat penjaga-penjaga itu diam-diam menghitung
+    // kartu laporan ini juga, dan yang mereka jaga jadi bukan lagi yang mereka sebut.
+    // Aturan CSS-nya tetap satu, kedua kelas berbagi selektor.
+    return `<div class="ds-section-meta pr-fd-jumlah">${daftar.length} laporan</div>` +
+      `<div class="pr-pd-grid">${kartu}</div>`;
+  }
+
+  /** Halaman telusur satu Laporan Pendukung: donut + legenda + tabel seluruh itemnya.
+   *
+   *  Tabelnya BUKAN pelengkap yang boleh dihilangkan. Ia yang membuat donut ini sah dipakai:
+   *  donut tidak bisa dipakai membandingkan nilai yang berdekatan, dan irisan yang dilipat jadi
+   *  "Lainnya" hanya bisa diurai di sini. Panduan `dataviz` menyebutnya relief — wajib ada
+   *  ketika ada warna yang kontrasnya di bawah 3:1 terhadap permukaan, dan di tema dark memang
+   *  ada tiga. */
+  function blokPendukungDetail(state, def, hasil, daftar = []) {
+    // Deretan pindah-laporan, permintaan pemilik 26 Agustus dengan contoh halaman telusur FA:
+    // "tambahkan tab2 laporan pendukung yg lainnya … seperti tabs Revenue, Expense, Income Nett".
+    // Komponen yang SAMA (`pr-fd-tab`), dan atribut yang sama (`data-pd-kartu`) — jadi tidak ada
+    // penangan klik baru: tab dan kartu sama-sama berarti "buka laporan ini".
+    //
+    // Labelnya DIPENDEKKAN (pilihan pemilik) dan judul penuhnya tertulis di bawahnya — pola yang
+    // sama dengan halaman telusur metrik, yang tabnya "EXPENSE" dan judulnya "EXPENSE" juga.
+    const tab = daftar.map((p) => {
+      const aktif = p.kode === def.kode;
+      return `<button type="button" class="pr-fd-tab${aktif ? ' pr-fd-tab-aktif' : ''}" ` +
+        `data-pd-kartu="${esc(p.kode)}"${aktif ? ' aria-current="true"' : ''} ` +
+        `title="${esc(p.judul)}">${esc(p.singkat)}</button>`;
+    }).join('');
+    const kepalaLaporan =
+      (tab ? `<div class="pr-fd-tabs" role="group" aria-label="Laporan pendukung lain">${tab}` +
+             `</div>` : '') +
+      `<div class="pr-fd-judul"><span class="pr-dr-level">Laporan Pendukung</span>` +
+        `<h2>${esc(def.judul)}</h2></div>`;
+
+    if (!hasil) {
+      return kepalaLaporan + `<div class="ds-empty-state"><div class="ds-empty-icon">` +
+        `<i class="bi bi-pie-chart"></i></div><h3>Belum ada data</h3>` +
+        `<p>Metrik sumber ${esc(def.metrik)} atau OCCUPANCY RATE % kosong di periode ini, ` +
+        `jadi komposisinya tidak bisa dihitung.</p></div>`;
+    }
+    const iris = irisanPendukung(hasil.item);
+    const satuanTeks = SATUAN_LABEL[hasil.satuan] || hasil.satuan;
+
+    const donat = CH.donat({
+      item: iris.map((it) => ({ label: it.nama, nilai: it.nilai, warna: it.warna })),
+      satuan: hasil.satuan,
+      judul: def.judul,
+    });
+    // Angka di tengah donut ditulis sebagai HTML di atas kanvas, bukan <text> di dalamnya —
+    // alasan yang sama dengan label sumbu chart lain: teks di dalam viewBox ikut menskala.
+    const inti = `<div class="pr-donat-inti" aria-hidden="true">` +
+      `<span class="pr-donat-angka">${esc(F.nilai(hasil.total, hasil.satuan))}</span>` +
+      `<span class="pr-donat-satuan">${esc(satuanTeks)}</span></div>`;
+
+    const legenda = `<ul class="pr-donat-legenda">${iris.map((it) =>
+      `<li><i class="pr-donat-kunci" style="background:${it.warna}"></i>` +
+        `<span class="pr-donat-nama"${it.lipatan ? ` title="${esc(it.lipatan.join(', '))}"` : ''}>` +
+          `${esc(it.nama)}</span>` +
+        `<span class="pr-donat-nilai">${esc(F.nilai(it.nilai, hasil.satuan))}</span>` +
+        `<span class="pr-donat-porsi">${esc(F.nilai(it.porsi, 'persen'))}</span></li>`).join('')}</ul>`;
+
+    // Tabel memakai urutan KAMUS, bukan urutan besar-kecil: itu urutan di berkas pemilik, dan
+    // di sanalah beliau mencocokkannya. Donut yang di atas sudah menyajikan urutan besar-kecil.
+    const baris = hasil.item.map((it) =>
+      `<tr class="pr-lp-baris${it.vacant ? ' pr-pd-vacant' : ''}">` +
+        `<td><span class="pr-lp-nama">${esc(it.nama)}</span></td>` +
+        `<td class="pr-num">${esc(F.nilai(it.nilai, hasil.satuan))}</td>` +
+        `<td class="pr-num">${esc(F.nilai(it.porsi, 'persen'))}</td></tr>`).join('');
+    const tabel = `<div class="pr-lp"><div class="pr-lp-tabel">` +
+      `<table class="ds-table ds-table-sm ds-table-striped">` +
+      `<thead><tr><th>ITEM</th><th class="pr-num">${esc(satuanTeks.toUpperCase())}</th>` +
+        `<th class="pr-num">PORSI</th></tr></thead>` +
+      `<tbody>${baris}</tbody>` +
+      `<tfoot><tr><th>TOTAL</th>` +
+        `<th class="pr-num">${esc(F.nilai(hasil.total, hasil.satuan))}</th>` +
+        `<th class="pr-num">${esc(F.nilai(100, 'persen'))}</th></tr></tfoot>` +
+      `</table></div></div>`;
+
+    // Keterangan asal angkanya. Wajib, dan bukan basa-basi: kalau tidak ditulis, pembaca tidak
+    // punya cara tahu bahwa jumlah irisan ini memang sama dengan kartu metrik di halaman
+    // sebelumnya — dan justru itu sifat yang membuatnya bisa dipercaya.
+    const nota = `<div class="ds-alert ds-alert-info"><i class="bi bi-info-circle"></i><div>` +
+      `Jumlah seluruh item = <strong>${esc(def.metrik)}</strong>` +
+      (hasil.kosong
+        ? `, dan porsi <strong>Vacant</strong> diturunkan dari <strong>OCCUPANCY RATE %</strong>`
+        : ` yang tersewa`) +
+      ` pada periode yang sama — metrik yang sama dengan kartu di halaman sebelumnya.` +
+      `</div></div>`;
+
+    return kepalaLaporan + nota +
+      `<div class="pr-donat-panel">` +
+        `<div class="pr-donat-kanvas">${donat}${inti}</div>${legenda}` +
+      `</div>` + tabel;
+  }
+
   /** Tabel perbandingan tiga tahun: metrik jadi baris, TAHUN jadi kolom (permintaan pemilik
    *  23 Agustus). Ia memakai penyaji yang SAMA dengan laporan sub unit — bukan tabel kedua yang
    *  bisa diam-diam menyimpang darinya. */
-  function blokBandingTahun(kodeHalaman, kodeSubUnit) {
-    return blokMatriks(G.matriksTahun(kodeHalaman, kodeSubUnit), 'tahun');
+  function blokBandingTahun(kodeHalaman, kodeSubUnit, opsi = {}) {
+    return blokMatriks(G.matriksTahun(kodeHalaman, kodeSubUnit), 'tahun', opsi);
   }
 
   /** Penyaji tabel matriks, dipakai laporan sub unit MAUPUN perbandingan tahun. Keduanya
    *  berbentuk sama — metrik jadi baris, sesuatu jadi kolom — jadi ia satu fungsi.
    *  `namaKolom` hanya untuk keterangan jumlah di atas tabelnya. */
-  function blokMatriks(m, namaKolom) {
+  /** `kunciMasuk` + `jalurBaris`: barisnya bisa diklik untuk menelusur (26 Agustus). Dipakai
+   *  mode Perbandingan 3 Tahun di halaman detail seksi, yang di sana tabel ini MENGGANTIKAN
+   *  kartu metrik — dan tanpa baris yang bisa diklik, pintu telusur halaman itu hilang sama
+   *  sekali. Tidak dinyalakan untuk Laporan per sub unit: barisnya metrik yang sama dengan
+   *  kartu di atasnya, dan pintunya sudah ada di kartu itu. */
+  function blokMatriks(m, namaKolom,
+                       { kunciMasuk,
+                         // Jalurnya dibawa BARISNYA sendiri (diisi matriksTahun/matriksTahunJalur
+                         // di data.js), bukan ditebak dari nomor baris: urutan baris di sini
+                         // urutan KARTU, bukan urutan kamus, jadi menebaknya dari indeks akan
+                         // membuka metrik yang salah — tanpa satu pun error.
+                         jalurBaris = (b) => (b.jalur ? b.jalur.join('.') : null) } = {}) {
     const kepala = `<thead><tr><th>METRIK</th><th>SATUAN</th>` +
       // Kode singkatnya, bukan nama panjangnya: enam kolom bernama "Summarecon Mall …" tidak
       // akan muat, dan kode inilah yang dipakai pemilik di berkasnya. Nama panjangnya tetap
@@ -3824,8 +4567,18 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
       m.kolom.map((k) => `<th class="pr-num" title="${esc(k.nama)}">${esc(k.kode)}</th>`).join('') +
       `</tr></thead>`;
 
-    const baris = m.baris.map((b) => {
-      const nama = `<td><span class="pr-lp-nama">${esc(b.nama)}</span></td>`;
+    const baris = m.baris.map((b, i) => {
+      // Simpul `grup` sengaja TIDAK bisa diklik walau punya turunan: angkanya kosong di ketiga
+      // kolom, dan telusurnya menampilkan halaman berisi tanda kosong — bukan jawaban.
+      const jalur = (kunciMasuk && !b.grup && jalurBaris) ? jalurBaris(b, i) : null;
+      const bisa = jalur !== null && jalur !== undefined;
+      const nama = `<td><span class="pr-lp-nama">${esc(b.nama)}</span>` +
+        (bisa ? `<i class="bi bi-chevron-right pr-lp-tanda" aria-hidden="true"></i>` : '') +
+        `</td>`;
+      const buka = bisa
+        ? ` ${kunciMasuk}="${esc(String(jalur))}" role="button" tabindex="0"` +
+          ` aria-label="Buka rincian ${esc(b.nama)}"`
+        : '';
       // Simpul grup: satu sel membentang, bukan sederet tanda kosong. Enam '—' berjajar terbaca
       // seperti data yang hilang, padahal sebabnya "tidak dijumlahkan" — perlakuan yang sama
       // dengan yang sudah dipakai blokTelusur() untuk kasus ini.
@@ -3836,7 +4589,7 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
           `</td></tr>`;
       }
       const sel = b.sel.map((v) => `<td class="pr-num">${esc(F.nilai(v, b.satuan))}</td>`).join('');
-      return `<tr class="pr-lp-baris">${nama}` +
+      return `<tr class="pr-lp-baris${bisa ? ' pr-dr-bisa' : ''}"${buka}>${nama}` +
         `<td><span class="pr-lp-satuan">${esc(SATUAN_LABEL[b.satuan] || b.satuan)}</span></td>` +
         `${sel}</tr>`;
     }).join('');
@@ -4053,6 +4806,100 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
     };
   }
 
+  /** Isi halaman detail seksi pada mode **Perbandingan 3 Tahun** — pangkal maupun telusurnya.
+   *
+   *  Satu fungsi untuk keduanya karena bentuknya memang satu: tabel metrik × tiga tahun, dan
+   *  yang membedakan hanya metrik siapa yang jadi barisnya (metrik akar kamus, atau turunan
+   *  simpul yang sedang dibuka). Barisnya BISA DIKLIK, dan itu bukan hiasan — di mode ini tabel
+   *  ini menggantikan kartu metrik, jadi tanpa baris yang bisa diklik pintu telusur halaman ini
+   *  hilang sama sekali.
+   *
+   *  Pintu keluarnya `data-fd-masuk`/`data-fd-crumb`, atribut yang SAMA dengan telusur bulanan —
+   *  jadi tidak ada penangan klik baru, dan berpindah mode tidak mengubah arti klik. */
+  function isiBanding3(state, { kodeHalaman, kodeSub, jalur, judul }) {
+    const tahun = G.tigaTahun();
+    const catatan = `<div class="ds-alert ds-alert-info"><i class="bi bi-info-circle"></i><div>` +
+      `Di mode ini halaman hanya memuat <strong>perbandingan tiga tahun</strong>. Kartu chart ` +
+      `dua belas bulan, kartu metrik satu angka, dan laporan per sub unit tidak ditampilkan — ` +
+      `ketiganya menyajikan <strong>satu periode</strong>, dan menaruhnya di halaman ini membuat ` +
+      `angkanya terbaca seolah sudah tiga tahun. Klik satu baris untuk menelusur.` +
+    `</div></div>`;
+
+    if (!jalur.length) {
+      return catatan + blokBandingTahun(kodeHalaman, kodeSub, { kunciMasuk: 'data-fd-masuk' });
+    }
+
+    const m = G.matriksTahunJalur(kodeHalaman, kodeSub, jalur);
+    if (!m) {
+      return `<div class="ds-empty-state"><div class="ds-empty-icon">` +
+        `<i class="bi bi-signpost-split"></i></div><h3>Metrik itu sudah tidak ada</h3>` +
+        `<p>Jalur telusur yang tersimpan menunjuk metrik yang tidak ada di kamus ` +
+        `${esc(judul)}. Kembali ke pangkalnya lewat breadcrumb di kepala halaman.</p></div>`;
+    }
+
+    // Breadcrumb dibangun dari pohon tahun TERAKHIR — nama simpulnya sama di ketiga tahun
+    // (semuanya dari kamus yang sama), jadi tahun mana pun boleh; yang terakhir dipilih supaya
+    // ia sepakat dengan daftar turunan yang dipakai tabel di bawahnya.
+    const pohonAkhir = G.pohonMetrikTahun(kodeHalaman, kodeSub, tahun[tahun.length - 1]);
+    const rantai = rantaiJalur(pohonAkhir, jalur);
+    const crumb = [`<button type="button" class="pr-dr-crumb" data-fd-crumb="">` +
+        `${esc(judul)}</button>`]
+      .concat(rantai.map((r, i) => (i === rantai.length - 1
+        ? `<span class="pr-dr-kini" aria-current="true">${esc(r.nama)}</span>`
+        : `<button type="button" class="pr-dr-crumb" data-fd-crumb="${esc(r.kunci)}">` +
+          `${esc(r.nama)}</button>`)))
+      .join('<span class="pr-dr-sep">&rsaquo;</span>');
+
+    // Deretan pindah-metrik: simpul sekandung pada level yang sedang dibuka — kemampuan yang
+    // sama dengan telusur bulanan. Kalau di mode ini ia tidak ada, berpindah dari satu metrik
+    // ke metrik sebelahnya harus mundur dulu ke pangkalnya.
+    const indukJalur = jalur.slice(0, -1);
+    const sekandung = indukJalur.length
+      ? (G.simpulJalur(pohonAkhir, indukJalur)?.children || [])
+      : pohonAkhir;
+    const kini = jalur.join('.');
+    const tab = sekandung.map((n, i) => {
+      const j = [...indukJalur, i];
+      const aktif = j.join('.') === kini;
+      return `<button type="button" class="pr-fd-tab${aktif ? ' pr-fd-tab-aktif' : ''}" ` +
+        `data-fd-crumb="${esc(j.join('.'))}"${aktif ? ' aria-current="true"' : ''}>` +
+        `${esc(n.nama)}</button>`;
+    }).join('');
+
+    // Angka simpulnya sendiri per tahun. Chart batang, bukan tiga kartu: `CH.bar()` sudah
+    // menuliskan angkanya di ujung tiap batang, jadi satu bentuk memberi angka DAN
+    // perbandingannya — dan ia bentuk yang sama dengan yang dipakai Overview di mode ini.
+    const batang = m.nilai.map((v, i) => ({
+      label: tahun[i], nilai: v,
+      // Warna mengikuti PERANNYA, bukan urutan panjang batang: tahun terakhir memakai warna
+      // seri dan tahun sebelumnya warna acuan, jadi mana yang "sekarang" selalu terbaca.
+      warna: i === tahun.length - 1 ? 'var(--pr-c-1)' : 'var(--pr-c-ref)',
+    }));
+    const level = D.LEVEL_NAMA[Math.min(jalur.length - 1, 3)];
+
+    const turunan = m.baris.length
+      ? blokMatriks(m, 'tahun', { kunciMasuk: 'data-fd-masuk' })
+      : `<div class="pr-dr-nota">Metrik ini tidak punya turunan — angkanya di atas sudah ` +
+        `lapisan paling dalam.</div>`;
+
+    return `<nav class="pr-fd-crumb" aria-label="Jalur metrik">${crumb}</nav>` +
+      `<div class="pr-fd-tabs" role="group" aria-label="Metrik setingkat">${tab}</div>` +
+      `<div class="pr-fd-judul"><span class="pr-dr-level">${esc(level)}</span>` +
+        `<h2>${esc(m.node.nama)}</h2></div>` +
+      // Lebar chartnya DITAHAN oleh `pr-ov-chart-sendiri`, penahan yang sama dengan chart per
+      // tahun di Overview — satu bentuk, satu penahan. Tanpa itu kanvas ber-viewBox merentang
+      // selebar kolom dan teks di dalamnya ikut menskala; terukur 26 Agustus 32,7 px pada
+      // 1536 px. Alasnya kartu (`pr-dr-panel`) karena warna batangnya diukur terhadap permukaan
+      // kartu, bukan terhadap latar halaman — pelajaran 24 Agustus.
+      `<div class="pr-dr-chart"><div class="pr-dr-panel">` +
+        `<div class="pr-chart-title">${esc(m.node.nama)} per Tahun &middot; ` +
+          `${esc(labelRentangTahunan())}</div>` +
+        `<div class="pr-ov-chart-grid pr-ov-chart-sendiri"><div class="pr-ov-chart">` +
+          CH.bar({ items: batang, h: 96, satuan: m.satuan }) +
+        `</div></div>` +
+      `</div></div>` + turunan;
+  }
+
   /** Halaman **detail seksi** — tujuan tombol View Details di tiap seksi berkartu. Satu fungsi
    *  melayani kelima seksi; yang membedakan hanya `state.seksiDetail` dan `state.entitas`.
    *
@@ -4076,17 +4923,31 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
    *  Halaman ini juga punya **filter Sub Unit** sejak 23 Agustus. Halaman modul yang lama
    *  memilikinya; kalau "disamakan" diartikan menghapusnya, kemampuan yang sudah ada justru
    *  hilang. Jadi filternya dipasang di sini, dan berlaku dari kedua pintu masuk. */
-  function halamanSeksiDetail(state, { judulHalaman, denganKembali = true } = {}) {
+  /** `dariMenu` (26 Agustus): halaman ini dibuka dari MENU sidebar, bukan dari View Details di
+   *  Dashboard Management. Yang membedakan cuma seksi **Laporan Pendukung**, dan sebabnya bukan
+   *  teknis melainkan pembagian kerja — permintaan pemilik: *"Laporan Pendukung hanya di gunakan
+   *  oleh Tim Leasing saja. Tim Management gak perlu."*
+   *
+   *  Ditulis sebagai medan sendiri, BUKAN diturunkan dari `denganKembali` yang kebetulan juga
+   *  membedakan kedua pintu. Keduanya menjawab pertanyaan yang berbeda — "adakah tempat untuk
+   *  kembali" dan "siapa pembaca halaman ini" — dan menumpangkannya berarti mengubah tombol
+   *  Kembali suatu hari nanti diam-diam menghidupkan atau mematikan seksi laporan. */
+  function halamanSeksiDetail(state,
+                              { judulHalaman, denganKembali = true, dariMenu = false } = {}) {
     const ent = D.entitasDari(state.entitas) || D.ENTITAS_DETAIL[0];
     const kodeSeksi = state.seksiDetail || 'finansial';
     const judul = judulHalaman || D.judulSeksiDetail(kodeSeksi);
     const kodeHalaman = D.halamanSumberSeksi(kodeSeksi, ent.kode);
-    // Mode dinormalkan sekali di kepala fungsi: halaman ini menyajikan Bulanan dan Tahunan, dan
-    // kalau state ‘banding3’ terbawa dari halaman awal seluruh penyajinya harus sepakat memakai
-    // bulanan — bukan sebagian tahunan sebagian bulanan.
-    state = { ...state, modePeriode: modePeriode(state, MODE_DETAIL) };
-    const mode = modePeriode(state, MODE_DETAIL);
-    const namaPeriode = labelPeriode(state);
+    // Mode dinormalkan sekali di kepala fungsi; membacanya berulang di tiap penyaji itu cara
+    // cacat "separuh bermode" lahir. Sejak 26 Agustus halaman ini menyajikan KETIGA mode
+    // (permintaan pemilik) — sampai sebelum itu ia dibatasi karena bentuk perbandingannya
+    // memang belum ada, dan kontrol yang tampil tapi tidak berefek lebih buruk daripada
+    // kontrol yang tidak ada.
+    state = { ...state, modePeriode: modePeriode(state) };
+    const mode = modePeriode(state);
+    const namaPeriode = mode === 'banding3'
+      ? `Perbandingan ${labelPeriode(state)}`
+      : labelPeriode(state);
     const jalur = (state.jalur || []).filter((x) => Number.isInteger(x));
 
     const kepala = kepalaHalaman(judul, [ent.nama, namaPeriode],
@@ -4103,7 +4964,7 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
       : null;
     const filter = `<section class="ds-section"><div class="pr-filter">` +
         (unitFilter ? fieldSubUnit(state, unitFilter) : '') +
-        filterPeriode(state, { modeTersedia: MODE_DETAIL }) +
+        filterPeriode(state) +
       `</div></section>`;
 
     if (!kodeHalaman) {
@@ -4131,6 +4992,50 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
     // sebab yang terlihat.
     const kodeSub = D.SUB_UNIT[unitFilter]?.some((s) => s.kode === state.subUnit)
       ? state.subUnit : 'SEMUA';
+
+    // Telusur Laporan Pendukung: halaman tersendiri, dan ia dijawab SEBELUM telusur metrik.
+    // Keduanya memakai halaman yang sama tetapi state yang berbeda (`state.pendukung` vs
+    // `state.jalur`), dan kalau urutannya dibalik sebuah jalur yang kebetulan masih tersimpan
+    // akan menang atas kartu yang baru diklik. `pendukungDari` ikut menjaga: kode yang tidak
+    // ada di kamus jatuh kembali ke pangkal halaman, bukan halaman kosong tanpa sebab.
+    // Kosong kalau halaman ini dibuka dari View Details Dashboard Management: seksinya memang
+    // tidak ada di sana. Disaring SATU KALI di sini, jadi seluruh yang bergantung padanya —
+    // seksi di pangkal, halaman donutnya, dan deretan tabnya — ikut hilang bersama-sama.
+    // Kalau tiap tempat memutuskan sendiri, satu pintu bisa tertinggal terbuka.
+    // Kosong di DUA keadaan, dan satu tempat memutuskan keduanya supaya seksi di pangkal,
+    // halaman donutnya, dan deretan tabnya ikut hilang bersama-sama:
+    //  - dibuka dari View Details Dashboard Management — seksinya memang tidak ada di sana;
+    //  - mode Perbandingan 3 Tahun — isinya komposisi pada SATU posisi waktu, dan tiga tahun
+    //    tidak bisa dimuat satu donut. Tanpa gerbang ini, `state.pendukung` yang terbawa akan
+    //    membuka halaman donut di mode yang halamannya sendiri sudah menolak blok satu-periode.
+    const daftarPendukung = (dariMenu && mode !== 'banding3')
+      ? D.pendukungUntuk(kodeSeksi) : [];
+    const defPendukung = state.pendukung
+      && daftarPendukung.find((p) => p.kode === state.pendukung);
+    if (defPendukung) {
+      // Breadcrumb-nya memakai kelas yang SAMA dengan telusur metrik — bukan bentuk kedua yang
+      // mirip. Pemakai yang sudah pernah menelusuri satu kartu metrik menemukan jalan pulang
+      // yang persis sama di sini.
+      const crumbPd = `<nav class="pr-fd-crumb" aria-label="Jalur laporan">` +
+        `<button type="button" class="pr-dr-crumb" data-pd-kembali>${esc(judul)}</button>` +
+        `<span class="pr-dr-sep">&rsaquo;</span>` +
+        `<span class="pr-dr-kini" aria-current="true">${esc(defPendukung.judul)}</span></nav>`;
+      const hasil = G.pendukung(defPendukung.kode, kodeSub, periodePendukung(state));
+      return kepala + filter + crumbPd +
+        blokPendukungDetail(state, defPendukung, hasil, daftarPendukung);
+    }
+    // ── Mode Perbandingan 3 Tahun (26 Agustus 2026) ────────────────────────────────────
+    //
+    // Dijawab sebelum penyaji bulanan/tahunan di bawahnya, dan mengambil alih SELURUH isi
+    // halaman — bukan menyelipkan satu tabel di antara blok yang lain. Sebabnya keputusan
+    // pemilik, dan alasannya sudah dua kali menggigit proyek ini: kartu chart 12 bulan, kartu
+    // metrik satu angka, Laporan per sub unit, dan Laporan Pendukung semuanya SATU PERIODE.
+    // Memajangnya di halaman yang berjudul "Perbandingan 3 Tahun" membuat pembaca menyimpulkan
+    // angkanya sudah tiga tahun — persis cacat "separuh bermode" yang ditutup 23 Agustus.
+    if (mode === 'banding3') {
+      return kepala + filter + nota + isiBanding3(state, { kodeHalaman, kodeSub, jalur, judul });
+    }
+
     const pohon = pohonAktif(state, kodeHalaman, kodeSub);
     const urutan = D.urutanKartuAkar(kodeHalaman, pohon);
     // Keempat kartu chart seksi ini. Dihitung SEKALI di sini karena tiga hal memakainya dan
@@ -4173,11 +5078,19 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
       // Kartu chart seksi ini, sama dengan yang ada di halaman awal / detail entitas
       // (permintaan pemilik 24 Agustus) — lihat blokChartSeksi().
       const seksiChart = { kode: 'chart', judul: `Chart ${namaSeksi}`, ikon: 'bi-graph-up' };
+      // Laporan Pendukung (26 Agustus, permintaan pemilik). Judulnya TIDAK menyebut seksinya —
+      // pemilik menulis judulnya sendiri, "laporan pendukung", dan sejauh ini hanya seksi
+      // Leasing yang punya. Seksinya ikut daftar collapse supaya sakelar Collapse View
+      // memerintahnya juga.
+      const seksiPendukung = daftarPendukung.length
+        ? { kode: 'pendukung', judul: 'Laporan Pendukung', ikon: 'bi-pie-chart' }
+        : null;
       // Tiap kelompok dibungkus seksi buka-tutup — komponen yang sama dengan seksi di Dashboard
       // Management, jadi tidak ada pola baru yang perlu dipelajari. Judul kelompok telanjang
       // dinilai pemilik "gak bagus" (21 Agustus).
       const terbuka = seksiTerbukaAwal(state,
-        [seksiChart, ...(kelompok || []), seksiLaporan]);
+        [seksiChart, ...(kelompok || []), seksiLaporan,
+         ...(seksiPendukung ? [seksiPendukung] : [])]);
       // Kelompok yang seluruh metriknya sudah jadi kartu chart dilewati sama sekali: seksi
       // buka-tutup berjudul dengan grid kosong di dalamnya terbaca seperti data yang gagal
       // dimuat, bukan seperti kelompok yang memang tidak punya sisa.
@@ -4237,7 +5150,18 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
           ` Rincian dibuka sebagai <strong>halaman</strong>, jadi tabelnya dapat lebar penuh; ` +
           `breadcrumb di atas memulangkan Anda.` +
         `</div></div>`;
-      return kepala + filter + nota + chart + pengantar + kartu + laporan;
+      // Laporan Pendukung diletakkan PALING BAWAH, sesudah Laporan seksi: isinya rincian
+      // pelengkap, dan yang dicari lebih dulu di halaman ini tetap metrik utamanya. Berbeda
+      // dari Laporan seksi, ia TIDAK disembunyikan saat satu sub unit difilter — isinya
+      // komposisi DI DALAM satu entitas, bukan perbandingan antar sub unit, jadi ia tetap
+      // bermakna (dan memang berubah) ketika satu sub unit dipilih.
+      const pendukung = seksiPendukung
+        ? `<div class="pr-cv">` +
+            seksiCollapse(seksiPendukung, blokPendukung(state, kodeSeksi, kodeSub),
+                          terbuka.has(seksiPendukung.kode)) +
+          `</div>`
+        : '';
+      return kepala + filter + nota + chart + pengantar + kartu + laporan + pendukung;
     }
 
     // Sub unit yang difilter ikut ke dalam telusur, kalau tidak angka di dalamnya konsolidasi
@@ -4799,27 +5723,51 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
 
   function halamanDetail(state) {
     const ent = D.entitasDari(state.entitas) || D.ENTITAS_DETAIL[0];
-    // Mode dinormalkan DI SINI, bukan dibaca berulang di bawah: halaman ini hanya menyajikan
-    // Bulanan dan Tahunan, dan kalau state ‘banding3’ terbawa dari halaman awal, seluruh
-    // penyajinya harus sepakat memakai bulanan — bukan sebagian tahunan sebagian bulanan.
-    state = { ...state, modePeriode: modePeriode(state, MODE_DETAIL) };
-    const mode = modePeriode(state, MODE_DETAIL);
+    // Mode dinormalkan DI SINI, bukan dibaca berulang di bawah — kalau dibaca ulang di tiap
+    // penyaji, sebagian bisa tahunan sementara sebagian bulanan di satu layar. Sejak
+    // 26 Agustus halaman ini menyajikan KETIGA mode (permintaan pemilik), jadi daftarnya
+    // MODE_PERIODE penuh; sampai sebelum itu ia dibatasi karena bentuk perbandingannya
+    // memang belum ada.
+    state = { ...state, modePeriode: modePeriode(state) };
+    const mode = modePeriode(state);
     // Selalu dari konsolidasi penuh: entitas halaman ini ditentukan kartu yang diklik, bukan
     // filter Unit Bisnis di halaman sebelumnya. Kalau ikut filter, membuka detail MALL sesudah
     // memfilter HOTEL akan memberi angka kosong tanpa sebab yang terlihat.
     // Ikut mode: sampai 23 Agustus baris ini selalu bulanan sementara kartu chart tiap seksi
     // sudah tahunan, sehingga satu layar memuat angka setahun dan angka sebulan berdampingan
     // tanpa keterangan yang membedakan. Ketemu waktu memverifikasi di browser.
+    // Mode perbandingan memakai tahun TERAKHIR untuk pohon organisasinya; ketiga tahunnya
+    // muncul sebagai kartu Overview dan kolom tabel di tiap seksi. Aturan yang sama dengan
+    // halaman awal — satu bentuk, dua halaman.
     const akar = mode === 'bulan'
       ? G.pohonOrganisasi(state.periode, 'SEMUA')
-      : G.pohonOrganisasiTahun(state.periode.slice(0, 4), 'SEMUA');
+      : G.pohonOrganisasiTahun(
+          mode === 'banding3' ? G.tigaTahun()[2] : state.periode.slice(0, 4), 'SEMUA');
     const node = ent.unitBisnis ? akar.children.find((c) => c.nama === ent.nama) : akar;
     const anak = node?.children || [];
     const judulAnak = ent.unitBisnis ? 'Sub Unit' : 'Unit Bisnis';
-    const namaPeriode = labelPeriode(state);
+    // Subjudulnya menyebut kata "Perbandingan" di mode banding3 — sama dengan halaman awal.
+    // Tanpa itu, "2024–2026" di kepala halaman terbaca sebagai rentang yang DIJUMLAHKAN.
+    const namaPeriode = mode === 'banding3'
+      ? `Perbandingan ${labelPeriode(state)}`
+      : labelPeriode(state);
 
     const terbuka = seksiTerbukaAwal(state, D.seksiUntuk(ent.kode));
     const isiSeksi = (s) => {
+      // Mode perbandingan tiga tahun (26 Agustus): bentuknya PERSIS yang sudah dipakai halaman
+      // awal — chart dua belas bulan tidak punya arti kalau yang dibandingkan tahun, dan kartu
+      // satu angka tidak bisa memuat tiga tahun sekaligus. Disalurkan ke penyaji yang sama,
+      // bukan ditulis ulang: dua bentuk perbandingan yang mirip akan menua jadi dua bentuk
+      // yang diam-diam berbeda.
+      if (mode === 'banding3') {
+        if (s.kode === 'overview') {
+          // Halaman ini SELALU konsolidasi penuh (lihat catatan `akar` di atas), jadi sub
+          // unitnya 'SEMUA' — bukan `state.subUnit`, yang di sini milik halaman sebelumnya.
+          return bandingOverview(state, ent.unitBisnis || 'SEMUA', 'SEMUA');
+        }
+        const kamus = D.halamanSumberSeksi(s.kode, ent.kode);
+        return kamus ? blokBandingTahun(kamus, 'SEMUA') : isiSeksiMenyusul(s);
+      }
       if (s.kode === 'overview') {
         // Chart kontribusi hanya di halaman yang turunannya UNIT BISNIS (PT SMIP). Pemilik
         // meminta "Kontribusi per Sub Unit" dihilangkan (21 Agustus): di halaman satu unit
@@ -4840,7 +5788,7 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
         `<button class="ds-btn ds-btn-sm ds-btn-secondary" type="button" data-detail-kembali>` +
           `<i class="bi bi-arrow-left"></i><span>Dashboard Management</span></button>`) +
       `<section class="ds-section"><div class="pr-filter">` +
-        filterPeriode(state, { modeTersedia: MODE_DETAIL }) +
+        filterPeriode(state) +
         `<div class="pr-filter-spacer"></div>` + sakelarCollapse(state) +
       `</div></section>` +
       `<div class="pr-cv">${seksi}</div>`;
@@ -4891,8 +5839,14 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
       warna: t === tahun[tahun.length - 1] ? `var(--pr-c-1)` : `var(--pr-c-ref)`,
     }));
 
+    // `pr-ov-chart-sendiri` WAJIB: barisan ini isinya satu chart, dan tanpa penahan itu
+    // `auto-fit` membuatnya merentang selebar halaman. Untuk chart ber-viewBox itu bukan sekadar
+    // "terlalu besar" — teks di dalamnya ikut menskala. Terukur 26 Agustus pada 1536 px: kanvas
+    // 1395 px, skala 2,85x, dan teks yang ditulis 11,5 tampil **32,7 px**. Cacat itu ada di sini
+    // sejak mode ini lahir 23 Agustus dan tidak pernah terlihat karena mode ini belum pernah
+    // diukur. Dengan penahannya: 544 px, skala 1,11x, teks 12,8 px.
     return `<div class="pr-ov-kartu">${kartu}</div>` +
-      `<div class="pr-ov-chart-grid"><div class="pr-ov-chart">` +
+      `<div class="pr-ov-chart-grid pr-ov-chart-sendiri"><div class="pr-ov-chart">` +
         `<div class="pr-chart-title">${esc(NAMA_REVENUE)} per Tahun &middot; ` +
           `${esc(labelRentangTahunan())}</div>` +
         CH.bar({ items: batang, h: 96, satuan: 'rp_mn' }) +
@@ -5035,7 +5989,9 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
         // Judulnya judul MENUNYA, dan tanpa tombol Kembali — dibuka dari sidebar tidak ada
         // tempat untuk kembali, dan tombol yang tidak menuju ke mana-mana lebih membingungkan
         // daripada tidak ada tombol.
-        { judulHalaman: h.judul, denganKembali: false });
+        // `dariMenu`: seksi Laporan Pendukung hanya ada di pintu INI — permintaan pemilik
+        // 26 Agustus, ia dipakai Tim Leasing dan bukan Tim Manajemen.
+        { judulHalaman: h.judul, denganKembali: false, dariMenu: true });
     }
 
     // Halaman modul yang kodenya tidak berpasangan dengan seksi mana pun adalah kesalahan
@@ -5125,7 +6081,7 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
   const state = { halaman: 'ringkasan', unitBisnis: 'SEMUA', subUnit: 'SEMUA',
                   periode: D.PERIODE_DEFAULT, modePeriode: 'bulan',
                   entitas: null, seksiTerbuka: null, collapseView: false,
-                  jalur: [], asal: null, seksiDetail: null };
+                  jalur: [], asal: null, seksiDetail: null, pendukung: null };
 
   const namaUnit = (kode) => (kode === 'SPM' ? 'OFFICE BUILDING SPM' : kode);
 
@@ -5279,6 +6235,7 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
     state.seksiDetail = kodeSeksi;
     state.entitas = kodeEntitas;
     state.jalur = [];
+    state.pendukung = null;
     // Kode seksi halaman ini berbeda (kelompok kartu, bukan seksi laporan), jadi keadaan
     // buka-tutup halaman sebelumnya TIDAK boleh terbawa — kalau terbawa, tidak satu pun kode
     // kelompok ada di dalamnya dan seluruh kelompoknya terbuka dalam keadaan tertutup.
@@ -5292,6 +6249,17 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
    *  masuk ke lapisan lain. */
   function telusurSeksiDetail(teks) {
     state.jalur = teks ? teks.split('.').map(Number) : [];
+    // Kedua telusur halaman ini — metrik dan Laporan Pendukung — memakai halaman yang sama,
+    // jadi masuk ke salah satunya WAJIB mengosongkan yang lain. Kalau tidak, kembali dari
+    // telusur metrik ke pangkalnya akan mendarat di halaman donut yang tertinggal di state.
+    state.pendukung = null;
+    gambar();
+  }
+
+  /** Telusur Laporan Pendukung: kebalikannya — masuk ke donut, dan jalur metrik dikosongkan. */
+  function telusurPendukung(kode) {
+    state.pendukung = kode || null;
+    state.jalur = [];
     gambar();
   }
 
@@ -5301,6 +6269,7 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
     state.entitas = asal.entitas;
     state.asal = null;
     state.jalur = [];
+    state.pendukung = null;
     state.seksiDetail = null;
     state.seksiTerbuka = null;   // halaman tujuan memakai bawaannya sendiri
     gambar();
@@ -5336,6 +6305,13 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
       const fdCrumb = e.target.closest('[data-fd-crumb]');
       if (fdCrumb) { telusurSeksiDetail(fdCrumb.dataset.fdCrumb); return; }
 
+      // ── Laporan Pendukung ──
+      // Diperiksa SESUDAH telusur metrik dan sebelum halaman lain: atributnya berawalan
+      // `data-pd-` sendiri, jadi tidak ada kartu yang bisa cocok dengan keduanya sekaligus.
+      const pdKartu = e.target.closest('[data-pd-kartu]');
+      if (pdKartu) { telusurPendukung(pdKartu.dataset.pdKartu); return; }
+      if (e.target.closest('[data-pd-kembali]')) { telusurPendukung(null); return; }
+
       // ── Dashboard Management Detail ──
       const kartuDetail = e.target.closest('[data-detail-entitas]');
       if (kartuDetail) { bukaDetail(kartuDetail.dataset.detailEntitas); return; }
@@ -5364,6 +6340,7 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
         state.subUnit = 'SEMUA';
         state.entitas = null;
         state.jalur = [];
+        state.pendukung = null;
         state.asal = null;
         // Kelima halaman modul memakai susunan halaman detail seksi, dan seksi mana yang
         // dipajang diambil dari kamus (`seksiHalamanModul`), bukan dari state. Sisa nilai lama
@@ -5443,11 +6420,12 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
     document.addEventListener('keydown', (e) => {
       if (e.key !== 'Enter' && e.key !== ' ') return;
       const sasaran = e.target.closest?.(
-        '[data-detail-entitas], [data-fd-kartu], [data-fd-masuk]');
+        '[data-detail-entitas], [data-fd-kartu], [data-fd-masuk], [data-pd-kartu]');
       if (!sasaran) return;
       e.preventDefault();
       if (sasaran.dataset.fdKartu !== undefined) telusurSeksiDetail(sasaran.dataset.fdKartu);
       else if (sasaran.dataset.fdMasuk !== undefined) telusurSeksiDetail(sasaran.dataset.fdMasuk);
+      else if (sasaran.dataset.pdKartu !== undefined) telusurPendukung(sasaran.dataset.pdKartu);
       else if (sasaran.dataset.detailEntitas) bukaDetail(sasaran.dataset.detailEntitas);
     });
   }
