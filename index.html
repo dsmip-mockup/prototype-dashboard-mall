@@ -179,6 +179,15 @@
 /* Rata kanan berhenti di kiri gridline-nya, tengahnya sejajar gridline. `left` + translate,
    bukan `right`: koordinat yang dihitung chart.js koordinat KIRI di sistem viewBox-nya. */
 .pr-ax-y { transform: translate(-100%, -50%); padding-right: 2px; }
+/* Label chart batang (26 Agustus). Sama seperti label sumbu: HTML, bukan <text> di dalam
+   viewBox — supaya lebar chart dan ukuran huruf tidak lagi terikat. Nama rata KANAN berhenti di
+   kiri batangnya; angka rata KIRI mulai di kanan ujung batangnya. Keduanya dipusatkan tegak
+   terhadap batangnya. */
+.pr-bar-nama { transform: translate(-100%, -50%); color: var(--t-text-muted); }
+.pr-bar-nilai { transform: translateY(-50%); color: var(--t-text-muted); }
+/* Sub unit yang sedang dipilih ditebalkan supaya perbandingannya punya jangkar. */
+.pr-bar-aktif { font-weight: 600; color: var(--t-text); }
+.pr-bar-kosong { color: var(--t-text-muted); }
 /* Satu BARIS pembawa posisi tegak; tiap label di dalamnya hanya membawa posisi mendatarnya.
    Susunan itu yang memungkinkan penjarangan `:nth-last-child` di bawah. */
 .pr-ax-x-baris { position: absolute; left: 0; right: 0; margin-top: 3px; }
@@ -763,6 +772,16 @@ select.ds-input:read-only { padding-right: 2.25rem; }
    Lebarnya ditahan kira-kira selebar SATU kolom pada susunan dua chart, jadi ukurannya konsisten
    dengan keadaan yang tidak difilter — bukan angka yang dikira-kira sendiri. */
 .pr-ov-chart-sendiri { grid-template-columns: minmax(0, 1fr); max-width: 34rem; }
+/* Chart perbandingan per tahun: **sedang** — permintaan pemilik 26 Agustus, *"terlalu kecil …
+   tidak kecil tidak kebesaran"*. Lebarnya bisa dipilih bebas begini justru karena label chart
+   batang sudah keluar dari SVG (lihat bar() di chart.js): sebelum itu melebarkan chart otomatis
+   membesarkan hurufnya, jadi 34rem adalah batas yang teksnya masih benar — bukan lebar yang
+   dipilih karena enak dilihat.
+
+   52rem ≈ 832 px: lebih besar daripada penahan lama (544 px) dan tetap jauh di bawah kolom
+   penuh (1.429 px pada 1536 px), yang dinilai pemilik "terlalu besar" untuk chart telusur
+   23 Agustus. */
+.pr-ov-chart-tahun { max-width: 52rem; }
 .pr-ov-chart { min-width: 0; }
 .pr-ov-chart svg { width: 100%; height: auto; display: block; }
 /* Kartu angka entitas: kartu pertama di baris itu, jadi bentuknya harus setara kartu KPI
@@ -3478,9 +3497,35 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
       batang + bands + `</svg>`, sumbu);
   }
 
-  function bar({ items = [], w = 490, h = 166, satuan } = {}) {
+  /** ── Label chart batang sebagai HTML, bukan `<text>` di dalam SVG (26 Agustus 2026) ────
+   *
+   *  Sebabnya sifat yang sama yang memindahkan label sumbu keluar SVG 24 Agustus, dan yang
+   *  komentarnya di berkas ini sudah memperingatkan: **kanvas ber-`viewBox` menskalakan seluruh
+   *  isinya, teks termasuk.** Akibatnya ukuran chart dan ukuran huruf terikat satu sama lain —
+   *  melebarkan chart otomatis membesarkan hurufnya.
+   *
+   *  Itu yang terjadi pada chart perbandingan per tahun: dibiarkan selebar kolom teksnya 32,7 px,
+   *  ditahan supaya teksnya benar chartnya jadi kekecilan (*"terlalu kecil … buatkan sedang
+   *  saja"* — pemilik, 26 Agustus). Penawar lewat pasangan kanvas + container query butuh EMPAT
+   *  varian untuk menutup rentang 335–854 px tanpa lubang, dan tiap varian hanya memindahkan
+   *  masalahnya ke lebar berikutnya.
+   *
+   *  Sebagai HTML, ukuran hurufnya CSS biasa: satu angka, berlaku di semua lebar, bisa diukur
+   *  seperti teks lain — dan lebar chartnya bebas dipilih sesuai enaknya dilihat.
+   *
+   *  Yang TETAP di dalam SVG, dan itu sengaja: batangnya sendiri dan seluruh hit target tooltip.
+   *  Hit target harus ikut menskala bersama batangnya — itu yang membuatnya nol konversi
+   *  koordinat (lihat hitTarget()). */
+  /** `padKiri` = ruang yang dicadangkan untuk kolom NAMA, dalam satuan viewBox. Bawaannya 150,
+   *  cukup untuk nama sub unit/unit bisnis yang panjang ("OFFICE BUILDING SPM"). Chart yang
+   *  namanya pendek — perbandingan per TAHUN, isinya "2024" — memberikan angka yang lebih kecil,
+   *  kalau tidak seperempat lebar kanvasnya jadi gutter kosong dan batangnya kependekan. */
+  function bar({ items = [], w = 490, h = 166, satuan, padKiri = 150 } = {}) {
     if (!items.length) return kosongKanvas(w, h, 'Tidak ada data');
-    const pad = { atas: 6, kanan: 62, bawah: 6, kiri: 150 };
+    // `kanan` menyediakan ruang untuk angka di ujung batang, `kiri` untuk namanya. Keduanya
+    // dalam satuan viewBox dan ikut menskala bersama kanvas — sementara teksnya TIDAK lagi ikut,
+    // jadi keduanya sekarang cadangan RUANG, bukan ukuran huruf.
+    const pad = { atas: 6, kanan: 62, bawah: 6, kiri: padKiri };
     const kw = w - pad.kiri - pad.kanan;
     const tinggiBaris = (h - pad.atas - pad.bawah) / items.length;
     const tinggiBar = Math.min(16, tinggiBaris * 0.6);
@@ -3490,21 +3535,27 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
     const max = Math.max(...terisi.map((it) => it.nilai), 1);   // 1 = jaga bagi nol
 
     let out = '';
+    let label = '';
+    // Posisi label dalam PERSEN kotak kanvas, dihitung dari koordinat viewBox yang sama dengan
+    // yang dipakai menggambar batangnya. Jadi tidak ada konversi koordinat layar sama sekali,
+    // dan labelnya tetap menempel pada batangnya di lebar berapa pun.
+    const kiriPersen = (x) => bulat((x / w) * 100);
+    const atasPersen = (y) => bulat((y / h) * 100);
     items.forEach((it, i) => {
       const cy = pad.atas + i * tinggiBaris + tinggiBaris / 2;
       // Nama sub unit dipendekkan supaya tidak menabrak batang di 1366px.
-      const label = it.label.length > 26 ? `${it.label.slice(0, 25)}…` : it.label;
+      const nama = it.label.length > 26 ? `${it.label.slice(0, 25)}…` : it.label;
       // Sub unit yang sedang dipilih ditebalkan supaya perbandingannya punya jangkar.
-      const tebal = it.aktif ? ' font-weight="600"' : '';
-      out += `<text x="${pad.kiri - 8}" y="${bulat(cy + 3)}" text-anchor="end" font-size="11.5" ` +
-             `fill="${WARNA.teks}"${tebal}>${esc(label)}</text>`;
+      const tebal = it.aktif ? ' pr-bar-aktif' : '';
+      label += `<span class="pr-ax pr-bar-nama${tebal}" ` +
+        `style="left:${kiriPersen(pad.kiri - 8)}%;top:${atasPersen(cy)}%">${esc(nama)}</span>`;
 
       // Nilai yang belum masuk TIDAK digambar sebagai batang nol — batang setinggi nol
       // bertulisan "0" terbaca sebagai angka yang seolah pasti nol, padahal yang benar
       // "belum diketahui". Aturan "kosong bukan nol" yang sama dengan garis().
       if (!angka(it.nilai)) {
-        out += `<text x="${pad.kiri}" y="${bulat(cy + 3)}" font-size="11.5" ` +
-               `fill="${WARNA.samar}">${esc(KOSONG)}</text>`;
+        label += `<span class="pr-ax pr-bar-nilai pr-bar-kosong" ` +
+          `style="left:${kiriPersen(pad.kiri)}%;top:${atasPersen(cy)}%">${esc(KOSONG)}</span>`;
         return;
       }
 
@@ -3515,9 +3566,10 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
       // panjang batang dua kali, dan warnanya berpindah entitas begitu urutannya berubah.
       const lebar = Math.max(0, bulat((Math.max(0, it.nilai) / max) * kw));
       out += `<rect x="${pad.kiri}" y="${bulat(cy - tinggiBar / 2)}" width="${lebar}" ` +
-             `height="${bulat(tinggiBar)}" rx="3" fill="${it.warna || WARNA.seri}"/>` +
-             `<text x="${pad.kiri + lebar + 6}" y="${bulat(cy + 3)}" font-size="11.5" ` +
-             `fill="${WARNA.teks}">${esc(Math.round(it.nilai).toLocaleString('id-ID'))}</text>`;
+             `height="${bulat(tinggiBar)}" rx="3" fill="${it.warna || WARNA.seri}"/>`;
+      label += `<span class="pr-ax pr-bar-nilai" ` +
+        `style="left:${kiriPersen(pad.kiri + lebar + 6)}%;top:${atasPersen(cy)}%">` +
+        `${esc(Math.round(it.nilai).toLocaleString('id-ID'))}</span>`;
     });
     /** Hit selebar PENUH kanvas, bukan hanya batangnya: barisnya memuat nama di kiri dan angka
      *  di kanan batang, dan pembaca membidik BARISNYA. Tooltipnya membawa nama LENGKAP — di
@@ -3530,8 +3582,10 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
       baris: [['Nilai', F.nilai(it.nilai, satuan), it.warna || WARNA.seri]],
     })).join('');
 
-    return `<svg viewBox="0 0 ${w} ${h}" role="img" aria-label="Perbandingan antar sub unit"` +
-      `${atributKanvas(items.length)}>${out}${bands}</svg>`;
+    return bungkusKanvas(
+      `<svg viewBox="0 0 ${w} ${h}" role="img" aria-label="Perbandingan antar sub unit"` +
+        `${atributKanvas(items.length)}>${out}${bands}</svg>`,
+      label);
   }
 
   /** Batang bullet untuk kartu summary FA 2: satu batang aktual di dalam palung, dengan
@@ -4344,6 +4398,11 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
    *  LENGKAPnya tetap terbaca di tabel di bawah donutnya, jadi tidak ada item yang hilang. */
   const IRISAN_DONAT = 8;
 
+  /** Ruang kolom nama pada chart batang PER TAHUN, satuan viewBox. Jauh lebih kecil daripada
+   *  bawaan `bar()` (150) karena namanya cuma "2024": dengan bawaannya, seperempat lebar kanvas
+   *  jadi gutter kosong dan batangnya kependekan. Terukur di layar 26 Agustus. */
+  const PAD_KIRI_TAHUN = 60;
+
   /** Item -> irisan donut: tujuh terbesar apa adanya, sisanya satu irisan "Lainnya".
    *
    *  Vacant TIDAK diistimewakan di sini walau ia punya arti sendiri: kalau ia dipaksa selalu
@@ -4894,8 +4953,8 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
       `<div class="pr-dr-chart"><div class="pr-dr-panel">` +
         `<div class="pr-chart-title">${esc(m.node.nama)} per Tahun &middot; ` +
           `${esc(labelRentangTahunan())}</div>` +
-        `<div class="pr-ov-chart-grid pr-ov-chart-sendiri"><div class="pr-ov-chart">` +
-          CH.bar({ items: batang, h: 96, satuan: m.satuan }) +
+        `<div class="pr-ov-chart-grid pr-ov-chart-sendiri pr-ov-chart-tahun"><div class="pr-ov-chart">` +
+          CH.bar({ items: batang, h: 96, satuan: m.satuan, padKiri: PAD_KIRI_TAHUN }) +
         `</div></div>` +
       `</div></div>` + turunan;
   }
@@ -5846,10 +5905,10 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
     // sejak mode ini lahir 23 Agustus dan tidak pernah terlihat karena mode ini belum pernah
     // diukur. Dengan penahannya: 544 px, skala 1,11x, teks 12,8 px.
     return `<div class="pr-ov-kartu">${kartu}</div>` +
-      `<div class="pr-ov-chart-grid pr-ov-chart-sendiri"><div class="pr-ov-chart">` +
+      `<div class="pr-ov-chart-grid pr-ov-chart-sendiri pr-ov-chart-tahun"><div class="pr-ov-chart">` +
         `<div class="pr-chart-title">${esc(NAMA_REVENUE)} per Tahun &middot; ` +
           `${esc(labelRentangTahunan())}</div>` +
-        CH.bar({ items: batang, h: 96, satuan: 'rp_mn' }) +
+        CH.bar({ items: batang, h: 96, satuan: 'rp_mn', padKiri: PAD_KIRI_TAHUN }) +
       `</div></div>`;
   }
 
