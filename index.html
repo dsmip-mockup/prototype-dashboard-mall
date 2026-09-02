@@ -425,7 +425,14 @@ select.ds-input:read-only { padding-right: 2.25rem; }
                font: inherit; color: var(--t-text-muted); text-decoration: underline; }
 .pr-dr-crumb:hover { color: var(--smra-orange); }
 .pr-dr-kini { font-weight: 600; overflow-wrap: anywhere; color: var(--t-text); }
-.pr-dr-panel { min-width: 0; }
+/* Kartu blok telusur — Summary Data, chart tren, dan Detail List Data, ketiganya memakai kelas
+   ini. Sampai 1 September yang berkartu HANYA chart-nya (aturan turunan `.pr-dr-chart
+   .pr-dr-panel` di bawah, kini dihapus karena sudah termuat di sini); kedua blok lainnya duduk
+   langsung di latar halaman, jadi halamannya terbaca seperti satu kartu yang mengapung di antara
+   dua daftar telanjang. Pemilik meminta keduanya berkartu 2 September, dengan tangkapan layar
+   bertanda biru pada kedua judulnya. */
+.pr-dr-panel { min-width: 0; background: var(--t-surf); border: 1px solid var(--t-border);
+               border-radius: var(--radius-lg); padding: var(--space-4); }
 .pr-dr-panel svg { width: 100%; height: auto; display: block; }
 .pr-dr-angka-atas { display: flex; flex-direction: column; gap: var(--space-2);
                     align-items: flex-start; }
@@ -529,8 +536,8 @@ select.ds-input:read-only { padding-right: 2.25rem; }
    WCAG 1.4.11 untuk unsur grafis — sementara chart yang sama di halaman awal dapat 3,04 karena
    ia berada di dalam kartu. Yang berubah alasnya, bukan paletnya: menggeser oranye Summarecon
    demi 0,1 poin akan menyentuh seluruh prototype dan warna itu milik design system. */
-.pr-dr-chart .pr-dr-panel { background: var(--t-surf); border: 1px solid var(--t-border);
-                            border-radius: var(--radius-lg); padding: var(--space-4); }
+/* Aturan `.pr-dr-chart .pr-dr-panel` yang dulu di sini DIHAPUS 2 September: sifatnya sudah
+   pindah ke `.pr-dr-panel` sendiri, karena kedua blok lain ikut berkartu. */
 
 .pr-dr-tabel { overflow-x: auto; }
 /* Tabel Data Info di halaman awal. Ditambahkan 24 Agustus sesudah diukur di jendela 500 px:
@@ -755,6 +762,18 @@ select.ds-input:read-only { padding-right: 2.25rem; }
    sebagai garis menggantung di bawah kepala tanpa ada yang dipisahkan. */
 .pr-cv-isi { border-top: 1px solid var(--t-border); padding: var(--space-4); }
 .pr-cv-isi[hidden] { display: none; }
+/* Tumpukan collapse TINGKAT KEDUA — group "Mall" di Dashboard Management memuat tiga seksi
+   (27 Agustus, hasil rapat Tim Manajemen). Komponennya sama, yang dibedakan hanya kepalanya:
+   dengan latar --t-surf yang sama dengan pembungkusnya, kepala seksi dalam terbaca sederajat
+   dan pembacanya kehilangan jejak sedang berada di dalam apa. Kartu di dalamnya tetap
+   berlatar --t-surf, jadi ia justru menonjol di atas kepala yang lebih gelap.
+   Yang diberi warna KEPALANYA, bukan seluruh seksinya: isi seksi memuat kanvas chart dan
+   kartu yang kontrasnya sudah diukur terhadap --t-surf. */
+.pr-cv-dalam { gap: var(--space-2); }
+.pr-cv-dalam > .pr-cv-seksi > .pr-cv-kepala { background: var(--t-surf-2); }
+.pr-cv-dalam > .pr-cv-seksi > .pr-cv-kepala:hover { background: var(--t-border); }
+/* Ikonnya dibalik: latar kepalanya kini --t-surf-2, jadi ikon berlatar --t-surf-2 akan lenyap. */
+.pr-cv-dalam > .pr-cv-seksi > .pr-cv-kepala .pr-cv-ikon { background: var(--t-surf); }
 /* Seksi Overview, susunan 21 Agustus (permintaan pemilik): baris kartu DI ATAS — kartu
    angka entitas lebih dulu, lalu kartu tiap turunannya — baru barisan chart di bawahnya.
    Empat kolom supaya PT SMIP (1 kartu angka + 3 unit bisnis) tepat satu baris; MALL yang
@@ -762,16 +781,30 @@ select.ds-input:read-only { padding-right: 2.25rem; }
 .pr-ov-kartu { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
                gap: var(--space-3); margin-bottom: var(--space-4); }
 @media (max-width: 991px) { .pr-ov-kartu { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+/* Barisan kartu mode Perbandingan 3 Tahun: TIGA kartu, jadi empat kolom yang dipatok di atas
+   menyisakan satu kolom kosong di kanan — pemilik meminta itu dirapikan 2 September, sebaris
+   dengan permintaan yang sama untuk chart di bawahnya ("selebar baris").
+   `auto-fit`, bukan `repeat(3, …)`: ia MENGURUNGKAN track yang kosong, jadi susunannya tetap
+   benar kalau jumlah tahun yang dibandingkan kelak berubah — dan `minmax(14rem, …)` yang
+   membuatnya melipat sendiri di lebar HP alih-alih memaksa tiga kartu sempit berdampingan.
+   Ditulis SESUDAH aturan @media di atas dengan sengaja: kekhususannya sama (0,1,0), jadi yang
+   menang urutan — dan di lebar HP `auto-fit` memang yang benar untuk ketiga kartu ini. */
+.pr-ov-kartu-tahun { grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); }
 /* Kedua chart berdampingan; `auto-fit` supaya halaman yang hanya punya satu chart
    (halaman detail, tanpa tren) memakai lebar penuh alih-alih menyisakan kolom kosong. */
 .pr-ov-chart-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
                     gap: var(--space-4); }
-/* Barisan chart yang isinya HANYA SATU chart. `auto-fit` di atas membuatnya merentang selebar
-   halaman, dan pemilik menilainya "terlalu besar" (23 Agustus) — keadaan itu muncul begitu satu
-   sub unit dipilih, karena sub unit tidak punya turunan sehingga chart kontribusinya hilang.
-   Lebarnya ditahan kira-kira selebar SATU kolom pada susunan dua chart, jadi ukurannya konsisten
-   dengan keadaan yang tidak difilter — bukan angka yang dikira-kira sendiri. */
-.pr-ov-chart-sendiri { grid-template-columns: minmax(0, 1fr); max-width: 34rem; }
+/* Barisan chart yang isinya HANYA SATU chart — pada filter satu unit bisnis, dan pada satu sub
+   unit, karena di sana chart kontribusi memang dihilangkan.
+   Sampai 1 September lebarnya DITAHAN 34rem: `auto-fit` di atas membuatnya merentang selebar
+   halaman dan pemilik menilainya "terlalu besar" (23 Agustus). Penahan itu **dicabut pemilik
+   2 September** — beliau menandai biru seluruh pita kosong di sebelah chart: "biar spacenya gak
+   kosong". Yang menjaga chart ini tidak jadi terlalu besar sekarang bukan lebarnya, melainkan
+   pasangan kanvas dua varian di dalamnya (`.pr-kanvas-kolom`, container query): tingginya tetap
+   ≤ 280 px selebar apa pun kolomnya, dan label sumbunya HTML 12 px yang tidak ikut diskalakan.
+   Ada penjaganya di tests/tampilan.test.js — termasuk yang melarang penahan lebar kembali.
+   Yang TETAP ditahan: barisan chart per tahun, lewat `.pr-ov-chart-tahun` di bawah. */
+.pr-ov-chart-sendiri { grid-template-columns: minmax(0, 1fr); }
 /* Chart perbandingan per tahun: **sedang** — permintaan pemilik 26 Agustus, *"terlalu kecil …
    tidak kecil tidak kebesaran"*. Lebarnya bisa dipilih bebas begini justru karena label chart
    batang sudah keluar dari SVG (lihat bar() di chart.js): sebelum itu melebarkan chart otomatis
@@ -781,7 +814,13 @@ select.ds-input:read-only { padding-right: 2.25rem; }
    52rem ≈ 832 px: lebih besar daripada penahan lama (544 px) dan tetap jauh di bawah kolom
    penuh (1.429 px pada 1536 px), yang dinilai pemilik "terlalu besar" untuk chart telusur
    23 Agustus. */
-.pr-ov-chart-tahun { max-width: 52rem; }
+/* Penahan 52rem DICABUT pemilik 2 September, tangkapan layar bertanda biru pada pita kosong di
+   kanan batangnya: "tolong di sesuaikan ya jangan ada space kosong". Kelasnya dibiarkan ADA —
+   ia penanda bentuk ini di ketiga tempatnya, dan penjaga test memakainya. Yang menahan geometri
+   sekarang pasangan kanvas `kanvasBarKolom()` di render.js: viewBox-nya ikut lebar kolom, jadi
+   batangnya tetap ~24 px tebal, bukan 46 px seperti waktu penahan ini dicabut tanpa pasangan
+   kanvasnya (terukur di browser hari itu). */
+.pr-ov-chart-tahun { grid-template-columns: minmax(0, 1fr); }
 .pr-ov-chart { min-width: 0; }
 .pr-ov-chart svg { width: 100%; height: auto; display: block; }
 /* Kartu angka entitas: kartu pertama di baris itu, jadi bentuknya harus setara kartu KPI
@@ -844,6 +883,13 @@ select.ds-input:read-only { padding-right: 2.25rem; }
 .pr-fp-grid-besar { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 @media (max-width: 1199px) { .pr-fp-grid-besar { grid-template-columns: minmax(0, 1fr); } }
 .pr-fp-kartu-besar { padding: var(--space-4); }
+/* Kartu tren di pangkal seksi Chart Financial Performance (2 September, permintaan pemilik):
+   satu kartu selebar baris DI ATAS keempat kartu chart, jadi ia perlu jarak ke grid di
+   bawahnya — grid itu punya `gap`, tetapi kartu ini di luarnya. Kanvasnya pasangan dua varian,
+   dan penahan lebar `.pr-kanvas-bungkus` dicabut dengan aturan yang sama seperti kartu besar
+   lainnya (lihat catatan di atas), karena di sini pun kartunya selebar baris. */
+.pr-fp-kartu-tren { margin-bottom: var(--space-3); }
+.pr-fp-kartu-tren .pr-kanvas-bungkus { max-width: none; }
 /* Penahannya dicabut HANYA untuk kanvas dua varian. Sempat dicabut untuk `.pr-fp-chart svg`
    seluruhnya, dan itu terukur salah: batang bullet di kartu `kuartal` ikut kena, direntang ke
    1362 px, dan karena viewBox-nya 240x14 tingginya jadi 79 px — kartunya 729 px, hampir dua
@@ -1059,7 +1105,7 @@ html, body { overflow-x: hidden; }
        lupa diperbarui, dan cap yang salah lebih buruk daripada tidak ada. -->
   <footer class="main-footer">
     <span>Prototype Dashboard Data Management &middot; PT SMIP &middot; <strong>Seluruh angka pada halaman ini adalah data contoh</strong>, bukan angka riil.</span>
-    <span class="pr-versi">Versi 26 Agustus 2026</span>
+    <span class="pr-versi">Versi 2 September 2026</span>
   </footer>
 </div>
 </div>
@@ -1121,10 +1167,17 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
   //  antar Sub Unit - Summarecon Mall"). HANYA MALL yang punya: pemilik tidak menyebutkan merek
   //  untuk HOTEL maupun SPM, dan mengarangnya sendiri berarti menaruh nama yang belum beliau
   //  setujui di layar rapat.
+  //  `nama` SPM dipendekkan jadi "OFFICE BUILDING" atas permintaan pemilik 27 Agustus ("untuk
+  //  kata SPM di OFFICE BUILDING SPM di hilangkan saja"). Menu sidebarnya menyusul di permintaan
+  //  berikutnya, "Dashboard SPM" -> "Dashboard Office Building" (lihat `HALAMAN`), jadi kata
+  //  "SPM" tidak lagi muncul di layar sama sekali.
+  //
+  //  Kode-nya TETAP 'SPM' — ia dipakai state, kamus, penanda menu aktif, dan nama berkas acuan;
+  //  mengubahnya hanya mengubah hal yang tidak dilihat pemakai.
   const UNIT_BISNIS = [
-    { kode: 'MALL',  nama: 'MALL',                subNama: 'Mall',   merekSub: 'Summarecon Mall' },
-    { kode: 'HOTEL', nama: 'HOTEL',               subNama: 'Hotel' },
-    { kode: 'SPM',   nama: 'OFFICE BUILDING SPM', subNama: 'Gedung' },
+    { kode: 'MALL',  nama: 'MALL',            subNama: 'Mall',   merekSub: 'Summarecon Mall' },
+    { kode: 'HOTEL', nama: 'HOTEL',           subNama: 'Hotel' },
+    { kode: 'SPM',   nama: 'OFFICE BUILDING', subNama: 'Gedung' },
   ];
 
   // ── Menjadikan angka bulanan jadi angka tahunan (23 Agustus 2026) ───────────────────────
@@ -1171,6 +1224,33 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
     || 'jumlah';
 
   const unitBisnisDari = (kode) => UNIT_BISNIS.find((u) => u.kode === kode) || null;
+  /** Nama unit bisnis yang DIPAJANG ke pemakai. Satu tempat, dan itu perlu: sampai 27 Agustus
+   *  tiga pemanggil (app.js dua kali, render.js dua kali) menuliskan sendiri
+   *  `kode === 'SPM' ? 'OFFICE BUILDING SPM' : kode`, sehingga waktu pemilik meminta kata "SPM"
+   *  dihilangkan nama itu harus diubah di lima tempat sekaligus — dan yang terlewat tidak
+   *  memunculkan satu pun error, hanya dua nama berbeda untuk unit yang sama di layar.
+   *  Kode yang tidak ada di daftar dikembalikan apa adanya; itu yang membuat MALL dan HOTEL
+   *  tidak butuh cabang khusus. */
+  const namaUnitBisnis = (kode) => unitBisnisDari(kode)?.nama || kode;
+
+  /** Pil unit di kepala halaman: nama yang dipajang + dua huruf ikonnya.
+   *
+   *  Ada DI KAMUS, bukan di app.js, dan itu bukan selera: app.js butuh DOM sehingga tidak
+   *  dimuat suite test ini, jadi apa pun teks yang lahir di sana **tidak terjangkau penjaga**.
+   *  Kelemahan itu nyata — waktu nama SPM dipendekkan 27 Agustus, pil ini masih memajang
+   *  "Semua SPM" karena app.js menyisipkan KODE unit bisnisnya (`Semua ${h.unitBisnis}`), dan
+   *  penjaga yang memindai keluaran render.js tidak bisa melihatnya. Yang ketemu di browser.
+   *
+   *  Perilakunya dipertahankan apa adanya: sub unit yang dipilih memakai namanya sendiri;
+   *  tanpa pilihan, halaman modul memakai "Semua <unit bisnis>" dan halaman gabungan "PT SMIP". */
+  const judulPilUnit = (kodeUnit, kodeSub) => {
+    const daftar = kodeUnit ? (SUB_UNIT[kodeUnit] || []) : UNIT_BISNIS;
+    const pilih = daftar.find((s) => s.kode === kodeSub);
+    return {
+      judul: pilih ? pilih.nama : (kodeUnit ? `Semua ${namaUnitBisnis(kodeUnit)}` : 'PT SMIP'),
+      ikon: (pilih ? pilih.kode : 'SM').slice(0, 2).toUpperCase(),
+    };
+  };
   /** Label kontrol sub unit (huruf besar, mengikuti label filter lain) dan teks opsi
    *  konsolidasinya. Satu tempat, supaya keduanya tidak bisa menyimpang satu dari yang lain. */
   const labelSubUnit = (kodeUnit) => (unitBisnisDari(kodeUnit)?.subNama || 'Sub Unit').toUpperCase();
@@ -1331,7 +1411,7 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
     d('AVERAGE RENTAL', 'rp_m2'),
   ];
 
-  // ── MALL · Operation (13 kelompok) — Lampiran A.3 ──
+  // ── MALL · Operation (15 kelompok) — Lampiran A.3 + No. 14 & 15 (27 Agustus 2026) ──
   const OPERATION = [
     g('JUMLAH LOT PARKIR', 'unit', 'jumlah', [
       g('MOBIL', 'unit', 'jumlah', [
@@ -1404,14 +1484,38 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
       d('S2', 'orang'),
       d('S3', 'orang'),
     ]),
+    // No. 14 & 15 berkas acuan Operation (27 Agustus 2026). Keduanya BELUM ada waktu kamus ini
+    // dibangun — pemilik menambahkannya di berkasnya, lalu menunjuk barisnya waktu Tim Manajemen
+    // meminta kedua metrik ini jadi kartu chart.
+    //
+    // Yang di berkas tertulis sebagai turunan ("MOBIL (Budget / Actual)", "Persentage (%)",
+    // "TAHUN 2025 VS 2026") TIDAK jadi simpul kamus: Budget vs Actual, VAR%, dan pembanding
+    // tahun lalu sudah dipajang prototype ini untuk SETIAP metrik. Menjadikannya simpul akan
+    // menggandakan angka yang sama dan membuat rollup induknya salah. Yang tersisa jadi simpul
+    // hanya pemecahan yang benar-benar dimensi: MOBIL dan MOTOR di bawah kendaraan.
+    g('TOTAL TRAFFIC KENDARAAN', 'unit', 'jumlah', [
+      d('MOBIL', 'unit'),
+      d('MOTOR', 'unit'),
+    ]),
+    d('TOTAL TRAFFIC PENGUNJUNG', 'orang'),
   ];
 
-  // ── HOTEL (11 kelompok) — Lampiran A.4 ──
+  // ── HOTEL (12 kelompok) — Lampiran A.4 ──
+  //
+  // 11 kelompok sampai 27 Agustus. `M.O.D REVENUE` (No. 5 berkas acuan
+  // `HOTEL\DASHBOARD_UTAMA_HOTEL.xlsx`) menyusul 1 September, waktu pemilik memilih ketiga
+  // pendapatan itu jadi kartu chart group Hotel dan barisnya ternyata tidak pernah masuk ke
+  // sini. Kejadian yang sama dengan No. 14 & 15 kamus Operation: **berkas acuan pemilik
+  // bertambah/terlewat, jadi bacalah berkasnya lagi sebelum menyimpulkan metriknya tidak ada.**
+  //
+  // Urutannya persis berkas acuan — M.O.D di antara F&B dan TOTAL REVENUE, karena TOTAL
+  // REVENUE (No. 6) memang jumlah ketiga pendapatan di atasnya.
   const HOTEL = [
     d('OCCUPANCY PERSENTASE (%)', 'persen'),
     d('AVERAGE ROOM RATE', 'rp'),
     d('ROOM REVENUE', 'rp_mn'),
     d('F&B REVENUE', 'rp_mn'),
+    d('M.O.D REVENUE', 'rp_mn'),
     d('TOTAL REVENUE', 'rp_mn'),
     d('GOP DAN GOP (%)', 'persen'),
     d('EBITDA MARGIN', 'persen'),
@@ -1421,33 +1525,53 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
     d('NO OF EMPLOYEE', 'orang'),
   ];
 
-  // ── OFFICE BUILDING SPM (3 kelompok) — Lampiran A.5 ──
+  // ── OFFICE BUILDING (3 kelompok) — Lampiran A.5, berkas `SPM\DASHBOARD_UTAMA_SPM.xlsx` ──
+  // Kamus SPM = daftar **Summary** berkas acuan pemilik `SPM\DASHBOARD_UTAMA_SPM.xlsx`, RATA
+  // dan urut sama. Permintaan pemilik 2 September: *"Untuk Office Building Detail dan Dashboard
+  // Office Building. BALANCE SCORECARD di hilangkan. Rubah menjadi sesuai di file berikut."*
+  //
+  // Sampai 1 September isinya TIGA akar — `BALANCE SCORECARD` (yang membungkus tiga perspektif
+  // Balanced Scorecard: Financial · Customer · Internal Process), `OCCUPANCY`, dan
+  // `NO OF EMPLOYEE`. Susunan itu datang dari Lampiran A.5, acuan yang dipakai membangun kamus
+  // ini 12 Agustus; berkas acuan pemilik yang sekarang tidak mengenal pembungkus itu sama sekali,
+  // dan sebelas metrik yang dulu tersembunyi dua lapis di dalamnya kini jadi akar sendiri.
+  //
+  // Tiga hal yang perlu diingat tentang daftar ini:
+  //
+  //  1. **Ejaannya HURUF BESAR, mengikuti berkasnya** — sebelumnya Title Case ('Revenue',
+  //     'Collection'). Itu sekaligus menutup butir 14 RINGKASAN 8: judul kartu chart SPM sudah
+  //     huruf besar sejak 1 September, jadi dulu satu metrik punya dua ejaan di satu layar.
+  //  2. **Dua ejaan DIBETULKAN dari berkasnya**, keduanya salah ketik yang jelas dan sudah
+  //     dicatat 1 September: No. 3 tertulis "EEBITDA", No. 4 "NET ROFIT BEFORE INTEREST (NPBI)".
+  //  3. **`Expense Ratio` DIHAPUS.** Ia tidak ada di berkas acuan — dan pertanyaan yang
+  //     menggantung sejak 1 September (butir 15 RINGKASAN 8: metrik lain, atau pengganti
+  //     EXPENSE?) terjawab oleh permintaan ini: yang ada di berkasnya hanya EXPENSE. Rantai
+  //     turunannya tetap utuh, hanya rasionya tidak lagi jadi metrik sendiri — lihat
+  //     TURUNAN.spm di `data.js`.
+  //
+  // Nomor di berkasnya melompat: "12." dipakai DUA KALI (% ON TIME COMPLAINT HANDLING dan
+  // OCCUPANCY), jadi barisnya empat belas walau nomor terakhirnya 13. Urutan di sini mengikuti
+  // urutan BARIS, bukan nomornya.
   const SPM = [
-    g('BALANCE SCORECARD', 'rasio', 'grup', [
-      g('Financial Perspective', 'rasio', 'grup', [
-        d('Net Profit Before Interest (NPBI)', 'rp_mn'),
-        d('Revenue', 'rp_mn'),
-        d('Expense Ratio', 'persen', biaya),
-        d('Collection', 'persen'),
-        d('Operating Cost Recovery', 'persen'),
-        d('Rasio Karyawan terhadap revenue', 'persen', biaya),
-      ]),
-      g('Customer Perspective', 'rasio', 'grup', [
-        d('Customer Satisfaction Index', 'indeks'),
-      ]),
-      g('Internal Process', 'persen', 'grup', [
-        d('Power Generating and Distribution System (Genset)', 'persen'),
-        d('Transportation System', 'persen'),
-        d('Audit Implementasi Sistem Manajemen', 'persen'),
-        d('% On Time Complaint Handling', 'persen'),
-      ]),
-    ]),
+    d('REVENUE', 'rp_mn'),
+    d('EXPENSE', 'rp_mn', biaya),
+    d('EBITDA', 'rp_mn'),
+    d('NET PROFIT BEFORE INTEREST (NPBI)', 'rp_mn'),
+    d('COLLECTION', 'persen'),
+    d('OPERATING COST RECOVERY', 'persen'),
+    d('RASIO KARYAWAN TERHADAP REVENUE', 'persen', biaya),
+    d('CUSTOMER SATISFACTION INDEX', 'indeks'),
+    d('POWER GENERATING & DISTRIBUTION SYSTEM (GENSET)', 'persen'),
+    d('TRANSPORTATION SYSTEM', 'persen'),
+    d('AUDIT IMPLEMENTASI SISTEM MANAJEMEN', 'persen'),
+    d('% ON TIME COMPLAINT HANDLING', 'persen'),
     d('OCCUPANCY', 'persen'),
     g('NO OF EMPLOYEE', 'orang', 'jumlah', [
       d('Inhouse', 'orang'),
       d('Outsource', 'orang'),
     ]),
   ];
+
 
   const ORGANISASI = {
     nama: 'PT SMIP', satuan: 'rp_mn', tipe: 'jumlah',
@@ -1463,7 +1587,7 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
     // `judul` dipakai di tiga tempat sekaligus: menu sidebar, breadcrumb, dan judul halaman (h1).
     // Nama-nama ini ditetapkan pemilik 13 Agustus 2026 supaya seluruh menu berawalan "Dashboard".
     { kode: 'ringkasan', judul: 'Dashboard Management', unitBisnis: null, metrik: [],
-      kpi: ['PT SMIP', 'MALL', 'HOTEL', 'OFFICE BUILDING SPM'] },
+      kpi: ['PT SMIP', 'MALL', 'HOTEL', 'OFFICE BUILDING'] },
     // `seksi` + `entitas` (23 Agustus): kelima menu ini MENJADI halaman detail seksinya, lengkap
     // dengan telusur — permintaan pemilik, yang menyebutkan pasangannya satu per satu. Ditulis
     // eksplisit, BUKAN diturunkan otomatis: untuk entitas HOTEL dan SPM, seksi 'finansial' dan
@@ -1486,9 +1610,13 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
     { kode: 'hotel', judul: 'Dashboard Hotel', unitBisnis: 'HOTEL', metrik: HOTEL,
       seksi: 'hotel', entitas: 'HOTEL',
       kpi: ['OCCUPANCY PERSENTASE (%)', 'AVERAGE ROOM RATE', 'TOTAL REVENUE', 'GOP DAN GOP (%)'] },
-    { kode: 'spm', judul: 'Dashboard SPM', unitBisnis: 'SPM', metrik: SPM,
+    // "Dashboard SPM" -> "Dashboard Office Building" (27 Agustus, permintaan pemilik menyusul
+    // pemendekan nama unit bisnisnya). Kode halamannya tetap 'spm': ia dipakai `state.halaman`,
+    // penanda menu aktif di sidebar, dan pasangan seksi/entitas di bawah ini.
+    { kode: 'spm', judul: 'Dashboard Office Building', unitBisnis: 'SPM', metrik: SPM,
       seksi: 'spm', entitas: 'SPM',
-      kpi: ['OCCUPANCY', 'Revenue', 'Net Profit Before Interest (NPBI)', 'Customer Satisfaction Index'] },
+      kpi: ['OCCUPANCY', 'REVENUE', 'NET PROFIT BEFORE INTEREST (NPBI)',
+            'CUSTOMER SATISFACTION INDEX'] },
   ];
 
   /** Seksi + entitas yang menjadi isi satu halaman modul, atau null kalau ia bukan halaman modul. */
@@ -1572,7 +1700,7 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
       warna: 'pr-c-1' },
     { kode: 'HOTEL', nama: 'HOTEL',               unitBisnis: 'HOTEL', ikon: 'bi-house-door',
       warna: 'pr-c-2' },
-    { kode: 'SPM',   nama: 'OFFICE BUILDING SPM', unitBisnis: 'SPM',   ikon: 'bi-building',
+    { kode: 'SPM',   nama: 'OFFICE BUILDING',     unitBisnis: 'SPM',   ikon: 'bi-building',
       warna: 'pr-c-3' },
   ];
 
@@ -1584,7 +1712,10 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
   // Collapse View dinyalakan. Di halaman detail hanya Overview; di Dashboard Management
   // tidak ada satu pun — pemilik meminta seluruh seksinya tertutup saat halaman dibuka.
   const SEKSI_DETAIL = [
-    { kode: 'overview',  judul: 'Overview',              ikon: 'bi-grid-1x2', bukaAwal: true,
+    // "Overview Revenue", bukan "Overview" saja, sejak 27 Agustus (Tim Manajemen menamainya
+    // begitu): isinya memang seluruhnya Total Revenue — angka besarnya, kartu per unit bisnis,
+    // kontribusinya, dan trennya.
+    { kode: 'overview',  judul: 'Overview Revenue',       ikon: 'bi-grid-1x2', bukaAwal: true,
       untuk: ['SMIP', 'MALL', 'HOTEL', 'SPM'] },
     { kode: 'finansial', judul: 'Financial Performance', ikon: 'bi-cash-coin',
       untuk: ['SMIP', 'MALL', 'HOTEL', 'SPM'] },
@@ -1592,12 +1723,18 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
       untuk: ['SMIP', 'MALL'] },
     // Judulnya menyebut ketiga divisi yang datanya masuk seksi ini (permintaan pemilik
     // 21 Agustus) — berkas acuan Operation memang memuat metrik Operation, Marketing, dan HR.
-    { kode: 'operation', judul: 'Operation, Marketing, HR', ikon: 'bi-gear',
+    // Divisi ketiga ditulis "HRD" sejak 27 Agustus, ejaan yang dipakai Tim Manajemen dan yang
+    // memang sudah dipakai pohon Sumber Data serta keterangan sumber kartunya.
+    { kode: 'operation', judul: 'Operation, Marketing, HRD', ikon: 'bi-gear',
       untuk: ['SMIP', 'MALL'] },
+    // Keduanya HANYA di PT SMIP sejak 2 September. Di halaman entitasnya sendiri, seksi
+    // Financial Performance kini memajang kartu group ini persis (lihat KARTU_FINANSIAL.HOTEL
+    // dan .SPM), jadi seksi kedua yang isinya sama hanya memanjangkan halaman. Di PT SMIP
+    // keduanya tetap: di sanalah mereka membedakan satu unit bisnis dari yang lain.
     { kode: 'hotel',     judul: 'Hotel',                 ikon: 'bi-house-door',
-      untuk: ['SMIP', 'HOTEL'] },
-    { kode: 'spm',       judul: 'Office Building SPM',   ikon: 'bi-building',
-      untuk: ['SMIP', 'SPM'] },
+      untuk: ['SMIP'] },
+    { kode: 'spm',       judul: 'Office Building',       ikon: 'bi-building',
+      untuk: ['SMIP'] },
   ];
 
   // Halaman ini SENGAJA tidak masuk `HALAMAN`: ia tidak punya menu sidebar sendiri
@@ -1619,11 +1756,14 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
   //  - PT SMIP: REVENUE-nya konsolidasi ketiga unit bisnis (satu-satunya yang bisa dijumlahkan
   //    lintas unit), tiga sisanya diambil dari FA MALL dan DIBERI KETERANGAN sumbernya —
   //    memajangnya tanpa keterangan akan terbaca sebagai angka seluruh perusahaan.
-  //  - HOTEL dan OFFICE BUILDING SPM: padanan terdekat dari kamus masing-masing.
-  // Pemilihan untuk PT SMIP, HOTEL, dan SPM adalah **keputusan Claude yang belum dikonfirmasi
-  // pemilik** — ubah di sini kalau beliau menghendaki metrik lain.
+  //  - HOTEL dan OFFICE BUILDING: padanan terdekat dari kamus masing-masing.
+  // Pemilihan untuk HOTEL dan SPM adalah **keputusan Claude yang belum dikonfirmasi pemilik** —
+  // ubah di sini kalau beliau menghendaki metrik lain. Keempat metrik PT SMIP TIDAK lagi begitu:
+  // Tim Manajemen menetapkannya sendiri 27 Agustus.
   // `chart` = bentuk kanvasnya. Pemilik meminta keempatnya BERBEDA bentuk (20 Agustus), jadi
-  // tiap entitas memakai keempat bentuk sekali: garis · area · kolom · kuartal.
+  // tiap entitas memakai empat bentuk yang berlainan: garis · area · kolom · kuartal untuk
+  // MALL, HOTEL, dan SPM. PT SMIP memakai `komposisi` di posisi keempat sejak 27 Agustus —
+  // kartu keempatnya (ACCOUNT RECEIVABLE) memang membandingkan dua turunan, bukan satu tren.
   //
   // `kuartal` menjumlahkan tiga bulan jadi satu kuartal, jadi ia HANYA boleh dipasang pada
   // metrik bersatuan rupiah — menjumlahkan persentase tiga bulan tidak bermakna. Karena itu
@@ -1636,36 +1776,50 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
       // REVENUE di sini hanya mengulanginya. Konsekuensinya keempat kartu PT SMIP kini
       // seluruhnya dari kamus FA MALL, jadi keempatnya WAJIB berketerangan sumber — tanpa itu
       // ia terbaca sebagai angka seluruh perusahaan.
+      //
+      // Keempat metriknya DITETAPKAN Tim Manajemen 27 Agustus: EXPENSE · EBITDA · NPAT ·
+      // ACCOUNT RECEIVABLE. Tiga di antaranya menggantikan INCOME NETT, OMZET REVENUE SHARING,
+      // dan EMPLOYEE COST — ketiganya tetap ada sebagai kartu metrik di halaman
+      // Financial Performance Detail, jadi tidak ada angka yang hilang dari prototype.
       { judul: 'EXPENSE', halaman: 'keuangan', metrik: 'EXPENSE', chart: 'garis',
-        catatan: 'Sumber: FA MALL — metrik ini belum ada di HOTEL & SPM' },
-      { judul: 'INCOME NETT', halaman: 'keuangan', metrik: 'INCOME NETT', chart: 'area',
-        catatan: 'Sumber: FA MALL — metrik ini belum ada di HOTEL & SPM' },
-      { judul: 'OMZET REVENUE SHARING', halaman: 'keuangan', metrik: 'OMZET REVENUE SHARING',
-        chart: 'kolom',
-        catatan: 'Sumber: FA MALL — metrik ini belum ada di HOTEL & SPM' },
-      { judul: 'EMPLOYEE COST', halaman: 'keuangan', metrik: 'EMPLOYEE COST', chart: 'kuartal',
-        catatan: 'Sumber: FA MALL — metrik ini belum ada di HOTEL & SPM' },
+        catatan: 'Sumber: FA MALL — metrik ini belum ada di HOTEL & OFFICE BUILDING' },
+      { judul: 'EBITDA', halaman: 'keuangan', metrik: 'EBITDA', chart: 'area',
+        catatan: 'Sumber: FA MALL — metrik ini belum ada di HOTEL & OFFICE BUILDING' },
+      // 'NPAT' ada DUA KALI di kamus FA (induk 'hitung' dan detail di bawahnya). Yang terambil
+      // di sini yang pertama ditemukan, yaitu induknya — dan itu memang yang benar: nilainya
+      // sendiri yang dihitung dari kedua PAT, bukan salah satu barisnya.
+      { judul: 'NPAT', halaman: 'keuangan', metrik: 'NPAT', chart: 'kolom',
+        catatan: 'Sumber: FA MALL — metrik ini belum ada di HOTEL & OFFICE BUILDING' },
+      // ACCOUNT RECEIVABLE bertipe `grup`: ia TIDAK punya angka sendiri, hanya dua turunan yang
+      // artinya berlawanan (Collection = sudah tertagih, Aging > 60 = tertunggak). Menjumlahkan
+      // keduanya bukan angka yang lazim, dan kartu bertanda '—' terbaca seperti data yang
+      // hilang. Keputusan pemilik 27 Agustus: angka besarnya Aging > 60 — piutang yang
+      // benar-benar tertunggak, yang memang dilihat manajemen — dan chart-nya membandingkan
+      // keduanya. `nilaiDari` yang membuat itu bisa: angka besar dari turunan, chart dari induk.
+      { judul: 'ACCOUNT RECEIVABLE', halaman: 'keuangan', metrik: 'ACCOUNT RECEIVABLE',
+        nilaiDari: 'Aging > 60', chart: 'komposisi',
+        catatan: 'Sumber: FA MALL · angka besar = Aging > 60 (piutang tertunggak); '
+                 + 'chart membandingkannya dengan Collection' },
     ],
+    // MALL memakai kartu yang SAMA dengan PT SMIP sejak 2 September, permintaan pemilik: kartu
+    // chart halaman detail harus sama dengan yang di Halaman Utama, dan di Halaman Utama group
+    // Mall memang memuat keempat kartu ini. Sebelumnya REVENUE · INCOME NETT · OMZET REVENUE
+    // SHARING · EMPLOYEE COST (pemilik, 20 Agustus) — keempatnya tidak hilang: aturan 2n
+    // mengembalikannya jadi kartu metrik di halaman Financial Performance Detail.
+    //
+    // Bedanya dari PT SMIP hanya KETERANGAN sumbernya: di halaman MALL angka ini memang angka
+    // MALL sendiri, jadi "Sumber: FA MALL" di sana mubazir — dan ada penjaga test yang melarang
+    // kata "Sumber:" muncul begitu halamannya difilter ke satu unit bisnis.
     MALL: [
-      { judul: 'REVENUE', halaman: 'keuangan', metrik: 'REVENUE', chart: 'garis' },
-      { judul: 'INCOME NETT', halaman: 'keuangan', metrik: 'INCOME NETT', chart: 'area' },
-      { judul: 'OMZET REVENUE SHARING', halaman: 'keuangan', metrik: 'OMZET REVENUE SHARING',
-        chart: 'kolom' },
-      { judul: 'EMPLOYEE COST', halaman: 'keuangan', metrik: 'EMPLOYEE COST', chart: 'kuartal' },
+      { judul: 'EXPENSE', halaman: 'keuangan', metrik: 'EXPENSE', chart: 'garis' },
+      { judul: 'EBITDA', halaman: 'keuangan', metrik: 'EBITDA', chart: 'area' },
+      { judul: 'NPAT', halaman: 'keuangan', metrik: 'NPAT', chart: 'kolom' },
+      { judul: 'ACCOUNT RECEIVABLE', halaman: 'keuangan', metrik: 'ACCOUNT RECEIVABLE',
+        nilaiDari: 'Aging > 60', chart: 'komposisi',
+        catatan: 'Angka besar = Aging > 60 (piutang tertunggak); '
+                 + 'chart membandingkannya dengan Collection' },
     ],
-    HOTEL: [
-      { judul: 'TOTAL REVENUE', halaman: 'hotel', metrik: 'TOTAL REVENUE', chart: 'garis' },
-      { judul: 'ROOM REVENUE', halaman: 'hotel', metrik: 'ROOM REVENUE', chart: 'area' },
-      { judul: 'GOP DAN GOP (%)', halaman: 'hotel', metrik: 'GOP DAN GOP (%)', chart: 'kolom' },
-      { judul: 'F&B REVENUE', halaman: 'hotel', metrik: 'F&B REVENUE', chart: 'kuartal' },
-    ],
-    SPM: [
-      { judul: 'Revenue', halaman: 'spm', metrik: 'Revenue', chart: 'garis' },
-      { judul: 'Collection', halaman: 'spm', metrik: 'Collection', chart: 'area' },
-      { judul: 'Expense Ratio', halaman: 'spm', metrik: 'Expense Ratio', chart: 'kolom' },
-      { judul: 'Net Profit Before Interest (NPBI)', halaman: 'spm',
-        metrik: 'Net Profit Before Interest (NPBI)', chart: 'kuartal' },
-    ],
+    // HOTEL dan SPM diisi di bawah, sesudah `KARTU_SEKSI` — lihat catatannya di sana.
   };
 
   /** Kartu chart keempat seksi selain Overview dan Financial Performance (21 Agustus 2026).
@@ -1674,20 +1828,22 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
    *    leasing    → `MALL\DASHBOARD_UTAMA_MALL_LEASING.xlsx`     (berkas itu memuat TEPAT
    *                 empat metrik, jadi keempat kartunya memakai keempatnya)
    *    operation  → `MALL\DASHBOARD_UTAMA_MALL_OPERATION.xlsx`   (13 metrik; empat dipilih)
-   *    hotel      → `HOTEL\DASHBOARD_UTAMA_HOTEL.xlsx`           (11 metrik; empat dipilih)
-   *    spm        → `SPM\DASHBOARD_UTAMA_SPM.xlsx`               (Balance Scorecard + 2)
+   *    hotel      → `HOTEL\DASHBOARD_UTAMA_HOTEL.xlsx`           (12 metrik; empat dipilih)
+   *    spm        → `SPM\DASHBOARD_UTAMA_SPM.xlsx`               (14 baris rata sejak 2 September)
    *
    *  Berbeda dari `KARTU_FINANSIAL`, kartunya TIDAK berbeda per entitas: datanya memang milik
    *  satu unit bisnis (Leasing dan Operation milik MALL, Hotel milik HOTEL, dan seterusnya),
    *  jadi halaman gabungan PT SMIP memajang angka yang sama — dengan keterangan `sumber`,
    *  supaya tidak terbaca sebagai angka seluruh perusahaan.
    *
-   *  **Yang mana dari 13 / 11 metrik itu yang dipilih adalah keputusan Claude**, mohon
-   *  dikoreksi. Aturan yang dipakai:
-   *  - tidak mengulang metrik yang sudah tampil di seksi lain — karena itu seksi Hotel memakai
-   *    metrik operasional hotel (occupancy, room rate, jumlah tamu, margin) dan bukan TOTAL
-   *    REVENUE / ROOM REVENUE / GOP / F&B REVENUE yang sudah jadi kartu Financial Performance
-   *    HOTEL; hal yang sama untuk SPM terhadap Revenue / Collection / Expense Ratio / NPBI;
+   *  **Yang tersisa sebagai keputusan Claude tinggal SPM** — leasing dan operation ditetapkan
+   *  Tim Manajemen 27 Agustus, hotel ditetapkan pemilik 1 September. Aturan yang dipakai waktu
+   *  keempatnya masih pilihan saya, dan yang masih berlaku untuk SPM:
+   *  - tidak mengulang metrik yang sudah tampil di seksi lain — seksi SPM karena itu tidak
+   *    memakai Revenue / Collection / Expense Ratio / NPBI yang sudah jadi kartu Financial
+   *    Performance SPM. **Aturan ini sudah TIDAK berlaku untuk Hotel:** pemilik sendiri memilih
+   *    ROOM dan F&B REVENUE untuk seksi Hotel walau keduanya juga kartu Financial Performance
+   *    HOTEL, dan diberi tahu bahwa keduanya jadi tampil dua kali pada filter Hotel;
    *  - seksi Operation mewakili ketiga divisi yang kini disebut judulnya — Operation (traffic,
    *    customer satisfaction), Marketing (member aktif), dan HR (total karyawan);
    *  - `kuartal` TIDAK dipakai di sini sama sekali. Ia menjumlahkan tiga bulan, sementara
@@ -1698,26 +1854,38 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
   const KARTU_SEKSI = {
     leasing: {
       sumber: 'Leasing MALL',
+      // Urutannya ditetapkan Tim Manajemen 27 Agustus (NLA · TOTAL TENANT · OCCUPANCY RATE % ·
+      // AVERAGE RENTAL) — persis urutan berkas acuannya. Metriknya sendiri tidak berubah:
+      // berkas itu memang memuat tepat empat metrik ini. Bentuk chart mengikuti posisi, jadi
+      // OCCUPANCY RATE % dan TOTAL TENANT bertukar bentuk ikut bertukar tempat.
       kartu: [
         { judul: 'NLA', halaman: 'leasing', metrik: 'NLA', chart: 'garis' },
+        { judul: 'TOTAL TENANT', halaman: 'leasing', metrik: 'TOTAL TENANT', chart: 'area' },
         { judul: 'OCCUPANCY RATE %', halaman: 'leasing', metrik: 'OCCUPANCY RATE %',
-          chart: 'area' },
-        { judul: 'TOTAL TENANT', halaman: 'leasing', metrik: 'TOTAL TENANT', chart: 'kolom' },
+          chart: 'kolom' },
         { judul: 'AVERAGE RENTAL', halaman: 'leasing', metrik: 'AVERAGE RENTAL',
           chart: 'subunit' },
       ],
     },
     operation: {
       sumber: 'Operation · Marketing · HRD MALL',
+      // Keempatnya ditetapkan Tim Manajemen 27 Agustus: TOTAL TRAFFIC KENDARAAN ·
+      // TOTAL TRAFFIC PENGUNJUNG · MEMBER · TOTAL KARYAWAN. Dua yang pertama No. 14 & 15 berkas
+      // acuan Operation — baris yang ditambahkan pemilik sesudah kamus ini dibangun, dan yang
+      // membuat kamusnya perlu ditambah lebih dulu (lihat OPERATION di atas).
+      //
+      // TRAFFIC AVERAGE dan CUSTOMER SATISFACTION INDEX yang digantikan TIDAK hilang: keduanya
+      // kembali muncul sebagai kartu metrik di halaman Operation, Marketing, HRD Detail —
+      // kartu chart di pangkal justru MENGHAPUS metriknya dari grid di bawahnya.
       kartu: [
-        { judul: 'TRAFFIC AVERAGE', halaman: 'operation', metrik: 'TRAFFIC AVERAGE',
-          chart: 'garis' },
-        { judul: 'CUSTOMER SATISFACTION INDEX', halaman: 'operation',
-          metrik: 'CUSTOMER SATISFACTION INDEX', chart: 'area' },
-        // Marketing. Simpul induknya (JUMLAH MEMBER) sengaja tidak dipakai: ia hanya
-        // mengelompokkan, angkanya sendiri kosong, dan kartu berangka '—' terbaca seperti
-        // data yang hilang.
-        { judul: 'MEMBER AKTIF', halaman: 'operation', metrik: 'Member Aktif', chart: 'kolom' },
+        { judul: 'TOTAL TRAFFIC KENDARAAN', halaman: 'operation',
+          metrik: 'TOTAL TRAFFIC KENDARAAN', chart: 'garis' },
+        { judul: 'TOTAL TRAFFIC PENGUNJUNG', halaman: 'operation',
+          metrik: 'TOTAL TRAFFIC PENGUNJUNG', chart: 'area' },
+        // Marketing. Judulnya 'MEMBER' seperti yang diminta Tim Manajemen; metriknya
+        // 'Member Aktif', BUKAN induk 'JUMLAH MEMBER' — induk itu bertipe `grup` sehingga
+        // angkanya sengaja kosong, dan kartu berangka '—' terbaca seperti data yang hilang.
+        { judul: 'MEMBER', halaman: 'operation', metrik: 'Member Aktif', chart: 'kolom' },
         // HR.
         { judul: 'TOTAL KARYAWAN', halaman: 'operation', metrik: 'TOTAL KARYAWAN',
           chart: 'komposisi' },
@@ -1725,28 +1893,91 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
     },
     hotel: {
       sumber: 'Dashboard Hotel',
+      // Keempatnya ditetapkan pemilik 1 September: ROOM REVENUE · F&B REVENUE · M.O.D REVENUE ·
+      // EBITDA MARGIN — "sesuai di file ... yg di warnai kuning", yaitu No. 3, 4, 5, dan 8
+      // berkas acuan Hotel. Ketiga pendapatan itu berurutan seperti di berkasnya.
+      //
+      // 2 September beliau MEMBETULKAN kartu keempatnya: "untuk Grafik Hotel ternyata urutannya
+      // seperti ini ROOM REVENUE, F&B REVENUE, M.O.D REVENUE, GOP & GOP MARGIN". Jadi No. 7
+      // berkas acuan (`GOP DAN GOP (%)`) yang dipakai, bukan No. 8. `judul` memakai ejaan
+      // kamus/berkas acuan, bukan "GOP & GOP MARGIN" yang beliau tulis, supaya SATU angka
+      // tidak punya DUA nama di layar yang sama — metrik ini juga terpajang sebagai kartu
+      // Financial Performance HOTEL dengan nama itu. Ditandai di RINGKASAN 8 untuk dikoreksi.
+      // EBITDA MARGIN yang keluar tidak hilang: ia kembali ke grid kartu metrik di bawahnya.
+      //
+      // M.O.D REVENUE baru masuk kamus hari yang sama (lihat HOTEL di atas) — sebelum itu
+      // barisnya ada di berkas pemilik tetapi tidak pernah ada di sini.
+      //
+      // OCCUPANCY PERSENTASE (%), AVERAGE ROOM RATE, dan NO OF GUEST yang digantikan TIDAK
+      // hilang: kartu chart di pangkal justru MENGHAPUS metriknya dari grid di bawahnya, jadi
+      // ketiganya kembali muncul sebagai kartu metrik di sana dan di halaman Hotel Detail —
+      // "untuk yg lainnya nanti masuk ketika di detail".
+      //
+      // Diketahui dan dibiarkan atas keputusan pemilik 1 September: pada filter Hotel (dan
+      // Dashboard Management Detail entitas HOTEL) group Financial Performance memajang
+      // TOTAL REVENUE · ROOM REVENUE · GOP · F&B REVENUE, sehingga ROOM dan F&B REVENUE tampil
+      // DUA KALI dalam satu layar — sejak 2 September GOP DAN GOP (%) ikut, jadi TIGA metrik
+      // yang berulang di sana. Pada filter Semua Unit Bisnis — halaman yang diminta
+      // beliau — tidak bertabrakan: group Financial Performance di sana milik MALL.
       kartu: [
-        { judul: 'OCCUPANCY PERSENTASE (%)', halaman: 'hotel',
-          metrik: 'OCCUPANCY PERSENTASE (%)', chart: 'garis' },
-        { judul: 'AVERAGE ROOM RATE', halaman: 'hotel', metrik: 'AVERAGE ROOM RATE',
-          chart: 'area' },
-        { judul: 'NO OF GUEST', halaman: 'hotel', metrik: 'NO OF GUEST', chart: 'kolom' },
-        { judul: 'EBITDA MARGIN', halaman: 'hotel', metrik: 'EBITDA MARGIN', chart: 'subunit' },
+        { judul: 'ROOM REVENUE', halaman: 'hotel', metrik: 'ROOM REVENUE', chart: 'garis' },
+        { judul: 'F&B REVENUE', halaman: 'hotel', metrik: 'F&B REVENUE', chart: 'area' },
+        { judul: 'M.O.D REVENUE', halaman: 'hotel', metrik: 'M.O.D REVENUE', chart: 'kolom' },
+        { judul: 'GOP DAN GOP (%)', halaman: 'hotel', metrik: 'GOP DAN GOP (%)',
+          chart: 'subunit' },
       ],
     },
     spm: {
-      sumber: 'Dashboard Office Building SPM',
+      sumber: 'Dashboard Office Building',
+      // Keempatnya ditetapkan pemilik 1 September, sesudah Hotel dan dengan pola yang sama:
+      // EXPENSE · EBITDA · NET PROFIT BEFORE INTEREST (NPBI) · COLLECTION, yaitu No. 2, 3, 4,
+      // dan 5 berkas acuan `SPM\DASHBOARD_UTAMA_SPM.xlsx`, berurutan seperti di berkasnya.
+      //
+      // EXPENSE dan EBITDA baru masuk kamus hari yang sama (lihat SPM di atas).
+      //
+      // `judul` DIBETULKAN ejaannya dari berkas acuan: No. 3 di sana tertulis "EEBITDA" dan
+      // No. 4 "NET ROFIT BEFORE INTEREST (NPBI)". Keduanya salah ketik yang jelas — pemilik
+      // sendiri menyalin yang kedua waktu memintanya — dan kamus ini sudah memuat ejaan yang
+      // benar sejak awal.
+      //
+      // COLLECTION memakai `subunit`, BUKAN `komposisi` seperti NO OF EMPLOYEE yang
+      // digantikannya: ia daun tanpa turunan, jadi tidak ada bagian yang bisa dikomposisikan.
+      // `kuartal` juga tidak bisa — satuannya persen, dan menjumlahkan persen tiga bulan tidak
+      // bermakna.
+      //
+      // Diketahui dan dibiarkan atas keputusan pemilik yang sama seperti Hotel: pada filter
+      // Office Building (dan Dashboard Management Detail entitas SPM) group Financial
+      // Performance memajang Revenue · Collection · Expense Ratio · NPBI, sehingga NPBI dan
+      // COLLECTION tampil DUA KALI dalam satu layar. Pada filter Semua Unit Bisnis tidak
+      // bertabrakan: group Financial Performance di sana milik MALL.
       kartu: [
-        { judul: 'OCCUPANCY', halaman: 'spm', metrik: 'OCCUPANCY', chart: 'garis' },
-        { judul: 'CUSTOMER SATISFACTION INDEX', halaman: 'spm',
-          metrik: 'Customer Satisfaction Index', chart: 'area' },
-        { judul: '% ON TIME COMPLAINT HANDLING', halaman: 'spm',
-          metrik: '% On Time Complaint Handling', chart: 'kolom' },
-        { judul: 'NO OF EMPLOYEE', halaman: 'spm', metrik: 'NO OF EMPLOYEE',
-          chart: 'komposisi' },
+        { judul: 'EXPENSE', halaman: 'spm', metrik: 'EXPENSE', chart: 'garis' },
+        { judul: 'EBITDA', halaman: 'spm', metrik: 'EBITDA', chart: 'area' },
+        { judul: 'NET PROFIT BEFORE INTEREST (NPBI)', halaman: 'spm',
+          metrik: 'NET PROFIT BEFORE INTEREST (NPBI)', chart: 'kolom' },
+        { judul: 'COLLECTION', halaman: 'spm', metrik: 'COLLECTION', chart: 'subunit' },
       ],
     },
   };
+
+  // Seksi Financial Performance untuk HOTEL dan OFFICE BUILDING memakai KARTU_SEKSI unit itu
+  // SENDIRI — permintaan pemilik 2 September: *"untuk yg Mall, Hotel, Office Building tolong
+  // Grafik2nya di samakan seperti yg di Halaman Utama Dashboard Management"*. Di Halaman Utama
+  // (filter Semua Unit Bisnis) kedua unit itu diwakili group bernama unitnya, bukan group
+  // Financial Performance, jadi "sama seperti Halaman Utama" berarti kartu group itu.
+  //
+  // Ditulis sebagai RUJUKAN ke daftar yang sama, bukan salinannya: sebelum ini keduanya daftar
+  // tersendiri (TOTAL REVENUE · ROOM REVENUE · GOP · F&B untuk Hotel; Revenue · Collection ·
+  // Expense Ratio · NPBI untuk SPM) yang sudah berbeda dari kartu group unitnya, dan itu yang
+  // pemilik lihat sebagai tidak sama. Dengan rujukan, keduanya tidak bisa menyimpang lagi:
+  // mengganti kartu group Hotel besok otomatis mengganti Financial Performance HOTEL juga.
+  //
+  // Karena isinya kini persis sama, seksi 'hotel' dan 'spm' DIHILANGKAN dari entitas unitnya
+  // (lihat `untuk` di SEKSI_DETAIL): dua seksi berisi empat kartu yang identik dalam satu
+  // halaman hanya membuat halaman itu dua kali lebih panjang. Keduanya tetap ada di PT SMIP,
+  // tempat mereka memang membedakan unit bisnis satu dari yang lain.
+  KARTU_FINANSIAL.HOTEL = KARTU_SEKSI.hotel.kartu;
+  KARTU_FINANSIAL.SPM = KARTU_SEKSI.spm.kartu;
 
   // ── Laporan Pendukung · Leasing MALL (26 Agustus 2026) ──────────────────────────────
   //
@@ -1904,7 +2135,8 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
   const KELOMPOK_AKAR = {
     operation: [
       { kode: 'grup-operation', judul: 'Operation', ikon: 'bi-gear', metrik: [
-        'JUMLAH LOT PARKIR', 'TRAFFIC AVERAGE', 'CUSTOMER SATISFACTION INDEX',
+        'JUMLAH LOT PARKIR', 'TRAFFIC AVERAGE', 'TOTAL TRAFFIC KENDARAAN',
+        'TOTAL TRAFFIC PENGUNJUNG', 'CUSTOMER SATISFACTION INDEX',
         'TENANT SATISFACTION INDEX', 'JUMLAH MEMBER', 'LUAS GFA',
         'LUAS GEDUNG PARKIR (PARKIR GEDUNG & BASEMENT)', 'TOTAL GFA',
       ] },
@@ -2021,12 +2253,49 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
   /** Seksi halaman awal untuk satu entitas — dipakai filter Unit Bisnis (permintaan pemilik
    *  23 Agustus). Filter SEMUA memakai entitas PT SMIP, filter satu unit bisnis memakai entitas
    *  unit itu, sehingga halaman awal yang difilter MALL memuat seksi yang sama dengan halaman
-   *  detail MALL — Hotel dan Office Building SPM tidak ikut tampil, dan sebaliknya.
+   *  detail MALL — Hotel dan Office Building tidak ikut tampil, dan sebaliknya.
    *
    *  Sengaja MEMBUNGKUS `seksiUntuk()` alih-alih menyaring sendiri: daftar seksi halaman ini
    *  tidak boleh punya sumber kebenaran kedua yang bisa diam-diam menyimpang dari halaman
-   *  detail. Data Info selalu terakhir, dan ia satu-satunya seksi yang hanya ada di halaman ini. */
-  const seksiRingkasanUntuk = (kodeEntitas) => [...seksiUntuk(kodeEntitas), SEKSI_INFO];
+   *  detail. Data Info selalu terakhir, dan ia satu-satunya seksi yang hanya ada di halaman ini.
+   *
+   *  **Filter Semua Unit Bisnis (entitas PT SMIP) BERSARANG dua tingkat** sejak 27 Agustus,
+   *  hasil rapat Tim Manajemen: "biar lebih ringkas", tujuh group collapse jadi LIMA —
+   *  Overview Revenue · Mall · Hotel · Office Building · Data Info — dengan ketiga seksi
+   *  yang datanya memang milik MALL (Financial Performance, Leasing, Operation) masuk ke dalam
+   *  group Mall.
+   *
+   *  Yang bersarang hanya kasus PT SMIP, dan itu keputusan pemilik yang sama: begitu filter
+   *  dipindah ke satu unit bisnis, seksi yang tersisa memang milik unit itu sendiri, dan
+   *  pembungkus bernama "Mall" di halaman yang seluruhnya MALL hanya menambah satu ketukan
+   *  tanpa memilah apa pun.
+   *
+   *  `anak` = seksi di dalamnya. Group ini TIDAK punya isi sendiri — ia hanya wadah — jadi
+   *  penyajinya membedakan keduanya dari ada-tidaknya medan ini, bukan dari kodenya. */
+  const GRUP_MALL = { kode: 'mall', judul: 'Mall', ikon: 'bi-shop',
+                      isi: ['finansial', 'leasing', 'operation'] };
+
+  const seksiRingkasanUntuk = (kodeEntitas) => {
+    const seksi = seksiUntuk(kodeEntitas);
+    if (kodeEntitas !== 'SMIP') return [...seksi, SEKSI_INFO];
+    const dalam = new Set(GRUP_MALL.isi);
+    // Urutannya: Overview lebih dulu, group Mall di tempat seksi MALL yang pertama, lalu sisanya
+    // apa adanya. Diturunkan dari `seksiUntuk()` supaya seksi baru di halaman detail tetap
+    // sampai ke sini — yang tidak terdaftar di `GRUP_MALL.isi` muncul sebagai group sendiri,
+    // bukan hilang.
+    const luar = seksi.filter((s) => !dalam.has(s.kode));
+    const iMall = seksi.findIndex((s) => dalam.has(s.kode));
+    const grup = { ...GRUP_MALL, anak: seksi.filter((s) => dalam.has(s.kode)) };
+    const sebelum = luar.filter((s) => seksi.indexOf(s) < iMall);
+    const sesudah = luar.filter((s) => seksi.indexOf(s) > iMall);
+    return [...sebelum, ...(grup.anak.length ? [grup] : []), ...sesudah, SEKSI_INFO];
+  };
+
+  /** Daftar seksi yang DIRATAKAN — group Mall diikuti ketiga seksi di dalamnya, urut seperti
+   *  di layar. Dipakai untuk apa pun yang bekerja per seksi tanpa peduli tingkatnya: keadaan
+   *  buka-tutup (`seksiTerbukaAwal`), `seksiAwal`, dan penjaga test. Tanpa ini seksi di dalam
+   *  group tidak akan pernah dianggap terbuka, karena kodenya tidak ada di daftar tingkat atas. */
+  const seksiRata = (daftar) => daftar.flatMap((s) => (s.anak ? [s, ...s.anak] : [s]));
 
   // Kasus PT SMIP dipertahankan sebagai konstanta karena beberapa pemanggil (app.js, penjaga
   // test) memakainya sebagai daftar seksi terlengkap halaman ini.
@@ -2086,8 +2355,9 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
     SUMBER_DATA, SUMBER_DATA_DAUN, sumberDataDari,
     IKON_FA, LEVEL_NAMA,
     DETAIL, ENTITAS_DETAIL, SEKSI_DETAIL, SEKSI_RINGKASAN, seksiAwal,
+    GRUP_MALL, seksiRata,
     entitasDari, entitasDariNama, seksiUntuk, seksiRingkasanUntuk,
-    unitBisnisDari, labelSubUnit, namaSemuaSubUnit,
+    unitBisnisDari, namaUnitBisnis, judulPilUnit, labelSubUnit, namaSemuaSubUnit,
     aturanTahunan, ATURAN_TAHUNAN_NAMA,
     KARTU_FINANSIAL, kartuFinansialUntuk, KARTU_SEKSI, kartuChartSeksi,
     SEKSIDETAIL, judulSeksiDetail, halamanSumberSeksi, urutanKartuAkar,
@@ -2308,8 +2578,10 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
     'Food Court': [1_400, 2_400],
     'Bekasi Food City': [700, 1_500],
     'Tenant Revenue Sharing': [2_200, 3_800],
-    // 'Collection' juga dipakai SPM bersatuan persen; dibedakan lewat jalur.
-    'Financial Perspective/Collection': [92, 99],
+    // Sampai 1 September SPM juga punya 'Collection' bersatuan persen, dan keduanya dibedakan
+    // lewat JALUR ('Financial Perspective/Collection'). Sejak kamus SPM mengikuti ejaan berkas
+    // acuannya (2 September) namanya 'COLLECTION' — nama yang berbeda, jadi kunci berjalur itu
+    // tidak diperlukan lagi. Rentangnya pindah ke blok SPM di bawah.
     // ── Keuangan · rasio (urutan margin sudah terjamin oleh rentangnya) ──
     'Revenue PA / Avg NLA / PA': [210_000, 320_000],
     'EBITDA PA / Avg NLA': [110_000, 170_000],
@@ -2377,16 +2649,26 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
     'GOP DAN GOP (%)': [28, 38],
 
     // ── SPM ──
-    'Net Profit Before Interest (NPBI)': [1_800, 4_200],
-    'Revenue': [6_500, 12_000],
-    'Expense Ratio': [52, 68],
-    'Operating Cost Recovery': [88, 104],
-    'Rasio Karyawan terhadap revenue': [6, 11],
-    'Customer Satisfaction Index': [3.8, 4.5],
-    'Power Generating and Distribution System (Genset)': [96, 99.8],
-    'Transportation System': [95, 99.5],
-    'Audit Implementasi Sistem Manajemen': [88, 98],
-    '% On Time Complaint Handling': [90, 99],
+    // `Net Profit Before Interest (NPBI)` DIHAPUS dari sini 1 September: ia sekarang diturunkan
+    // dari EBITDA (lihat TURUNAN.spm). Rentang [1.800, 4.200] yang lama dibiarkan berdiri akan
+    // jadi sumber kebenaran kedua yang tidak pernah dipakai — dan yang menyesatkan orang
+    // berikutnya yang mencari dari mana angka NPBI datang.
+    // Ejaannya HURUF BESAR sejak 2 September, mengikuti kamus yang kini mengikuti berkas acuan
+    // pemilik. 'Expense Ratio' DIHAPUS bersama metriknya — rasio 52-68% itu sekarang hidup di
+    // dalam TURUNAN.spm sebagai pengali EXPENSE, bukan sebagai metrik yang dipajang.
+    'REVENUE': [6_500, 12_000],
+    'COLLECTION': [92, 99],
+    'OPERATING COST RECOVERY': [88, 104],
+    'RASIO KARYAWAN TERHADAP REVENUE': [6, 11],
+    // 'CUSTOMER SATISFACTION INDEX' TIDAK didaftar ulang di sini: sejak ejaan SPM jadi huruf
+    // besar, namanya SAMA PERSIS dengan metrik Operation di atas — dan kunci BASIS berlaku per
+    // NAMA. Mendaftarnya dua kali membuat yang kedua menimpa yang pertama tanpa satu pun error,
+    // jadi rentang Operation ([3,9-4,6]) diam-diam berubah. Keduanya kini memakai rentang itu;
+    // bedanya dengan rentang SPM yang lama ([3,8-4,5]) tidak berarti pada data contoh.
+    'POWER GENERATING & DISTRIBUTION SYSTEM (GENSET)': [96, 99.8],
+    'TRANSPORTATION SYSTEM': [95, 99.5],
+    'AUDIT IMPLEMENTASI SISTEM MANAJEMEN': [88, 98],
+    '% ON TIME COMPLAINT HANDLING': [90, 99],
     'OCCUPANCY': [78, 95],
   };
 
@@ -2427,6 +2709,20 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
         (v('AVERAGE MOBIL TOTAL/AVG Weekdays') * 5 + v('AVERAGE MOBIL TOTAL/AVG Weekend') * 2) / 7)],
       ['AVERAGE MOTOR TOTAL', (v) => Math.round(
         (v('AVERAGE MOTOR TOTAL/AVG Weekdays') * 5 + v('AVERAGE MOTOR TOTAL/AVG Weekend') * 2) / 7)],
+      // TOTAL TRAFFIC KENDARAAN — No. 14 berkas acuan Operation, baris yang ditambahkan pemilik
+      // sesudah kamus ini dibangun. Ia trafik SEBULAN, sementara TRAFFIC AVERAGE di atasnya
+      // trafik rata-rata SEHARI. Diturunkan dari rata-rata itu x 30 hari, bukan diacak sendiri:
+      // dua angka trafik yang diundi terpisah bisa menghasilkan bulan yang rata-rata hariannya
+      // naik sementara totalnya turun — dan kedua angka itu berdampingan di satu halaman.
+      ['TOTAL TRAFFIC KENDARAAN/MOBIL', (v) => v('AVERAGE MOBIL TOTAL') * 30],
+      ['TOTAL TRAFFIC KENDARAAN/MOTOR', (v) => v('AVERAGE MOTOR TOTAL') * 30],
+      // TOTAL TRAFFIC PENGUNJUNG — No. 15 berkas acuan. Satuannya ORANG, bukan kendaraan, jadi
+      // ia diturunkan dari kendaraan lewat pengali muatan (mobil membawa lebih banyak orang
+      // daripada motor). Dengan begitu jumlah pengunjung selalu lebih besar daripada jumlah
+      // kendaraan — hubungan yang akan langsung diperiksa begitu kedua kartunya bersebelahan.
+      ['TOTAL TRAFFIC PENGUNJUNG', (v, r) => Math.round(
+        v('TOTAL TRAFFIC KENDARAAN/MOBIL') * r(2.2, 2.8)
+        + v('TOTAL TRAFFIC KENDARAAN/MOTOR') * r(1.2, 1.6))],
       ['Member Aktif', (v, r) => Math.round((v('Gold Member') + v('Green Member')) * r(0.55, 0.75))],
       ['TOTAL GFA', (v) => v('LUAS GFA') + v('LUAS GEDUNG PARKIR (PARKIR GEDUNG & BASEMENT)')],
       // Tiga pengelompokan karyawan harus berjumlah sama dengan TOTAL KARYAWAN
@@ -2442,12 +2738,36 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
       ['ROOM REVENUE', (v) => Math.round(
         (v('NO OF ROOM') * 30 * (v('OCCUPANCY PERSENTASE (%)') / 100) * v('AVERAGE ROOM RATE')) / 1e6)],
       ['F&B REVENUE', (v, r) => Math.round(v('ROOM REVENUE') * r(0.35, 0.55))],
-      ['TOTAL REVENUE', (v) => v('ROOM REVENUE') + v('F&B REVENUE')],
+      // M.O.D = *minor operating departments* — laundry, telepon, spa, sewa ruang. Porsinya
+      // 6-12 % dari Room Revenue: **angka itu karangan Claude**, berkas acuan pemilik memuat
+      // barisnya tanpa satu pun angka (RINGKASAN.md 8 butir 13). Yang pasti benar hanya
+      // sifatnya — namanya sendiri berarti departemen KECIL, jadi ia selalu di bawah Room dan
+      // F&B, dan ada penjaga test-nya.
+      ['M.O.D REVENUE', (v, r) => Math.round(v('ROOM REVENUE') * r(0.06, 0.12))],
+      ['TOTAL REVENUE', (v) => v('ROOM REVENUE') + v('F&B REVENUE') + v('M.O.D REVENUE')],
       ['EBITDA MARGIN', (v, r) => Math.round((v('GOP DAN GOP (%)') - r(4, 8)) * 100) / 100],
       ['NPAT MARGIN', (v, r) => Math.round(v('EBITDA MARGIN') * r(0.45, 0.65) * 100) / 100],
       ['NO OF GUEST', (v, r) => Math.round(
         v('NO OF ROOM') * 30 * (v('OCCUPANCY PERSENTASE (%)') / 100) * r(1.4, 1.9))],
       ['NO OF EMPLOYEE', (v, r) => Math.round(v('NO OF ROOM') * r(0.6, 1.0))],
+    ],
+    spm: [
+      // Ketiga metrik ini plus Revenue berdiri BERDAMPINGAN dalam satu baris empat kartu sejak
+      // 1 September, jadi manajemen bisa langsung menguranginya sendiri di rapat. Karena itu
+      // ketiganya diturunkan, bukan diacak terpisah — angka yang diacak sendiri-sendiri bisa
+      // menghasilkan EBITDA yang lebih besar daripada Revenue, atau NPBI yang lebih besar
+      // daripada EBITDA, dan keduanya terlihat tanpa perlu membuka apa pun.
+      //
+      // EXPENSE = REVENUE x rasio 52-68%. Rasio itu sampai 1 September adalah METRIK sendiri
+      // (`Expense Ratio`) dan itulah yang membuatnya berarti; 2 September metriknya DIHAPUS
+      // karena berkas acuan pemilik tidak memuatnya, jadi rasionya pindah ke sini sebagai
+      // pengali — rentangnya sama, [52, 68] persen. Yang penting tidak berubah: rupiah Expense
+      // tetap sepadan dengan Revenue di sebelahnya, bukan angka yang diacak lepas.
+      ['EXPENSE', (v, r) => Math.round(v('REVENUE') * r(0.52, 0.68))],
+      ['EBITDA', (v) => v('REVENUE') - v('EXPENSE')],
+      // NPBI = laba sebelum bunga, jadi ia sebagian dari EBITDA — selalu di bawahnya. Sebelum
+      // 1 September ia diacak sendiri (BASIS 1.800-4.200) dan bisa melampaui EBITDA.
+      ['NET PROFIT BEFORE INTEREST (NPBI)', (v, r) => Math.round(v('EBITDA') * r(0.55, 0.75))],
     ],
   };
 
@@ -3095,7 +3415,7 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
   }
 
   /** Nilai per sub unit untuk halaman Ringkasan: pakai metrik pendapatan utama unit itu. */
-  const METRIK_RINGKASAN = { MALL: ['keuangan', 'REVENUE'], HOTEL: ['hotel', 'TOTAL REVENUE'], SPM: ['spm', 'Revenue'] };
+  const METRIK_RINGKASAN = { MALL: ['keuangan', 'REVENUE'], HOTEL: ['hotel', 'TOTAL REVENUE'], SPM: ['spm', 'REVENUE'] };
 
   function pohonOrganisasi(kodePeriode, kodeUnitBisnis) {
     const unit = D.UNIT_BISNIS
@@ -3517,7 +3837,7 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
    *  Hit target harus ikut menskala bersama batangnya — itu yang membuatnya nol konversi
    *  koordinat (lihat hitTarget()). */
   /** `padKiri` = ruang yang dicadangkan untuk kolom NAMA, dalam satuan viewBox. Bawaannya 150,
-   *  cukup untuk nama sub unit/unit bisnis yang panjang ("OFFICE BUILDING SPM"). Chart yang
+   *  cukup untuk nama sub unit/unit bisnis yang panjang ("Summarecon Mall Kelapa Gading"). Chart yang
    *  namanya pendek — perbandingan per TAHUN, isinya "2024" — memberikan angka yang lebih kecil,
    *  kalau tidak seperempat lebar kanvasnya jadi gutter kosong dan batangnya kependekan. */
   function bar({ items = [], w = 490, h = 166, satuan, padKiri = 150 } = {}) {
@@ -3740,25 +4060,50 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
   const sel = (nilai, aktif, daftar) => daftar.map((o) =>
     `<option value="${esc(o.kode)}"${o.kode === aktif ? ' selected' : ''}>${esc(o.nama)}</option>`).join('');
 
-  /** Satu baris + seluruh turunannya. idxJalur = id unik stabil untuk baris ini. */
-  function barisTabel(node, level, indukId, idxJalur) {
+  /** Satu baris + seluruh turunannya. idxJalur = id unik stabil untuk baris ini.
+   *
+   *  `tingkatTerbuka` = tingkat terdalam yang SUDAH tampil waktu tabelnya pertama digambar.
+   *  Bawaannya 1 (hanya akar; pemakai membuka sisanya sendiri). Seksi Data Info memakai 2 atas
+   *  permintaan pemilik 1 September — di sana akarnya cuma SATU baris, jadi tabel enam kolomnya
+   *  memajang satu baris saja sampai ada yang mengklik panahnya. Dibuat parameter, bukan diubah
+   *  di sini: fungsi ini juga pernah dipakai pohon METRIK (kamus FA punya empat tingkat, dan
+   *  membuka tingkat dua di sana berarti puluhan baris sekaligus). */
+  function barisTabel(node, level, indukId, idxJalur, tingkatTerbuka = 1) {
     const punyaAnak = !!node.children?.length;
     const id = idxJalur;
-    const sembunyi = level > 1 ? ' pr-row-hidden' : '';
+    const sembunyi = level > tingkatTerbuka ? ' pr-row-hidden' : '';
+    // Anak baris ini sudah tampil, jadi caretnya WAJIB memajang keadaan terbuka. Kalau tidak,
+    // panahnya menunjuk ke kanan padahal isinya sudah terbuka — dan klik pertama pemakai justru
+    // menutup, kebalikan dari yang dijanjikan panahnya.
+    const terbuka = punyaAnak && level < tingkatTerbuka;
+    // Nama ikonnya ditulis UTUH di kedua cabang, tidak disusun dari potongan: penjaga di
+    // `tests/build.test.js` memeriksa setiap nama `bi-*` benar-benar ada di Bootstrap Icons,
+    // dan nama yang dirangkai saat berjalan tidak bisa ia periksa. Penjaga itu sudah menangkap
+    // versi pertama perubahan ini.
+    const ikonCaret = terbuka ? 'bi-caret-down-fill' : 'bi-caret-right-fill';
 
     const caret = punyaAnak
-      ? `<button class="pr-caret" type="button" data-toggle-baris="${id}" aria-expanded="false" ` +
-        `aria-label="Buka ${esc(node.nama)}"><i class="bi bi-caret-right-fill"></i></button>`
+      ? `<button class="pr-caret" type="button" data-toggle-baris="${id}" ` +
+        `aria-expanded="${terbuka}" ` +
+        `aria-label="${terbuka ? 'Tutup' : 'Buka'} ${esc(node.nama)}">` +
+        `<i class="bi ${ikonCaret}"></i></button>`
       : '<span class="pr-caret-spacer"></span>';
 
     let html =
       `<tr class="pr-baris${sembunyi}" data-id="${id}" data-induk="${esc(indukId)}" data-level="${level}">` +
         `<td><div class="pr-tree-cell pr-lvl-${level}">${caret}` +
           `<span class="pr-nama-${level}">${esc(node.nama)}</span></div></td>` +
-        `<td>${badge(node.status)}</td>${selAngka(node)}` +
+        // Kolom STATUS dihapus 2 September atas permintaan Tim Management, lewat pemilik:
+        // *"Untuk Data Info di Data Rincian ada kolom Status di hilangkan saja. Ini sebenarnya
+        // berlaku di semua Data Rincian."* Statusnya sendiri TIDAK hilang dari prototype — ia
+        // tetap ada di badge tiap kartu metrik, di kartu chart, dan di tabel turunan halaman
+        // telusur; yang dicabut kolomnya di tabel ini saja.
+        `${selAngka(node)}` +
       '</tr>';
 
-    (node.children || []).forEach((c, i) => { html += barisTabel(c, level + 1, id, `${id}-${i}`); });
+    (node.children || []).forEach((c, i) => {
+      html += barisTabel(c, level + 1, id, `${id}-${i}`, tingkatTerbuka);
+    });
     return html;
   }
 
@@ -3963,11 +4308,28 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
   /** Satu kartu chart tren garis beserta legendanya. Dulu separuh dari blokChart(), yang
    *  memasangkannya dengan chart perbandingan antar sub unit; blokChart() ikut terhapus bersama
    *  renderer halaman modul yang lama (23 Agustus). */
-  function kartuTren(tren, namaUtama, satuan) {
+  /** `sendiri` = kartu ini satu-satunya chart di barisannya, jadi ia mengisi SELURUH lebar baris.
+   *  Permintaan pemilik 2 September, dengan tangkapan layar bertanda biru pada pita kosong di
+   *  sebelah chart: *"Untuk grafik Tren 12 Bulan · Total Revenue tolong di perbaiki ya. biar
+   *  spacenya gak kosong."* Keadaan itu muncul pada filter MALL / HOTEL / OFFICE BUILDING — dan
+   *  pada satu sub unit — karena di sana chart kontribusi memang dihilangkan (21 & 23 Agustus).
+   *
+   *  Kanvasnya karena itu WAJIB pasangan dua varian, bukan kanvas tunggal. Kanvas tunggal
+   *  490x166 yang merentang selebar baris menjadi ~484 px tinggi, dan tinggi itulah yang pemilik
+   *  keluhkan 23 Agustus ("terlalu besar, di rubah sedang saja") — waktu itu ditambal dengan
+   *  MENAHAN LEBARNYA, penahan yang sekarang beliau cabut. Pasangan `KANVAS_KOLOM` menjawab
+   *  keduanya sekaligus: lebar penuh, tinggi tetap ≤ 280 px, dan label sumbunya HTML 12 px yang
+   *  tidak ikut diskalakan. Ia justru dibuat 24 Agustus untuk keadaan yang sama di halaman
+   *  telusur. */
+  function kartuTren(tren, namaUtama, satuan, sendiri = false) {
+    const kanvas = sendiri
+      ? kanvasSatuKolom((u) => CH.garis({ ...tren, satuan, ...u,
+                                          langkahLabel: KANVAS_KOLOM.langkahLabel }))
+      : CH.garis({ ...tren, satuan });
     return `<div class="pr-chart">` +
       `<div class="pr-chart-title">${judulRentangTren(tren.labels)} &middot; ` +
         `${esc(namaUtama)}</div>` +
-      CH.garis({ ...tren, satuan }) + LEGENDA_TREN +
+      kanvas + LEGENDA_TREN +
     `</div>`;
   }
 
@@ -4190,8 +4552,8 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
 
   /** `judulKolom`: judul kolom pertama. Di Dashboard Management isinya simpul organisasi
    *  (unit bisnis dan sub unitnya), bukan metrik — pemilik meminta judulnya menyebut itu. */
-  function tabel(pohon, judulKolom = 'METRIK') {
-    const baris = pohon.map((akar, i) => barisTabel(akar, 1, '', `k${i}`)).join('');
+  function tabel(pohon, judulKolom = 'METRIK', tingkatTerbuka = 1) {
+    const baris = pohon.map((akar, i) => barisTabel(akar, 1, '', `k${i}`, tingkatTerbuka)).join('');
     // Pembungkus bergulir sendiri, pola yang sama dengan tabel telusur (`.pr-dr-tabel`) dan
     // tabel Laporan (`.pr-lp-tabel`). Tabel ini satu-satunya yang belum punya, dan itu terukur
     // di layar HP 24 Agustus: pada lebar 500 px tabel Data Info 453 px di dalam wadah 447 px,
@@ -4201,7 +4563,10 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
     // sendiri alih-alih memaksa seluruh halaman ikut bergulir.
     return `<div class="pr-tabel-gulir">` +
       `<table class="ds-table ds-table-sm ds-table-striped">` +
-      `<thead><tr><th>${esc(judulKolom)}</th><th>STATUS</th><th class="pr-num">AKTUAL</th>` +
+      // LIMA kolom sejak 2 September: STATUS dicabut atas permintaan Tim Management (lihat
+      // catatannya di barisTabel()). Satu kolom lebih sedikit sekalian melegakan tabel ini di
+      // lebar HP — enam kolom memang tidak pernah muat di 390 px.
+      `<thead><tr><th>${esc(judulKolom)}</th><th class="pr-num">AKTUAL</th>` +
       `<th class="pr-num">BUDGET</th><th class="pr-num">VAR%</th>` +
       `<th class="pr-num">YoY%</th></tr></thead>` +
       `<tbody>${baris}</tbody></table></div>` + KAKI_VARYOY;
@@ -4256,7 +4621,14 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
    *  unit, jadi ia berguna walau tidak punya lapisan di bawahnya (sebagian besar metrik HOTEL
    *  memang datar). Di halaman modul dan Dashboard Management ia mati: di sana yang dibuka
    *  memang tabel turunan. */
-  function kartuSummary(node, idx, kunci, selaluBisa = false) {
+  /** `denganIkon`: ikon summary hanya dipakai halaman yang kamusnya punya petanya — sejauh ini
+   *  FA MALL (`D.IKON_FA`). Ditulis sebagai PARAMETER, bukan diputuskan dari nama simpulnya:
+   *  sejak kamus SPM memakai ejaan huruf besar berkas acuannya (2 September), tiga metriknya —
+   *  REVENUE, EXPENSE, EBITDA — bernama SAMA PERSIS dengan metrik FA, jadi pencocokan nama
+   *  memberi ikon ke tiga dari empat belas kartu Office Building dan membiarkan sebelas lainnya
+   *  kosong. Ikon di tiga kartu saja terbaca seperti sisa pekerjaan, bukan pilihan. Ini jebakan
+   *  "nama ganda di kamus" yang sama dengan Listrik/Gas/Air dan NPAT — kali ini lintas kamus. */
+  function kartuSummary(node, idx, kunci, selaluBisa = false, denganIkon = true) {
     const jumlahAnak = (node.children || []).length;
     const bisaBuka = jumlahAnak > 0 || selaluBisa;
     // Kartu yang bisa dibuka diberi role/tabindex supaya bisa dicapai keyboard, bukan hanya
@@ -4265,13 +4637,18 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
       ? ` ${kunci}="${idx}" role="button" tabindex="0"` +
         ` aria-label="Buka rincian ${esc(node.nama)}"`
       : ' aria-disabled="true"';
+    // Kata afordansnya "Detail", bukan "Telusuri" — permintaan pemilik 2 September: *"di card2
+    // halaman-halaman kan ada kata-kata Telusuri tolong di rubah menjadi Detail saja"*. Ia ada
+    // di TIGA kaki kartu yang berbeda (metrik, Laporan Pendukung, kartu chart) plus satu kalimat
+    // pengantar yang menyebut nama tombolnya; ada penjaga yang memindai halaman jadi supaya
+    // tidak ada yang tertinggal. Nama class `pr-k-telusuri` dibiarkan: ia tidak pernah tampil.
     const kaki = bisaBuka
       ? `<span>${jumlahAnak ? `${jumlahAnak} turunan` : 'Tanpa turunan'}</span>` +
-        `<span class="pr-k-telusuri">Telusuri <i class="bi bi-chevron-right"></i></span>`
+        `<span class="pr-k-telusuri">Detail <i class="bi bi-chevron-right"></i></span>`
       : `<span>Tanpa turunan</span>`;
     // Ikon dekoratif: nama metriknya sudah ada sebagai teks di sebelahnya, jadi membacakan
     // ikonnya lagi hanya mengulang. Nama class-nya dijaga test agar tidak jadi kotak kosong.
-    const ikon = D.IKON_FA[node.nama]
+    const ikon = denganIkon && D.IKON_FA[node.nama]
       ? `<span class="pr-k-ikon"><i class="bi ${esc(D.IKON_FA[node.nama])}" ` +
         `aria-hidden="true"></i></span>`
       : '';
@@ -4338,8 +4715,12 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
               `<span class="pr-porsi"><i style="width:${Math.min(100, porsi[i]).toFixed(1)}%"></i></span></td>`)
         : '';
 
+      // Tanpa sel STATUS sejak 2 September: permintaan Tim Management yang sama dengan tabel
+      // Data Rincian, ditegaskan pemilik untuk halaman ini sendiri ("Kolom Status di halaman
+      // Telusuri hilangkan juga"). Badge status simpul yang sedang DIBUKA tetap ada di kepala
+      // panel di atas tabel ini — yang dicabut kolomnya, dan beliau menyebut "kolom".
       return `<tr${atribut}><td><span class="pr-dr-nama">${esc(c.nama)}</span>${tanda}</td>` +
-        `<td>${badge(c.status)}</td>${selAngka(c)}${selPorsi}</tr>`;
+        `${selAngka(c)}${selPorsi}</tr>`;
     }).join('');
 
     const kepalaPorsi = denganPorsi ? '<th class="pr-num">KONTRIBUSI</th>' : '';
@@ -4351,10 +4732,11 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
     return `<div class="pr-dr-panel">` +
       `<div class="ds-section-title">${esc(levelAnak)}` +
         `<span class="ds-section-meta">${anak.length} item</span></div>` +
-      // Tabel tujuh kolom di dalam panel selebar 620px perlu wadah yang bisa digeser
-      // sendiri — kalau tidak, ia yang memaksa SELURUH halaman punya scroll horizontal.
+      // Tabel enam kolom (lima tanpa KONTRIBUSI) di dalam panel selebar 620px perlu wadah yang
+      // bisa digeser sendiri — kalau tidak, ia yang memaksa SELURUH halaman punya scroll
+      // horizontal. Sampai 1 September TUJUH kolom; STATUS dicabut 2 September.
       `<div class="pr-dr-tabel"><table class="ds-table ds-table-sm ds-table-striped">` +
-        `<thead><tr><th>NAMA FIELD</th><th>STATUS</th><th class="pr-num">AKTUAL</th>` +
+        `<thead><tr><th>NAMA FIELD</th><th class="pr-num">AKTUAL</th>` +
         `<th class="pr-num">BUDGET</th>` +
         `<th class="pr-num">VAR%</th>` +
         `<th class="pr-num">YoY%</th>${kepalaPorsi}</tr></thead>` +
@@ -4400,8 +4782,14 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
 
   /** Ruang kolom nama pada chart batang PER TAHUN, satuan viewBox. Jauh lebih kecil daripada
    *  bawaan `bar()` (150) karena namanya cuma "2024": dengan bawaannya, seperempat lebar kanvas
-   *  jadi gutter kosong dan batangnya kependekan. Terukur di layar 26 Agustus. */
-  const PAD_KIRI_TAHUN = 60;
+   *  jadi gutter kosong dan batangnya kependekan. Terukur di layar 26 Agustus.
+   *
+   *  Dikalibrasi ulang 2 September, dari 60 ke 40: sejak chart ini memakai pasangan kanvas
+   *  `kanvasBarKolom()` viewBox-nya 340/730/920 (bukan 490 lagi), jadi 60 satuan yang dulu
+   *  menyediakan 102 px di layar kini menyediakan 91–171 px — gutter kosong yang justru
+   *  dikeluhkan. 40 satuan menyediakan 46–61 px pada ketiga varian, dan label "2024" 12 px
+   *  butuh ~30 px. Diukur di browser. */
+  const PAD_KIRI_TAHUN = 40;
 
   /** Item -> irisan donut: tujuh terbesar apa adanya, sisanya satu irisan "Lainnya".
    *
@@ -4488,7 +4876,7 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
           `${esc(F.nilai(teratas.porsi, 'persen'))}</div>`
         : '') +
       `<div class="pr-k-kaki"><span>${hasil.item.length} kategori</span>` +
-        `<span class="pr-k-telusuri">Telusuri <i class="bi bi-chevron-right"></i></span>` +
+        `<span class="pr-k-telusuri">Detail <i class="bi bi-chevron-right"></i></span>` +
       `</div></article>`;
   }
 
@@ -4752,6 +5140,21 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
 
   const kanvasSatuKolom = (gambar) => kanvasDuaVarian(KANVAS_KOLOM, gambar);
 
+  /** Pasangan yang sama untuk chart BATANG, yang tingginya ditentukan jumlah baris — bukan oleh
+   *  pasangan kanvasnya. Lebarnya diambil dari `KANVAS_KOLOM` supaya ambang container query di
+   *  CSS tetap yang itu (satu ambang untuk satu kelas wadah); yang diganti hanya tingginya.
+   *
+   *  Dipakai chart per tahun sejak 2 September, waktu pemilik mencabut penahan lebarnya
+   *  ("jangan ada space kosong"). Tanpa pasangan ini, satu viewBox 490 lebar yang merentang
+   *  1.395 px menskalakan batangnya jadi 46 px tebal dan bloknya 273 px tinggi — terukur di
+   *  browser, dan itu bukan "sedang" yang beliau setujui 26 Agustus. */
+  const kanvasBarKolom = (h, gambar) => kanvasDuaVarian(
+    { kelas: KANVAS_KOLOM.kelas,
+      hp: { w: KANVAS_KOLOM.hp.w, h },
+      sempit: { w: KANVAS_KOLOM.sempit.w, h },
+      lebar: { w: KANVAS_KOLOM.lebar.w, h } },
+    gambar);
+
   /** Isi telusur satu simpul: blok angka, tren 12 bulan, perbandingan antar sub unit, lalu
    *  tabel turunannya. Dipakai halaman detail seksi, dan lewat itu kelima halaman modul —
    *  jadi ia tidak boleh tahu halaman mana yang memanggilnya.
@@ -4858,7 +5261,18 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
       // SATU chart saja (permintaan pemilik 23 Agustus, sesudah chart perbandingan antar sub unit
       // dihilangkan): trennya sendiri, lebarnya ditahan di CSS supaya ia tidak merentang selebar
       // halaman — permintaan beliau yang sama seperti untuk chart tren di halaman awal.
-      isi: `<div class="pr-dr-panel"><div class="pr-dr-angka-atas">` +
+      //
+      // Judul blok ini — "Summary Data" + nama simpulnya — DI DALAM kartunya sejak 2 September,
+      // waktu pemilik meminta Summary Data dan Detail List Data berkartu. Sebelumnya ia dirender
+      // pemanggil sebagai `.pr-fd-judul` di luar, dan begitu bloknya berkartu judulnya jadi
+      // menggantung di atas kartu sendirian — sementara kartu chart dan kartu Detail List Data
+      // keduanya memuat judulnya. Namanya dihitung di sini, bukan diterima dari pemanggil, supaya
+      // satu tempat saja yang menentukan lapisan mana yang sedang dibuka.
+      isi: `<div class="pr-dr-panel">` +
+             `<div class="pr-fd-judul"><span class="pr-dr-level">` +
+               `${esc(D.LEVEL_NAMA[Math.min(jalur.length - 1, 3)])}</span>` +
+               `<h2>${esc(node.nama)}</h2></div>` +
+             `<div class="pr-dr-angka-atas">` +
              `${badge(node.status)}${angkaKartu(node)}</div></div>` +
            `<div class="pr-dr-chart">${blokTren}</div>` +
            isiTurunan,
@@ -4945,16 +5359,19 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
       `<div class="pr-fd-tabs" role="group" aria-label="Metrik setingkat">${tab}</div>` +
       `<div class="pr-fd-judul"><span class="pr-dr-level">${esc(level)}</span>` +
         `<h2>${esc(m.node.nama)}</h2></div>` +
-      // Lebar chartnya DITAHAN oleh `pr-ov-chart-sendiri`, penahan yang sama dengan chart per
-      // tahun di Overview — satu bentuk, satu penahan. Tanpa itu kanvas ber-viewBox merentang
-      // selebar kolom dan teks di dalamnya ikut menskala; terukur 26 Agustus 32,7 px pada
-      // 1536 px. Alasnya kartu (`pr-dr-panel`) karena warna batangnya diukur terhadap permukaan
-      // kartu, bukan terhadap latar halaman — pelajaran 24 Agustus.
+      // Bentuk yang SAMA dengan chart per tahun di Overview, jadi ia ikut perlakuan yang sama:
+      // mengisi kolomnya, geometri ditahan pasangan kanvas `kanvasBarKolom()`. Penahan lebar
+      // 52rem yang dulu dipakai keduanya dicabut pemilik 2 September ("jangan ada space
+      // kosong") — permintaannya menyebut halaman awal, tetapi membiarkan yang di sini tetap
+      // ditahan akan membuat satu bentuk punya dua ukuran di dua halaman.
+      // Alasnya kartu (`pr-dr-panel`) karena warna batangnya diukur terhadap permukaan kartu,
+      // bukan terhadap latar halaman — pelajaran 24 Agustus.
       `<div class="pr-dr-chart"><div class="pr-dr-panel">` +
         `<div class="pr-chart-title">${esc(m.node.nama)} per Tahun &middot; ` +
           `${esc(labelRentangTahunan())}</div>` +
         `<div class="pr-ov-chart-grid pr-ov-chart-sendiri pr-ov-chart-tahun"><div class="pr-ov-chart">` +
-          CH.bar({ items: batang, h: 96, satuan: m.satuan, padKiri: PAD_KIRI_TAHUN }) +
+          kanvasBarKolom(96, (u) => CH.bar({ items: batang, ...u, satuan: m.satuan,
+                                             padKiri: PAD_KIRI_TAHUN })) +
         `</div></div>` +
       `</div></div>` + turunan;
   }
@@ -4982,17 +5399,13 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
    *  Halaman ini juga punya **filter Sub Unit** sejak 23 Agustus. Halaman modul yang lama
    *  memilikinya; kalau "disamakan" diartikan menghapusnya, kemampuan yang sudah ada justru
    *  hilang. Jadi filternya dipasang di sini, dan berlaku dari kedua pintu masuk. */
-  /** `dariMenu` (26 Agustus): halaman ini dibuka dari MENU sidebar, bukan dari View Details di
-   *  Dashboard Management. Yang membedakan cuma seksi **Laporan Pendukung**, dan sebabnya bukan
-   *  teknis melainkan pembagian kerja — permintaan pemilik: *"Laporan Pendukung hanya di gunakan
-   *  oleh Tim Leasing saja. Tim Management gak perlu."*
-   *
-   *  Ditulis sebagai medan sendiri, BUKAN diturunkan dari `denganKembali` yang kebetulan juga
-   *  membedakan kedua pintu. Keduanya menjawab pertanyaan yang berbeda — "adakah tempat untuk
-   *  kembali" dan "siapa pembaca halaman ini" — dan menumpangkannya berarti mengubah tombol
-   *  Kembali suatu hari nanti diam-diam menghidupkan atau mematikan seksi laporan. */
-  function halamanSeksiDetail(state,
-                              { judulHalaman, denganKembali = true, dariMenu = false } = {}) {
+  /** Antara 26 Agustus dan 1 September ada medan ketiga di sini, `dariMenu`: seksi **Laporan
+   *  Pendukung** hanya disajikan kalau halaman ini dibuka dari MENU sidebar — permintaan pemilik,
+   *  *"Laporan Pendukung hanya di gunakan oleh Tim Leasing saja. Tim Management gak perlu."*
+   *  **Beliau membalik keputusan itu 2 September** ("tolong di samakan dengan Menu Dashboard
+   *  Leasing"), jadi medannya dicabut — kedua pintu kini menyajikan susunan yang sama, dan
+   *  satu-satunya yang masih membedakannya `denganKembali`. */
+  function halamanSeksiDetail(state, { judulHalaman, denganKembali = true } = {}) {
     const ent = D.entitasDari(state.entitas) || D.ENTITAS_DETAIL[0];
     const kodeSeksi = state.seksiDetail || 'finansial';
     const judul = judulHalaman || D.judulSeksiDetail(kodeSeksi);
@@ -5009,9 +5422,34 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
       : labelPeriode(state);
     const jalur = (state.jalur || []).filter((x) => Number.isInteger(x));
 
+    // Tombol Kembali di kepala halaman, dan tujuannya berbeda menurut PINTU serta lapisan:
+    //
+    //  - pintu **View Details** (`denganKembali`): memulangkan ke tempat tombol itu ditekan —
+    //    Dashboard Management atau halaman detail entitas (keputusan pemilik 21 Agustus);
+    //  - pintu **menu sidebar**: pangkalnya memang tidak punya tempat untuk kembali, jadi di
+    //    sana tetap tanpa tombol (23 Agustus). **Tetapi halaman TELUSURNYA punya**, dan sampai
+    //    1 September jalan pulang satu-satunya di sana breadcrumb kecil di atas judul —
+    //    permintaan pemilik 2 September: *"Di menu Dasboard Leasing untuk halaman Detail belum
+    //    ada button Kembali ke halaman sebelumnya. Tolong tambahkan ya."*
+    //
+    // Tujuannya "satu lapis ke atas", bukan langsung ke pangkal: itu arti "halaman sebelumnya",
+    // dan sama dengan yang ditunjuk breadcrumb induknya. Untuk telusur Laporan Pendukung tidak
+    // ada lapisan, jadi ia pulang ke pangkal.
+    //
+    // Atributnya yang SUDAH ADA — `data-fd-crumb` (pergi ke jalur ini) dan `data-pd-kembali` —
+    // bukan atribut baru. Penangan kliknya lahir di `app.js`, yang butuh DOM sehingga tidak
+    // dimuat suite test; atribut baru berarti penangan baru yang tidak terjangkau penjaga mana
+    // pun. Pelajaran 27 Agustus, dan ini kesempatan memakainya alih-alih mengulanginya.
+    const aksiKembali = () => {
+      if (denganKembali) return 'data-fd-kembali';
+      if (state.pendukung) return 'data-pd-kembali';
+      if (jalur.length) return `data-fd-crumb="${jalur.slice(0, -1).join('.')}"`;
+      return null;
+    };
+    const atributKembali = aksiKembali();
     const kepala = kepalaHalaman(judul, [ent.nama, namaPeriode],
-      denganKembali
-        ? `<button class="ds-btn ds-btn-sm ds-btn-secondary" type="button" data-fd-kembali>` +
+      atributKembali
+        ? `<button class="ds-btn ds-btn-sm ds-btn-secondary" type="button" ${atributKembali}>` +
             `<i class="bi bi-arrow-left"></i><span>Kembali</span></button>`
         : '');
     // Filter Sub Unit memakai unit bisnis KAMUS SUMBERNYA, bukan entitas halamannya: seksi Leasing
@@ -5057,18 +5495,22 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
     // `state.jalur`), dan kalau urutannya dibalik sebuah jalur yang kebetulan masih tersimpan
     // akan menang atas kartu yang baru diklik. `pendukungDari` ikut menjaga: kode yang tidak
     // ada di kamus jatuh kembali ke pangkal halaman, bukan halaman kosong tanpa sebab.
-    // Kosong kalau halaman ini dibuka dari View Details Dashboard Management: seksinya memang
-    // tidak ada di sana. Disaring SATU KALI di sini, jadi seluruh yang bergantung padanya —
-    // seksi di pangkal, halaman donutnya, dan deretan tabnya — ikut hilang bersama-sama.
-    // Kalau tiap tempat memutuskan sendiri, satu pintu bisa tertinggal terbuka.
-    // Kosong di DUA keadaan, dan satu tempat memutuskan keduanya supaya seksi di pangkal,
-    // halaman donutnya, dan deretan tabnya ikut hilang bersama-sama:
-    //  - dibuka dari View Details Dashboard Management — seksinya memang tidak ada di sana;
-    //  - mode Perbandingan 3 Tahun — isinya komposisi pada SATU posisi waktu, dan tiga tahun
-    //    tidak bisa dimuat satu donut. Tanpa gerbang ini, `state.pendukung` yang terbawa akan
-    //    membuka halaman donut di mode yang halamannya sendiri sudah menolak blok satu-periode.
-    const daftarPendukung = (dariMenu && mode !== 'banding3')
-      ? D.pendukungUntuk(kodeSeksi) : [];
+    // Disaring SATU KALI di sini, jadi seluruh yang bergantung padanya — seksi di pangkal,
+    // halaman donutnya, dan deretan tabnya — ikut hilang bersama-sama. Kalau tiap tempat
+    // memutuskan sendiri, satu pintu bisa tertinggal terbuka.
+    //
+    // Tinggal SATU gerbang: **mode Perbandingan 3 Tahun** — isinya komposisi pada SATU posisi
+    // waktu, dan tiga tahun tidak bisa dimuat satu donut. Tanpa gerbang ini, `state.pendukung`
+    // yang terbawa akan membuka halaman donut di mode yang halamannya sendiri sudah menolak
+    // blok satu-periode.
+    //
+    // Gerbang kedua — "hanya kalau dibuka dari MENU" — DICABUT pemilik 2 September: *"Untuk
+    // Halaman Leasing Detail tolong di samakan dengan Menu Dashboard Leasing. Dimana menu
+    // Dashboard Leasing ada Laporan Pendukung. Tolong tambahkan di Leasing Detail ya."* Ia
+    // membalik keputusan beliau sendiri 26 Agustus (*"Laporan Pendukung hanya di gunakan oleh
+    // Tim Leasing saja. Tim Management gak perlu"*), jadi jangan dipasang kembali tanpa
+    // memintanya. Parameter `dariMenu` ikut dicabut: satu-satunya pemakainya gerbang ini.
+    const daftarPendukung = mode !== 'banding3' ? D.pendukungUntuk(kodeSeksi) : [];
     const defPendukung = state.pendukung
       && daftarPendukung.find((p) => p.kode === state.pendukung);
     if (defPendukung) {
@@ -5113,7 +5555,9 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
       // penangan kliknya membelahnya dengan `.split('.')` sejak telusur ada, jadi tidak ada
       // mesin baru di sini.
       const grid = (jalurKartu) => `<div class="pr-kartu-grid">${jalurKartu
-        .map((p) => kartuSummary(G.simpulJalur(pohon, p), p.join('.'), 'data-fd-kartu', true))
+        // Ikon hanya untuk kamus yang punya petanya — lihat catatan di kartuSummary().
+        .map((p) => kartuSummary(G.simpulJalur(pohon, p), p.join('.'), 'data-fd-kartu', true,
+                                 kodeHalaman === 'keuangan'))
         .join('')}</div>`;
       // Metrik yang sudah punya kartu CHART di seksi di atas tidak lagi mendapat kartu metrik
       // (permintaan pemilik 24 Agustus: *"card-card ini REVENUE, INCOME NETT, OMZET REVENUE
@@ -5124,7 +5568,17 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
       // Yang ditapis hanya metrik AKAR: 'Member Aktif' di kamus Operation adalah turunan
       // JUMLAH MEMBER, jadi kartu JUMLAH MEMBER-nya tetap ada — dan itu benar, angka yang
       // dipajang chart-nya bukan angka kartu itu.
-      const bukanChart = (p) => !(p.length === 1
+      //
+      // **Aturan itu DICABUT pemilik 2 September** untuk seksi yang beliau minta "disamakan
+      // dengan Financial Performance Detail": *"Untuk card-card dibawah card grafik di sesuaikan
+      // dengan List yg di Laporan Financial Performance."* Jadi di halaman itu daftar kartu =
+      // daftar baris Laporan, apa adanya. Beliau diberi tahu akibatnya sebelum dikerjakan —
+      // metrik yang sudah jadi kartu chart tampil DUA KALI di satu halaman — dan memilih tetap;
+      // waktu seksi Hotel menyusul, akibat yang sama disebutkan lagi dan jawabannya *"Iy
+      // samakan"*. Seksi di luar `SEKSI_SEPERTI_FP` belum diminta berubah, jadi aturan
+      // 24 Agustus masih berlaku di sana; ada penjaga untuk kedua sisinya.
+      const semuaKartu = SEKSI_SEPERTI_FP.includes(kodeSeksi);
+      const bukanChart = (p) => semuaKartu || !(p.length === 1
         && kartuDepan.some((d) => d.metrik === pohon[p[0]].nama));
       const kelompok = D.kelompokAkar(kodeHalaman, pohon);
       // Seksi Laporan ikut daftar collapse halaman ini supaya sakelar dan keadaan buka-tutupnya
@@ -5204,7 +5658,9 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
           (kartu
             ? `Klik satu kartu untuk membuka rinciannya — di dalamnya ada ${rentang}, ` +
               `dan tabel turunannya.`
-            : `Tekan <strong>Telusuri</strong> pada satu kartu chart untuk membuka rinciannya — ` +
+            // Menyebut NAMA tombolnya, jadi ia wajib ikut berganti bersama tombolnya
+            // (2 September: "Telusuri" → "Detail"). Ada penjaganya.
+            : `Tekan <strong>Detail</strong> pada satu kartu chart untuk membuka rinciannya — ` +
               `di dalamnya ada ${rentang}, dan tabel turunannya.`) +
           ` Rincian dibuka sebagai <strong>halaman</strong>, jadi tabelnya dapat lebar penuh; ` +
           `breadcrumb di atas memulangkan Anda.` +
@@ -5259,12 +5715,12 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
         `${esc(n.nama)}</button>`;
     }).join('');
 
-    const level = D.LEVEL_NAMA[Math.min(jalur.length - 1, 3)];
+    // Judul lapisan ("Summary Data" + nama simpulnya) TIDAK dirender di sini lagi sejak
+    // 2 September: ia pindah ke DALAM kartu Summary Data (lihat blokTelusur()), waktu pemilik
+    // meminta blok itu berkartu. Kalau dibiarkan di sini juga, judulnya tampil dua kali.
     return kepala + filter + nota +
       `<nav class="pr-fd-crumb" aria-label="Jalur metrik">${crumb}</nav>` +
       `<div class="pr-fd-tabs" role="group" aria-label="Metrik setingkat">${tab}</div>` +
-      `<div class="pr-fd-judul"><span class="pr-dr-level">${esc(level)}</span>` +
-        `<h2>${esc(hasil.node.nama)}</h2></div>` +
       `<div class="pr-fd-isi">${hasil.isi}</div>`;
   }
 
@@ -5272,7 +5728,7 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
    *  (spec sec 12), jadi yang dijelaskan di sini adalah PERANNYA dalam alur data — itu yang
    *  berguna dibahas di rapat, sekaligus menyambungkan badge status di dashboard ke asalnya. */
   function halamanSumberData(daun) {
-    const namaUnit = daun.unitBisnis === 'SPM' ? 'OFFICE BUILDING SPM' : daun.unitBisnis;
+    const namaUnit = D.namaUnitBisnis(daun.unitBisnis);
     const alur = ['Draft', 'Menunggu Review', 'Menunggu Approval', 'Approved', 'Final'];
 
     return `<div class="ds-page-header"><div class="ds-page-title">` +
@@ -5327,12 +5783,14 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
    *
    *  Tambahan DILEWATI kalau judul seksinya sudah menyebut unit itu (keputusan pemilik dari tiga
    *  pilihan yang disodorkan). Tanpa aturan ini, difilter HOTEL seksi "Hotel" jadi "Hotel HOTEL",
-   *  dan difilter SPM seksi "Office Building SPM" jadi "Office Building SPM OFFICE BUILDING SPM"
-   *  — di rapat keduanya terbaca seperti salah ketik. Namanya tidak hilang: ia tetap ada di
-   *  subjudul halaman.
+   *  dan difilter SPM seksi "Office Building" jadi "Office Building OFFICE BUILDING" — di rapat
+   *  keduanya terbaca seperti salah ketik. Namanya tidak hilang: ia tetap ada di subjudul halaman.
    *
    *  Perbandingannya tanpa memperhatikan besar-kecil huruf, karena judul seksi memakai Title Case
-   *  ("Office Building SPM") sementara nama unit bisnis huruf besar semua. */
+   *  ("Office Building") sementara nama unit bisnis huruf besar semua.
+   *
+   *  Sejak 27 Agustus pemanggilnya di halaman awal (`judulGroup`) hanya memakai ini kalau
+   *  filternya BENAR-BENAR satu unit bisnis — lihat catatan di sana. */
   function judulSeksiUnit(seksi, namaUnit) {
     const sudahMenyebut = seksi.judul.toLowerCase().includes(namaUnit.toLowerCase());
     return sudahMenyebut ? seksi : { ...seksi, judul: `${seksi.judul} ${namaUnit}` };
@@ -5393,14 +5851,21 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
                           jalur = null) {
     const { node, tren } = dataFinansial(state, def, subUnit);
     if (!node) return '';
-    const biaya = !!node.biaya;
-    const tone = F.arahDelta(node.yoy, biaya);
-    const panah = node.yoy > 0 ? '▲' : node.yoy < 0 ? '▼' : '';
-    const delta = node.yoy === null || node.yoy === undefined
-      ? F.KOSONG : `${panah} ${F.persenDelta(node.yoy)}`;
-    const capai = (node.budget !== null && node.budget !== undefined && node.budget !== 0
-                   && node.aktual !== null && node.aktual !== undefined)
-      ? `<div class="pr-fp-capai">${esc(F.nilai((node.aktual / node.budget) * 100, 'persen'))}` +
+    // `nilaiDari`: angka besar kartu ini diambil dari SALAH SATU TURUNAN, chart-nya tetap dari
+    // induknya. Dipakai kartu ACCOUNT RECEIVABLE (keputusan pemilik 27 Agustus) — induknya
+    // bertipe `grup` sehingga angkanya sengaja kosong, sementara chart komposisinya justru
+    // butuh induk itu untuk membandingkan kedua turunannya. Turunan yang tidak ada tidak
+    // membatalkan kartunya: ia kembali ke induknya, dan kartunya tampil apa adanya.
+    const angka = (def.nilaiDari
+      && (node.children || []).find((c) => c.nama === def.nilaiDari)) || node;
+    const biaya = !!angka.biaya;
+    const tone = F.arahDelta(angka.yoy, biaya);
+    const panah = angka.yoy > 0 ? '▲' : angka.yoy < 0 ? '▼' : '';
+    const delta = angka.yoy === null || angka.yoy === undefined
+      ? F.KOSONG : `${panah} ${F.persenDelta(angka.yoy)}`;
+    const capai = (angka.budget !== null && angka.budget !== undefined && angka.budget !== 0
+                   && angka.aktual !== null && angka.aktual !== undefined)
+      ? `<div class="pr-fp-capai">${esc(F.nilai((angka.aktual / angka.budget) * 100, 'persen'))}` +
         ` dari budget</div>`
       : '';
     const catatan = def.catatan
@@ -5412,7 +5877,7 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
     const telusuri = jalur
       ? `<div class="pr-fp-kaki-kartu">` +
           `<span class="pr-k-telusuri" data-fd-kartu="${esc(jalur)}" role="button" tabindex="0" ` +
-            `aria-label="Telusuri ${esc(def.judul)}">Telusuri ` +
+            `aria-label="Detail ${esc(def.judul)}">Detail ` +
             `<i class="bi bi-chevron-right" aria-hidden="true"></i></span>` +
         `</div>`
       : '';
@@ -5420,7 +5885,7 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
     return `<article class="pr-fp-kartu${ukuranKanvas === 'kecil' ? '' : ' pr-fp-kartu-besar'}">` +
       `<div class="pr-fp-atas"><span class="pr-fp-judul">${esc(def.judul)}</span>` +
         `${badge(node.status)}</div>` +
-      `<div class="pr-fp-nilai">${esc(F.nilai(node.aktual, node.satuan))}` +
+      `<div class="pr-fp-nilai">${esc(F.nilai(angka.aktual, angka.satuan))}` +
         `<span class="pr-fp-periode">/ ${esc(namaPeriode)}</span></div>` +
       `<div class="pr-fp-delta pr-tone-${tone}">${esc(delta)}` +
         `<span class="pr-fp-banding">vs tahun lalu</span></div>` +
@@ -5677,11 +6142,80 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
    *  yang punya pohonnya; tanpa itu kartu chart tidak punya pintu telusur, dan sejak kartu metrik
    *  yang sudah punya chart dihapus dari pangkal, di kamus Leasing tidak akan ada pintu telusur
    *  sama sekali. */
+  /** Kartu chart **Tren 12 Bulan · Total Revenue &lt;unit&gt;** di PANGKAL seksi Chart Financial
+   *  Performance — permintaan pemilik 2 September: *"Di Chart Financial Performance dmana ada
+   *  4 Card grafik yg ada. di atas nya saya mau tambahkan Card Grafik Tren 12 Bulan · Total
+   *  Revenue MALL."*
+   *
+   *  **Hanya seksi yang didaftar `SEKSI_SEPERTI_FP`.** Mula-mula seksi 'finansial' saja —
+   *  beliau menyebut satu halaman dan, waktu ditanya, memilih cakupan itu. Seksi **'hotel'**
+   *  menyusul beberapa menit kemudian: *"Untuk menu Dashboard Hotel tolong di samakan dengan
+   *  halaman Financial Performance Detail ada tambahan grafik Tren 12 Bulan · Total Revenue
+   *  HOTEL."* Yang belum diminta: Leasing dan Operation — di sana Total Revenue bukan metrik
+   *  seksi itu — dan Office Building.
+   *
+   *  Angkanya dari pohon ORGANISASI, sama dengan chart tren di Dashboard Management — bukan dari
+   *  kamus seksi ini. Itu memang yang diminta ("Total Revenue"), dan untuk MALL keduanya angka
+   *  yang sama (`REVENUE` FA MALL).
+   *
+   *  Unitnya diambil dari **kamus sumber seksi itu**, BUKAN dari entitas halamannya — aturan yang
+   *  sama dengan filter Sub Unit di halaman ini, dan alasannya sama: seksi Hotel yang dibuka dari
+   *  halaman PT SMIP tetap berisi angka HOTEL, jadi trennya pun harus tren HOTEL. Versi pertama
+   *  (2 September, beberapa menit) memakai entitas, dan di halaman PT SMIP itu memberi tren
+   *  SELURUH perusahaan di samping kartu yang jelas milik satu unit bisnis — plus, kalau satu sub
+   *  unit difilter, tren yang mengabaikan filter itu.
+   *
+   *  Judulnya ikut unit DAN filter sub unit. Tanpa itu ia membohongi angkanya — cacat yang sudah
+   *  dua kali menggigit proyek ini (judul yang tidak ikut filter, 23 Agustus; judul rentang yang
+   *  tidak ikut mode, 24 Agustus). Kanvasnya pasangan dua varian karena kartunya selebar baris;
+   *  kanvas tunggal di lebar itu membengkak tingginya (2 September, RINGKASAN 2w). */
+  /** Seksi yang "disamakan dengan halaman Financial Performance Detail" — istilah pemilik
+   *  sendiri. Satu daftar untuk DUA sifat sekaligus, karena permintaannya memang satu paket:
+   *
+   *    1. kartu chart **Tren 12 Bulan · Total Revenue <unit>** di pangkal seksi Chart;
+   *    2. kartu metrik selengkap daftar Laporan — mencabut aturan 24 Agustus di seksi itu.
+   *
+   *  Ditulis satu daftar, bukan dua, supaya keduanya tidak bisa menyimpang: "samakan dengan
+   *  Financial Performance Detail" berarti kedua sifat itu, dan halaman yang mendapat satu
+   *  tetapi tidak yang lain justru tidak sama. Kalau kelak pemilik meminta hanya salah satunya
+   *  untuk satu seksi, di sinilah daftarnya dipecah dua.
+   *
+   *  Isinya, urut waktu permintaan pemilik 2 September: 'finansial' (permintaan pertama),
+   *  'hotel' (*"Untuk menu Dashboard Hotel tolong di samakan dengan halaman Financial
+   *  Performance Detail"* + *"Iy samakan"* untuk kartu metriknya), lalu 'spm' (*"Untuk Dashboard
+   *  Office Building juga tambahkan ya grafik Tren 12 Bulan · Total Revenue Office Building"*).
+   *
+   *  Untuk 'spm' beliau menyebut grafiknya saja — dan itu memang satu-satunya yang berubah di
+   *  sana: kartu metrik Office Building SUDAH sama dengan daftar Laporannya (BALANCE SCORECARD ·
+   *  OCCUPANCY · NO OF EMPLOYEE), karena keempat metrik kartu chart SPM bukan metrik akar
+   *  melainkan turunan Balance Scorecard, jadi tidak ada yang pernah ditapis di sana. Sifat
+   *  kedua ikut aktif tanpa mengubah apa pun yang terlihat — sudah diperiksa.
+   *
+   *  **Belum diminta: 'leasing', 'operation'.** Di keduanya perlu dipikirkan dulu: Total Revenue
+   *  bukan metrik seksi itu, jadi kartu trennya akan memajang angka yang tidak berhubungan
+   *  dengan kartu-kartu di bawahnya. */
+  const SEKSI_SEPERTI_FP = ['finansial', 'hotel', 'spm'];
+
+  function kartuTrenTotal(state, kodeSeksi, ent, subUnit = 'SEMUA') {
+    if (!SEKSI_SEPERTI_FP.includes(kodeSeksi)) return '';
+    const kodeHalaman = D.halamanSumberSeksi(kodeSeksi, ent.kode);
+    const kodeUnit = (kodeHalaman
+      && D.HALAMAN.find((h) => h.kode === kodeHalaman)?.unitBisnis) || 'SEMUA';
+    const namaSub = subUnit !== 'SEMUA'
+      ? (D.SUB_UNIT[kodeUnit] || []).find((s) => s.kode === subUnit)?.nama || null
+      : (kodeUnit === 'SEMUA' ? null : D.namaUnitBisnis(kodeUnit));
+    const tren = trenOrganisasi({ ...state, unitBisnis: kodeUnit, subUnit });
+    return `<article class="pr-fp-kartu pr-fp-kartu-besar pr-fp-kartu-tren">` +
+      kartuTren(tren, judulTotalRevenue(namaSub), 'rp_mn', true) +
+    `</article>`;
+  }
+
   function blokChartSeksi(state, kodeSeksi, ent, subUnit = 'SEMUA', jalurMetrik = () => null) {
     const daftar = D.kartuChartSeksi(kodeSeksi, ent.kode);
     if (!daftar.length) return '';
     const namaPeriode = labelPeriode(state);
-    return `<div class="pr-fp-grid pr-fp-grid-besar">` +
+    return kartuTrenTotal(state, kodeSeksi, ent, subUnit) +
+      `<div class="pr-fp-grid pr-fp-grid-besar">` +
       daftar.map((def) => kartuFinansial(state, def, namaPeriode, subUnit, 'sedang',
                                          jalurMetrik(def.metrik))).join('') +
     `</div>`;
@@ -5740,7 +6274,7 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
 
     // Kontribusi turunan entitas ini — permintaan pemilik 20 Agustus. Isinya mengikuti entitas
     // yang dibuka: unit bisnis untuk PT SMIP, dan sub unit masing-masing untuk MALL / HOTEL /
-    // OFFICE BUILDING SPM. Sumbernya simpul yang sama dengan kartu di atasnya, jadi keduanya
+    // OFFICE BUILDING. Sumbernya simpul yang sama dengan kartu di atasnya, jadi keduanya
     // tidak bisa berbeda.
     // Tingginya ikut jumlah baris: kanvas tetap membuat batang enam sub unit MALL berimpit,
     // sementara untuk dua gedung SPM ia menyisakan ruang kosong setengah kanvas.
@@ -5766,17 +6300,25 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
         `</div>`
       : '';
 
+    // `tambahan` boleh berupa FUNGSI, dan pemanggil di halaman awal memang mengirimnya begitu:
+    // ia dipanggil dengan `sendiri` = benar ketika chart kontribusi tidak ada, karena hanya DI
+    // SINI yang tahu apakah baris ini akan berisi satu chart atau dua. Kalau keputusan itu
+    // ditinggalkan di pemanggil, ia harus mengulang syarat `batang.length && denganKontribusi` —
+    // dan salinan kedua syarat itu akan menyimpang begitu salah satunya berubah.
+    const trenHtml = typeof tambahan === 'function' ? tambahan(!chart) : tambahan;
+
     // Tanpa satu chart pun, grid-nya tidak dirender: kotak kosong di bawah kartu terbaca
     // seperti chart yang gagal dimuat.
     //
-    // Kalau isinya hanya SATU chart, gridnya ditandai supaya lebarnya bisa ditahan CSS.
-    // `auto-fit` membuat satu-satunya chart yang tersisa merentang selebar halaman, dan pemilik
-    // menilainya "terlalu besar" (23 Agustus) — keadaan itu muncul begitu satu sub unit dipilih,
-    // karena sub unit tidak punya turunan sehingga chart kontribusinya hilang.
-    const jmlChart = (tambahan ? 1 : 0) + (chart ? 1 : 0);
+    // Kalau isinya hanya SATU chart, gridnya ditandai — dan sejak 2 September penandanya bukan
+    // lagi penahan lebar, melainkan pemaksa SATU kolom penuh: pemilik menandai pita kosong di
+    // sebelah chart dan meminta "spacenya" diisi. Yang menjaga chart itu tidak jadi "terlalu
+    // besar" seperti keluhan 23 Agustus bukan lebarnya lagi, melainkan pasangan kanvas dua
+    // varian di kartunya (lihat kartuTren()).
+    const jmlChart = (trenHtml ? 1 : 0) + (chart ? 1 : 0);
     return kartu + (jmlChart
       ? `<div class="pr-ov-chart-grid${jmlChart === 1 ? ' pr-ov-chart-sendiri' : ''}">` +
-        `${tambahan}${chart}</div>`
+        `${trenHtml}${chart}</div>`
       : '');
   }
 
@@ -5865,12 +6407,21 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
   /** Judul + tabel pohon rinciannya. Dipakai halaman modul (judul "Rincian Metrik", kolom
    *  METRIK) dan seksi Summary Info di Dashboard Management ("Data Rincian", kolom UNIT
    *  BISNIS) — pemilik meminta penamaannya menyebut apa yang benar-benar didaftar tabelnya. */
-  function blokRincian(judul, pohon, judulKolom) {
+  function blokRincian(judul, pohon, judulKolom, tingkatTerbuka = 1) {
     return `<div class="ds-section-title">` +
         `<i class="bi bi-diagram-3"></i> ${esc(judul)}` +
         `<span class="ds-section-meta">Klik tanda panah untuk membuka level di bawahnya</span>` +
-      `</div>${tabel(pohon, judulKolom)}`;
+      `</div>${tabel(pohon, judulKolom, tingkatTerbuka)}`;
   }
+
+  /** Data Info memajang tingkat 1 DAN 2 sejak awal (permintaan pemilik 1 September, dengan
+   *  tangkapan layar). Pohonnya di sini hanya punya satu akar — PT SMIP pada filter Semua Unit
+   *  Bisnis, atau unit itu sendiri kalau difilter — jadi tabel berkolom enam itu sebelumnya
+   *  memajang SATU baris sampai ada yang mengklik panahnya. Ditulis satu kali di sini supaya
+   *  kedua tempat yang merender seksi ini (mode biasa dan mode Perbandingan 3 Tahun) tidak bisa
+   *  menyimpang. */
+  const blokDataInfo = (simpul) =>
+    blokRincian('Data Rincian', [simpul], 'UNIT BISNIS', 2);
 
   /** Seksi Overview pada mode perbandingan tiga tahun: satu kartu angka per tahun, plus satu chart
    *  batang yang menyandingkan ketiganya.
@@ -5898,17 +6449,27 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
       warna: t === tahun[tahun.length - 1] ? `var(--pr-c-1)` : `var(--pr-c-ref)`,
     }));
 
-    // `pr-ov-chart-sendiri` WAJIB: barisan ini isinya satu chart, dan tanpa penahan itu
-    // `auto-fit` membuatnya merentang selebar halaman. Untuk chart ber-viewBox itu bukan sekadar
-    // "terlalu besar" — teks di dalamnya ikut menskala. Terukur 26 Agustus pada 1536 px: kanvas
-    // 1395 px, skala 2,85x, dan teks yang ditulis 11,5 tampil **32,7 px**. Cacat itu ada di sini
-    // sejak mode ini lahir 23 Agustus dan tidak pernah terlihat karena mode ini belum pernah
-    // diukur. Dengan penahannya: 544 px, skala 1,11x, teks 12,8 px.
-    return `<div class="pr-ov-kartu">${kartu}</div>` +
+    // Chart ini pernah ditahan lebarnya (`.pr-ov-chart-tahun`, 52rem) karena 26 Agustus ia
+    // terukur merentang 1.395 px dan pemilik meminta "sedang". **Penahan itu dicabut beliau
+    // 2 September**, dengan tangkapan layar bertanda biru pada pita kosong di kanan batangnya:
+    // *"tolong di sesuaikan ya jangan ada space kosong."*
+    //
+    // Yang menggantikannya pasangan kanvas `kanvasBarKolom()`. Alasannya terukur di browser
+    // hari itu, dan sekalian membetulkan catatan lama di sini: teks chart batang **TIDAK** ikut
+    // menskala sejak label bar() jadi HTML 24 Agustus (tetap 12 px pada 832 px maupun 1.395 px).
+    // Yang benar-benar membengkak GEOMETRINYA — batang 27 → 46 px tebal, blok 163 → 273 px
+    // tinggi. Pasangan kanvas menahan itu: viewBox lebarnya ikut lebar kolom, jadi skalanya
+    // tetap ~1,5x di mana pun dan batangnya tetap ~24 px.
+    // `pr-ov-kartu-tahun`: barisan kartu Overview dipatok EMPAT kolom supaya PT SMIP (1 kartu
+    // angka + 3 unit bisnis) tepat satu baris — dan tiga kartu tahun karena itu menyisakan satu
+    // kolom kosong di kanan. Pemilik meminta itu dirapikan 2 September, menyusul chart per tahun
+    // tepat di bawahnya: *"Ya, kartu tahunnya sekalian dirapikan selebar baris"*.
+    return `<div class="pr-ov-kartu pr-ov-kartu-tahun">${kartu}</div>` +
       `<div class="pr-ov-chart-grid pr-ov-chart-sendiri pr-ov-chart-tahun"><div class="pr-ov-chart">` +
         `<div class="pr-chart-title">${esc(NAMA_REVENUE)} per Tahun &middot; ` +
           `${esc(labelRentangTahunan())}</div>` +
-        CH.bar({ items: batang, h: 96, satuan: 'rp_mn', padKiri: PAD_KIRI_TAHUN }) +
+        kanvasBarKolom(96, (u) => CH.bar({ items: batang, ...u, satuan: 'rp_mn',
+                                           padKiri: PAD_KIRI_TAHUN })) +
       `</div></div>`;
   }
 
@@ -5923,7 +6484,12 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
    *   - kartu unit bisnis di Overview BISA diklik ke halaman detail masing-masing — sesudah
    *     baris empat kartu di atas dihapus, itulah satu-satunya pintu masuk ke halaman detail;
    *   - tidak ada kartu PT SMIP dan tidak ada tombol kembali: angka PT SMIP sudah menjadi
-   *     angka besar di Overview, dan halaman inilah tujuan tombol kembali itu. */
+   *     angka besar di Overview, dan halaman inilah tujuan tombol kembali itu.
+   *
+   *  27 Agustus, hasil rapat Tim Manajemen: pada filter Semua Unit Bisnis susunannya dipadatkan
+   *  dari tujuh group collapse menjadi LIMA — Overview Revenue · Mall · Hotel · Office Building ·
+   *  Data Info — dengan ketiga seksi milik MALL bersarang di dalam group Mall. Daftarnya
+   *  tetap datang dari kamus (`D.seksiRingkasanUntuk`), bukan disusun di sini. */
   function halamanRingkasan(state, h) {
     // Tanpa filter = seluruh unit bisnis. Dijadikan eksplisit supaya state yang belum memuat
     // medan ini (mis. tautan lama, atau pemanggil yang hanya peduli periode) tidak diam-diam
@@ -5975,7 +6541,7 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
       // tidak bisa memuat tiga tahun sekaligus.
       if (mode === 'banding3') {
         if (s.kode === 'overview') return bandingOverview(state, kodeUnit, kodeSub);
-        if (s.kode === 'info') return blokRincian('Data Rincian', [simpul], 'UNIT BISNIS');
+        if (s.kode === 'info') return blokDataInfo(simpul);
         const kamus = D.halamanSumberSeksi(s.kode, ent.kode);
         // Seksi yang kamusnya tidak ada untuk entitas ini tetap ditandai, bukan dibiarkan kosong.
         return kamus ? blokBandingTahun(kamus, kodeSub) : isiSeksiMenyusul(s);
@@ -5999,14 +6565,18 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
           // kolom pertama barisan chart Overview, bukan blok terpisah di bawahnya. Judulnya ikut
           // menyebut yang sedang difilter — trennya memang sudah disaring sampai sub unit, jadi
           // tanpa itu judulnya membohongi angkanya.
-          tambahan: kartuTren(trenOrganisasi(state), judulTotalRevenue(namaSub),
-                              simpul.satuan),
+          //
+          // Dikirim sebagai FUNGSI, bukan HTML yang sudah jadi: lebar kanvasnya tergantung
+          // apakah chart kontribusi ikut tampil, dan yang tahu itu isiOverview() (lihat
+          // catatannya di sana). Sejak 2 September chart yang sendirian mengisi seluruh baris.
+          tambahan: (sendiri) => kartuTren(trenOrganisasi(state), judulTotalRevenue(namaSub),
+                                           simpul.satuan, sendiri),
         });
       }
       // Sub unit diteruskan ke seksi berkartu, bukan hanya ke Overview: tanpa itu angka kartunya
       // tetap konsolidasi unit bisnisnya — terbaca wajar di layar, dan tidak ada yang gagal.
       if (s.kode === 'finansial') return isiFinansial(state, ent, kodeSub);
-      if (s.kode === 'info') return blokRincian('Data Rincian', [simpul], 'UNIT BISNIS');
+      if (s.kode === 'info') return blokDataInfo(simpul);
       // Keempat seksi lainnya diisi metrik unit bisnis pemiliknya (Leasing & Operation dari
       // MALL, dan seterusnya). Entitasnya ikut filter, dan itu sekalian menghilangkan keterangan
       // "Sumber: …" begitu difilter ke unit itu sendiri — di sana angkanya memang angka unit itu.
@@ -6014,16 +6584,41 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
     };
 
     const seksi = D.seksiRingkasanUntuk(ent.kode);
-    const terbuka = seksiTerbukaAwal(state, seksi);
+    // Daftarnya DIRATAKAN dulu: sejak 27 Agustus filter Semua Unit Bisnis punya group yang
+    // isinya seksi lagi, dan seksi di dalamnya tidak akan pernah dianggap terbuka kalau yang
+    // dibaca hanya tingkat atas.
+    const terbuka = seksiTerbukaAwal(state, D.seksiRata(seksi));
+    // Judul seksi menyebut unit bisnis yang difilter (permintaan pemilik 23 Agustus) — TETAPI
+    // hanya kalau filternya benar-benar satu unit bisnis. Pada filter Semua Unit Bisnis akhiran
+    // itu dihilangkan (permintaan pemilik 27 Agustus, sesudah beliau melihat hasilnya): sejak
+    // ada group bernama Mall / Hotel / Office Building, "Mall Semua Unit Bisnis" **membantah
+    // dirinya sendiri** — group itu justru membatasi ke satu unit. Akhiran itu memang berguna
+    // waktu filternya BUKAN bawaan, supaya satu seksi yang di-screenshot tidak terbaca sebagai
+    // angka seluruh perusahaan; pada filter bawaan lingkupnya sudah tertulis di subjudul halaman
+    // dan di kontrol filternya, jadi ia hanya menambah panjang.
+    //
+    // Yang TIDAK ikut aturan ini: judul kartu angka Total Revenue di Overview. Ia satu ANGKA,
+    // bukan judul wadah, dan "Total Revenue" saja tidak membedakan gabungan seluruh unit bisnis
+    // dari total satu unit.
+    const judulGroup = (s) => (semuaUnit ? s : judulSeksiUnit(s, namaSub));
+    // Group yang isinya seksi lain (Mall) tidak punya isi sendiri — yang dirender di dalamnya
+    // tumpukan collapse kedua, komponen yang SAMA dengan tingkat atasnya. Judul seksi di dalam
+    // tidak pernah ikut menyebut unit bisnisnya, apa pun filternya: pembungkusnya sudah
+    // menyebutkannya.
+    const seksiAtau = (s) => (s.anak
+      ? seksiCollapse(judulGroup(s),
+                      `<div class="pr-cv pr-cv-dalam">${s.anak
+                        .map((a) => seksiCollapse(a, isiSeksi(a), terbuka.has(a.kode)))
+                        .join('')}</div>`,
+                      terbuka.has(s.kode))
+      : seksiCollapse(judulGroup(s), isiSeksi(s), terbuka.has(s.kode)));
     // Tombol "Buka semua / Tutup semua" dihilangkan di halaman ini atas permintaan pemilik
     // (20 Agustus): pekerjaannya sudah diambil alih sakelar Collapse View. Halaman modul masih
     // memakainya — di sana tidak ada seksi collapse, jadi tanpa tombol itu tabelnya hanya bisa
     // dibuka satu per satu.
     return kepalaHalaman(h.judul, [namaSub, namaPeriode]) +
       toolbar(state, { denganCollapse: true }) +
-      `<div class="pr-cv">${seksi
-        .map((s) => seksiCollapse(judulSeksiUnit(s, namaSub), isiSeksi(s), terbuka.has(s.kode)))
-        .join('')}</div>`;
+      `<div class="pr-cv">${seksi.map(seksiAtau).join('')}</div>`;
   }
 
   function halaman(state) {
@@ -6047,16 +6642,15 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
         { ...state, seksiDetail: pasangan.seksi, entitas: pasangan.entitas },
         // Judulnya judul MENUNYA, dan tanpa tombol Kembali — dibuka dari sidebar tidak ada
         // tempat untuk kembali, dan tombol yang tidak menuju ke mana-mana lebih membingungkan
-        // daripada tidak ada tombol.
-        // `dariMenu`: seksi Laporan Pendukung hanya ada di pintu INI — permintaan pemilik
-        // 26 Agustus, ia dipakai Tim Leasing dan bukan Tim Manajemen.
-        { judulHalaman: h.judul, denganKembali: false, dariMenu: true });
+        // daripada tidak ada tombol. Sejak 2 September itu satu-satunya yang membedakan kedua
+        // pintu: seksi Laporan Pendukung kini ada di keduanya (permintaan pemilik).
+        { judulHalaman: h.judul, denganKembali: false });
     }
 
     // Halaman modul yang kodenya tidak berpasangan dengan seksi mana pun adalah kesalahan
     // KAMUS, bukan keadaan yang bisa dialami pemakai. Diberi keterangan yang menyebut
     // kodenya, supaya kesalahan itu terbaca di layar alih-alih menjadi halaman kosong.
-    return kepalaHalaman(h.judul, [h.unitBisnis === 'SPM' ? 'OFFICE BUILDING SPM' : h.unitBisnis]) +
+    return kepalaHalaman(h.judul, [D.namaUnitBisnis(h.unitBisnis)]) +
       `<div class="ds-empty-state"><div class="ds-empty-icon">` +
         `<i class="bi bi-exclamation-triangle"></i></div>` +
         `<h3>Halaman ini belum dipasangkan dengan seksinya</h3>` +
@@ -6142,7 +6736,10 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
                   entitas: null, seksiTerbuka: null, collapseView: false,
                   jalur: [], asal: null, seksiDetail: null, pendukung: null };
 
-  const namaUnit = (kode) => (kode === 'SPM' ? 'OFFICE BUILDING SPM' : kode);
+  // Nama yang dipajang datang dari kamus (`D.namaUnitBisnis`), BUKAN ditulis di sini. Sampai
+  // 27 Agustus berkas ini menuliskan sendiri `kode === 'SPM' ? 'OFFICE BUILDING SPM' : kode`,
+  // dan waktu pemilik meminta kata "SPM" dihilangkan, nama itu ada di lima tempat.
+  const namaUnit = (kode) => D.namaUnitBisnis(kode);
 
   /** Halaman yang sedang aktif, termasuk yang tidak terdaftar di D.HALAMAN (Detail). */
   const halamanAktif = () =>
@@ -6173,11 +6770,13 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
       return;
     }
     const h = halamanAktif();
-    const daftar = h.unitBisnis ? D.SUB_UNIT[h.unitBisnis] : D.UNIT_BISNIS;
-    const pilih = daftar.find((s) => s.kode === state.subUnit);
-    const judul = pilih ? pilih.nama : (h.unitBisnis ? `Semua ${h.unitBisnis}` : 'PT SMIP');
-    document.getElementById('unitPillIcon').textContent = (pilih ? pilih.kode : 'SM').slice(0, 2).toUpperCase();
-    document.getElementById('unitPillTitle').textContent = judul;
+    // Teksnya dari kamus (`D.judulPilUnit`), bukan disusun di sini: sampai 27 Agustus baris ini
+    // menyisipkan KODE unit bisnisnya (`Semua ${h.unitBisnis}`) sehingga pil memajang
+    // "Semua SPM" walau nama unitnya sudah dipendekkan — dan penjaga test tidak bisa melihatnya,
+    // karena app.js butuh DOM dan tidak dimuat suite itu. Ketemu di browser.
+    const pil = D.judulPilUnit(h.unitBisnis, state.subUnit);
+    document.getElementById('unitPillIcon').textContent = pil.ikon;
+    document.getElementById('unitPillTitle').textContent = pil.judul;
     document.getElementById('unitPillSubtitle').textContent =
       D.PERIODE.find((p) => p.kode === state.periode).nama;
   }
@@ -6208,7 +6807,7 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
     }
     const daun = D.sumberDataDari(state.halaman);
     const bagian = daun
-      // Jalur penuh, mis. OFFICE BUILDING SPM ▸ Sumber Data, atau MALL ▸ Sumber Data ▸ Operation ▸ HRD
+      // Jalur penuh, mis. OFFICE BUILDING ▸ Sumber Data, atau MALL ▸ Sumber Data ▸ Operation ▸ HRD
       ? [`<a href="#">${namaUnit(daun.unitBisnis)}</a>`,
          ...daun.jalur.slice(0, -1).map((n) => `<a href="#">${n}</a>`),
          `<b>${daun.nama}</b>`]
@@ -6238,6 +6837,13 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
     if (tombol) {
       tombol.setAttribute('aria-expanded', String(buka));
       tombol.querySelector('i').className = buka ? 'bi bi-caret-down-fill' : 'bi bi-caret-right-fill';
+      // Labelnya ikut diperbarui, tidak hanya panahnya. Sebelum 1 September baris selalu lahir
+      // tertutup dan labelnya "Buka …" selamanya — salah sesudah klik pertama, tetapi tidak
+      // terlihat. Sejak Data Info memajang barisnya sudah terbuka, label yang tidak ikut
+      // berubah jadi salah SEJAK awal, dan pembaca layar mendapat perintah yang berlawanan.
+      const label = tombol.getAttribute('aria-label') || '';
+      tombol.setAttribute('aria-label',
+        `${buka ? 'Tutup' : 'Buka'} ${label.replace(/^(Buka|Tutup)\s+/, '')}`);
     }
     for (const tr of document.querySelectorAll(`tr[data-induk="${id}"]`)) {
       tr.classList.toggle('pr-row-hidden', !buka);
@@ -6440,7 +7046,7 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
         // daftarnya, dan halamannya diam-diam memakai opsi pertama — angka yang bukan yang
         // ditunjuk pemilih, tanpa satu pun error.
         state.subUnit = 'SEMUA';
-        // Filter ini mengubah DAFTAR seksinya, bukan cuma angkanya (Hotel & Office Building SPM
+        // Filter ini mengubah DAFTAR seksinya, bukan cuma angkanya (Hotel & Office Building
         // hilang saat MALL dipilih, dan sebaliknya). Keadaan buka-tutup yang terbawa karena itu
         // tidak berlaku lagi: pemakai yang menutup seksi Hotel saat filter SEMUA, lalu memilih
         // filter HOTEL, akan menemukan seksi Hotel — satu-satunya seksi berisi di sana — sudah
