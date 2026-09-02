@@ -1145,8 +1145,25 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
       { kode: 'SVLG', nama: 'Summarecon Villagio',           singkat: 'Villagio Outlets' },
       { kode: 'SSJB', nama: 'Summarecon Samasta Jimbaran Bali', singkat: 'Samasta Jimbaran Bali' },
     ],
+    // POP Hotel Kelapa Gading menyusul 2 September, permintaan pemilik: *"untuk Hotel Tolong
+    // tambahkan 1 hotel lg yaitu POP HOTEL KELAPA GADING. Ini tambahkan di bagian filter jg ya.
+    // Dan semua yg berhubungan dengan Hotel."* Ditaruh di kamus SAJA, dan itu sudah "semua yang
+    // berhubungan": filter Sub Unit, kartu Overview, pohon organisasi, chart perbandingan antar
+    // sub unit, kolom tabel Laporan, dan baris Data Info semuanya diturunkan dari daftar ini.
+    // Angkanya pun ikut — PRNG-nya berbenih KODE sub unit, jadi hotel baru langsung punya angka
+    // sendiri yang konsisten antar periode tanpa satu baris data pun ditulis tangan.
+    //
+    // `nama` mengikuti pola tetangganya (Title Case, merek di depan) walau pemilik menulisnya
+    // huruf besar semua — di kamus ini nama sub unit memang Title Case, dan "POP" dibiarkan
+    // huruf besar karena itu merek, bukan kata.
+    // Urutannya ditetapkan pemilik sesudah melihat hasilnya: POP Hotel **tepat sesudah** Harris
+    // Hotel Kelapa Gading — *"urutannya setelah Harris Hotel Kelapa Gading ya"*. Jadi dua hotel
+    // di lokasi yang sama berdampingan, bukan yang baru ditaruh di ekor daftar. Urutan daftar ini
+    // menentukan urutan di filter, kartu Overview, kolom tabel Laporan, dan baris Data Info
+    // sekaligus; chart Perbandingan antar Sub Unit tetap urut NILAI, bukan urutan ini.
     HOTEL: [
       { kode: 'HKG', nama: 'Harris Hotel Kelapa Gading' },
+      { kode: 'PKG', nama: 'POP Hotel Kelapa Gading' },
       { kode: 'HBK', nama: 'Harris Hotel Bekasi' },
       { kode: 'HSP', nama: 'Harris Hotel Serpong' },
       { kode: 'MJB', nama: 'Mövenpick Hotel Jimbaran Bali' },
