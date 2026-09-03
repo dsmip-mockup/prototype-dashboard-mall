@@ -1105,7 +1105,7 @@ html, body { overflow-x: hidden; }
        lupa diperbarui, dan cap yang salah lebih buruk daripada tidak ada. -->
   <footer class="main-footer">
     <span>Prototype Dashboard Data Management &middot; PT SMIP &middot; <strong>Seluruh angka pada halaman ini adalah data contoh</strong>, bukan angka riil.</span>
-    <span class="pr-versi">Versi 2 September 2026</span>
+    <span class="pr-versi">Versi 3 September 2026</span>
   </footer>
 </div>
 </div>
@@ -1542,46 +1542,68 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
     d('NO OF EMPLOYEE', 'orang'),
   ];
 
-  // ── OFFICE BUILDING (3 kelompok) — Lampiran A.5, berkas `SPM\DASHBOARD_UTAMA_SPM.xlsx` ──
-  // Kamus SPM = daftar **Summary** berkas acuan pemilik `SPM\DASHBOARD_UTAMA_SPM.xlsx`, RATA
-  // dan urut sama. Permintaan pemilik 2 September: *"Untuk Office Building Detail dan Dashboard
-  // Office Building. BALANCE SCORECARD di hilangkan. Rubah menjadi sesuai di file berikut."*
+  // ── OFFICE BUILDING (7 kelompok) — berkas acuan `SPM\DASHBOARD_UTAMA_SPM.xlsx` ──
+  // Kamus SPM = kolom **Summary** berkas acuan pemilik berikut kolom **Detail**-nya, urut sama.
   //
-  // Sampai 1 September isinya TIGA akar — `BALANCE SCORECARD` (yang membungkus tiga perspektif
-  // Balanced Scorecard: Financial · Customer · Internal Process), `OCCUPANCY`, dan
-  // `NO OF EMPLOYEE`. Susunan itu datang dari Lampiran A.5, acuan yang dipakai membangun kamus
-  // ini 12 Agustus; berkas acuan pemilik yang sekarang tidak mengenal pembungkus itu sama sekali,
-  // dan sebelas metrik yang dulu tersembunyi dua lapis di dalamnya kini jadi akar sendiri.
+  // Berkasnya sudah berubah DUA HARI BERTURUT-TURUT, dan tiap kali pemilik memintanya diikuti:
   //
-  // Tiga hal yang perlu diingat tentang daftar ini:
+  //  - sampai 1 September kamus ini TIGA akar, warisan Lampiran A.5, dengan sebelas metrik
+  //    tersembunyi dua lapis di dalam pembungkus `BALANCE SCORECARD`;
+  //  - 2 September pembungkus itu dihapus dan isinya dirata jadi **14 akar** mengikuti berkas
+  //    yang waktu itu memang rata (*"BALANCE SCORECARD di hilangkan. Rubah menjadi sesuai di
+  //    file berikut"*);
+  //  - 3 September berkasnya **disusun ulang lagi** jadi **7 Summary berjenjang** — versi
+  //    2 September-nya beliau simpan di sebelahnya sebagai `DASHBOARD_UTAMA_SPM_AWAL.xlsx`,
+  //    jadi jangan salah baca berkas kalau angkanya tidak cocok.
   //
-  //  1. **Ejaannya HURUF BESAR, mengikuti berkasnya** — sebelumnya Title Case ('Revenue',
-  //     'Collection'). Itu sekaligus menutup butir 14 RINGKASAN 8: judul kartu chart SPM sudah
-  //     huruf besar sejak 1 September, jadi dulu satu metrik punya dua ejaan di satu layar.
-  //  2. **Dua ejaan DIBETULKAN dari berkasnya**, keduanya salah ketik yang jelas dan sudah
-  //     dicatat 1 September: No. 3 tertulis "EEBITDA", No. 4 "NET ROFIT BEFORE INTEREST (NPBI)".
-  //  3. **`Expense Ratio` DIHAPUS.** Ia tidak ada di berkas acuan — dan pertanyaan yang
-  //     menggantung sejak 1 September (butir 15 RINGKASAN 8: metrik lain, atau pengganti
-  //     EXPENSE?) terjawab oleh permintaan ini: yang ada di berkasnya hanya EXPENSE. Rantai
-  //     turunannya tetap utuh, hanya rasionya tidak lagi jadi metrik sendiri — lihat
-  //     TURUNAN.spm di `data.js`.
+  // **Susunan barunya nyaris menyalin kamus FA di atas** (REVENUE per account · EXPENSE ·
+  // EBITDA per account · NPAT · ACCOUNT RECEIVABLE → Collection), dan itu bukan kebetulan:
+  // pemilik menyeragamkan susunan keuangan Office Building dengan Mall. Akibat yang harus
+  // diingat: **sepuluh nama daun di sini kembar dengan nama daun FA**, sementara kunci `BASIS`
+  // (data.js) berlaku per NAMA lintas kamus. Karena itu tak satu pun daun SPM didaftar di
+  // `BASIS` — semuanya diturunkan dari `REVENUE` lewat `TURUNAN.spm`, yang berkunci HALAMAN
+  // sehingga tidak bisa tertukar dengan FA. Rentang MALL 3-5 kali lebih besar; kalau tertukar,
+  // Office Building diam-diam tampil seukuran Mall. Ada penjaga skalanya di `data.test.js`.
   //
-  // Nomor di berkasnya melompat: "12." dipakai DUA KALI (% ON TIME COMPLAINT HANDLING dan
-  // OCCUPANCY), jadi barisnya empat belas walau nomor terakhirnya 13. Urutan di sini mengikuti
-  // urutan BARIS, bukan nomornya.
+  // Tiga hal lain yang perlu diingat:
+  //
+  //  1. **REVENUE dan NPAT bertipe `hitung`, bukan `jumlah`.** Di kedua baris itu berkasnya
+  //     menaruh anak yang bukan bagian induknya: NPBI (laba, bukan pendapatan) di bawah
+  //     REVENUE, dan `NPAT` yang mengulang nama induknya. Kalau induknya menjumlahkan anak,
+  //     keduanya terhitung dua kali — Revenue menggelembung persis sebesar NPBI, tanpa error.
+  //     Pemilik memilih sendiri jalan ini 3 September ("ikuti berkas, angka dijaga"); cara yang
+  //     sama sudah dipakai kamus FA untuk NPAT sejak awal.
+  //  2. **Ejaan mengikuti berkasnya**: Summary HURUF BESAR, Detail Title Case. NPBI karena itu
+  //     berubah dari `NET PROFIT BEFORE INTEREST (NPBI)` (akar, 2 September) menjadi
+  //     `Net Profit Before Interest (NPBI)` (Detail) — kartu chart Office Building menyebut
+  //     nama ini, jadi keduanya berpindah bersama.
+  //  3. **Tujuh metrik non-finansial DIHAPUS** karena berkasnya tidak memuatnya lagi: OPERATING
+  //     COST RECOVERY, RASIO KARYAWAN TERHADAP REVENUE, CUSTOMER SATISFACTION INDEX, GENSET,
+  //     TRANSPORTATION SYSTEM, AUDIT IMPLEMENTASI SISTEM MANAJEMEN, dan % ON TIME COMPLAINT
+  //     HANDLING. Pemilik ditanya lebih dulu dan memilih menghapusnya ("hapus, ikut berkas"),
+  //     dengan konsekuensi yang disebutkan: Office Building tidak lagi punya metrik layanan.
   const SPM = [
-    d('REVENUE', 'rp_mn'),
-    d('EXPENSE', 'rp_mn', biaya),
-    d('EBITDA', 'rp_mn'),
-    d('NET PROFIT BEFORE INTEREST (NPBI)', 'rp_mn'),
-    d('COLLECTION', 'persen'),
-    d('OPERATING COST RECOVERY', 'persen'),
-    d('RASIO KARYAWAN TERHADAP REVENUE', 'persen', biaya),
-    d('CUSTOMER SATISFACTION INDEX', 'indeks'),
-    d('POWER GENERATING & DISTRIBUTION SYSTEM (GENSET)', 'persen'),
-    d('TRANSPORTATION SYSTEM', 'persen'),
-    d('AUDIT IMPLEMENTASI SISTEM MANAJEMEN', 'persen'),
-    d('% ON TIME COMPLAINT HANDLING', 'persen'),
+    g('REVENUE', 'rp_mn', 'hitung', [
+      d('Net Profit Before Interest (NPBI)', 'rp_mn'),
+      d('Revenue Property Account', 'rp_mn'),
+      d('Revenue Operation Account', 'rp_mn'),
+    ]),
+    g('EXPENSE', 'rp_mn', 'jumlah', [
+      d('Property Expense', 'rp_mn', biaya),
+      d('Operation Expense', 'rp_mn', biaya),
+    ], biaya),
+    g('EBITDA', 'rp_mn', 'jumlah', [
+      d('EBITDA Property Account', 'rp_mn'),
+      d('EBITDA Operation Account', 'rp_mn'),
+    ]),
+    g('NPAT', 'rp_mn', 'hitung', [
+      d('NPAT', 'rp_mn'),
+      d('PAT Property Account', 'rp_mn'),
+      d('PAT Operation Account', 'rp_mn'),
+    ]),
+    g('ACCOUNT RECEIVABLE', 'rp_mn', 'grup', [
+      d('Collection', 'rp_mn'),
+    ]),
     d('OCCUPANCY', 'persen'),
     g('NO OF EMPLOYEE', 'orang', 'jumlah', [
       d('Inhouse', 'orang'),
@@ -1632,8 +1654,11 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
     // penanda menu aktif di sidebar, dan pasangan seksi/entitas di bawah ini.
     { kode: 'spm', judul: 'Dashboard Office Building', unitBisnis: 'SPM', metrik: SPM,
       seksi: 'spm', entitas: 'SPM',
-      kpi: ['OCCUPANCY', 'REVENUE', 'NET PROFIT BEFORE INTEREST (NPBI)',
-            'CUSTOMER SATISFACTION INDEX'] },
+      // CUSTOMER SATISFACTION INDEX dihapus dari kamus SPM 3 September bersama enam metrik
+      // non-finansial lainnya, dan NPBI berpindah nama mengikuti kolom Detail berkasnya —
+      // keduanya diganti di sini karena ada penjaga yang menagih tiap nama KPI ada di kamus
+      // halamannya. NPAT jadi penggantinya: metrik terbawah rantai keuangan berkas baru.
+      kpi: ['OCCUPANCY', 'REVENUE', 'Net Profit Before Interest (NPBI)', 'NPAT'] },
   ];
 
   /** Seksi + entitas yang menjadi isi satu halaman modul, atau null kalau ia bukan halaman modul. */
@@ -1962,6 +1987,14 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
       // `kuartal` juga tidak bisa — satuannya persen, dan menjumlahkan persen tiga bulan tidak
       // bermakna.
       //
+      // **3 September: keempat metriknya TETAP, hanya ejaan dan letaknya menyesuaikan berkas
+      // acuan yang disusun ulang** (pilihan pemilik sendiri waktu ditanya). Keduanya turun jadi
+      // Detail di sana, jadi namanya ikut Title Case: `NET PROFIT BEFORE INTEREST (NPBI)` →
+      // `Net Profit Before Interest (NPBI)` (kini di bawah REVENUE) dan `COLLECTION` →
+      // `Collection` (di bawah ACCOUNT RECEIVABLE). `Collection` juga berganti satuan, persen →
+      // rupiah; `subunit` tetap cocok, dan sekarang malah lebih masuk akal karena rupiah antar
+      // sub unit memang bisa dibandingkan langsung.
+      //
       // Diketahui dan dibiarkan atas keputusan pemilik yang sama seperti Hotel: pada filter
       // Office Building (dan Dashboard Management Detail entitas SPM) group Financial
       // Performance memajang Revenue · Collection · Expense Ratio · NPBI, sehingga NPBI dan
@@ -1970,9 +2003,9 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
       kartu: [
         { judul: 'EXPENSE', halaman: 'spm', metrik: 'EXPENSE', chart: 'garis' },
         { judul: 'EBITDA', halaman: 'spm', metrik: 'EBITDA', chart: 'area' },
-        { judul: 'NET PROFIT BEFORE INTEREST (NPBI)', halaman: 'spm',
-          metrik: 'NET PROFIT BEFORE INTEREST (NPBI)', chart: 'kolom' },
-        { judul: 'COLLECTION', halaman: 'spm', metrik: 'COLLECTION', chart: 'subunit' },
+        { judul: 'Net Profit Before Interest (NPBI)', halaman: 'spm',
+          metrik: 'Net Profit Before Interest (NPBI)', chart: 'kolom' },
+        { judul: 'Collection', halaman: 'spm', metrik: 'Collection', chart: 'subunit' },
       ],
     },
   };
@@ -2666,26 +2699,22 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
     'GOP DAN GOP (%)': [28, 38],
 
     // ── SPM ──
-    // `Net Profit Before Interest (NPBI)` DIHAPUS dari sini 1 September: ia sekarang diturunkan
-    // dari EBITDA (lihat TURUNAN.spm). Rentang [1.800, 4.200] yang lama dibiarkan berdiri akan
-    // jadi sumber kebenaran kedua yang tidak pernah dipakai — dan yang menyesatkan orang
-    // berikutnya yang mencari dari mana angka NPBI datang.
-    // Ejaannya HURUF BESAR sejak 2 September, mengikuti kamus yang kini mengikuti berkas acuan
-    // pemilik. 'Expense Ratio' DIHAPUS bersama metriknya — rasio 52-68% itu sekarang hidup di
-    // dalam TURUNAN.spm sebagai pengali EXPENSE, bukan sebagai metrik yang dipajang.
+    // **Hanya DUA kunci, dan itu disengaja.** Sejak berkas acuannya disusun ulang 3 September,
+    // kesepuluh daun SPM lainnya bernama SAMA PERSIS dengan daun kamus FA di atas ('Property
+    // Expense', 'Collection', 'Revenue Property Account', ...) — sementara kunci BASIS berlaku
+    // per NAMA lintas kamus. Mendaftarnya di sini berarti salah satu dari dua hal, dan dua-duanya
+    // diam: kunci SPM menimpa rentang MALL, atau Office Building memungut rentang MALL yang 3-5
+    // kali lebih besar. Karena itu semua daun SPM DITURUNKAN dari 'REVENUE' lewat TURUNAN.spm,
+    // yang berkunci HALAMAN sehingga tidak bisa tertukar. Penjaganya 'SPM: skala rupiahnya tetap
+    // skala Office Building' di data.test.js.
+    //
+    // Yang tersisa di sini: 'REVENUE' — satu-satunya angka SPM yang diacak, pangkal seluruh
+    // rantainya — dan 'OCCUPANCY', persen yang tidak berhubungan dengan rantai itu.
+    // ('OCCUPANCY' tidak kembar dengan Hotel: di sana namanya 'OCCUPANCY PERSENTASE (%)'.)
+    // Ketujuh metrik non-finansial yang dulu di sini ikut dihapus bersama metriknya 3 September,
+    // dan 'COLLECTION' berpindah nama jadi 'Collection' — kini daun di bawah ACCOUNT RECEIVABLE,
+    // bersatuan rupiah, jadi ia pun diturunkan.
     'REVENUE': [6_500, 12_000],
-    'COLLECTION': [92, 99],
-    'OPERATING COST RECOVERY': [88, 104],
-    'RASIO KARYAWAN TERHADAP REVENUE': [6, 11],
-    // 'CUSTOMER SATISFACTION INDEX' TIDAK didaftar ulang di sini: sejak ejaan SPM jadi huruf
-    // besar, namanya SAMA PERSIS dengan metrik Operation di atas — dan kunci BASIS berlaku per
-    // NAMA. Mendaftarnya dua kali membuat yang kedua menimpa yang pertama tanpa satu pun error,
-    // jadi rentang Operation ([3,9-4,6]) diam-diam berubah. Keduanya kini memakai rentang itu;
-    // bedanya dengan rentang SPM yang lama ([3,8-4,5]) tidak berarti pada data contoh.
-    'POWER GENERATING & DISTRIBUTION SYSTEM (GENSET)': [96, 99.8],
-    'TRANSPORTATION SYSTEM': [95, 99.5],
-    'AUDIT IMPLEMENTASI SISTEM MANAJEMEN': [88, 98],
-    '% ON TIME COMPLAINT HANDLING': [90, 99],
     'OCCUPANCY': [78, 95],
   };
 
@@ -2769,22 +2798,50 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
       ['NO OF EMPLOYEE', (v, r) => Math.round(v('NO OF ROOM') * r(0.6, 1.0))],
     ],
     spm: [
-      // Ketiga metrik ini plus Revenue berdiri BERDAMPINGAN dalam satu baris empat kartu sejak
-      // 1 September, jadi manajemen bisa langsung menguranginya sendiri di rapat. Karena itu
-      // ketiganya diturunkan, bukan diacak terpisah — angka yang diacak sendiri-sendiri bisa
-      // menghasilkan EBITDA yang lebih besar daripada Revenue, atau NPBI yang lebih besar
-      // daripada EBITDA, dan keduanya terlihat tanpa perlu membuka apa pun.
+      // **Seluruh angka Office Building lahir dari SATU yang diacak: 'REVENUE' (BASIS
+      // 6.500-12.000).** Semua yang lain diturunkan darinya, dan itu dua-duanya disengaja:
       //
-      // EXPENSE = REVENUE x rasio 52-68%. Rasio itu sampai 1 September adalah METRIK sendiri
-      // (`Expense Ratio`) dan itulah yang membuatnya berarti; 2 September metriknya DIHAPUS
-      // karena berkas acuan pemilik tidak memuatnya, jadi rasionya pindah ke sini sebagai
-      // pengali — rentangnya sama, [52, 68] persen. Yang penting tidak berubah: rupiah Expense
-      // tetap sepadan dengan Revenue di sebelahnya, bukan angka yang diacak lepas.
-      ['EXPENSE', (v, r) => Math.round(v('REVENUE') * r(0.52, 0.68))],
-      ['EBITDA', (v) => v('REVENUE') - v('EXPENSE')],
-      // NPBI = laba sebelum bunga, jadi ia sebagian dari EBITDA — selalu di bawahnya. Sebelum
-      // 1 September ia diacak sendiri (BASIS 1.800-4.200) dan bisa melampaui EBITDA.
-      ['NET PROFIT BEFORE INTEREST (NPBI)', (v, r) => Math.round(v('EBITDA') * r(0.55, 0.75))],
+      //  1. angka yang diacak sendiri-sendiri bisa saling membantah di layar yang sama —
+      //     EBITDA melampaui Revenue, NPBI melampaui EBITDA — dan sejak 1 September keempatnya
+      //     memang berdampingan dalam satu baris kartu, jadi manajemen langsung melihatnya;
+      //  2. sejak 3 September kesepuluh daun ini bernama sama dengan daun kamus FA, dan BASIS
+      //     berkunci NAMA lintas kamus. TURUNAN berkunci HALAMAN, jadi menurunkan di sini
+      //     adalah cara SPM tetap berskala Office Building, bukan berskala MALL.
+      //
+      // Urutan array = urutan hitung, jadi rantainya dibaca dari atas ke bawah: Revenue dibagi
+      // dua account, tiap account dikurangi bebannya sendiri jadi EBITDA, EBITDA jadi PAT, dan
+      // PAT kedua account dijumlah jadi NPAT. Susunan ini sama dengan TURUNAN.keuangan di atas
+      // — memang begitu berkas acuannya sekarang.
+      //
+      // Pembagian Revenue: Property Account (sewa) 55-70% dan sisanya Operation Account (service
+      // charge), sepadan dengan komposisi FA. Operation Account WAJIB sisanya, bukan diacak
+      // sendiri, supaya kedua anak menjumlah PERSIS Revenue induknya — yang dipajang bersebelahan
+      // di halaman yang sama.
+      ['Revenue Property Account', (v, r) => Math.round(v('REVENUE') * r(0.55, 0.70))],
+      ['Revenue Operation Account', (v) => v('REVENUE') - v('Revenue Property Account')],
+      // Beban tiap account = 52-68% pendapatannya. Rasio itu sampai 1 September METRIK sendiri
+      // ('Expense Ratio'); metriknya dihapus 2 September karena tidak ada di berkas acuan, dan
+      // rentangnya tinggal di sini sebagai pengali. EXPENSE induknya bertipe 'jumlah', jadi
+      // nilainya kedua baris ini — rasio gabungannya tetap jatuh di rentang yang sama.
+      ['Property Expense', (v, r) => Math.round(v('Revenue Property Account') * r(0.52, 0.68))],
+      ['Operation Expense', (v, r) => Math.round(v('Revenue Operation Account') * r(0.52, 0.68))],
+      ['EBITDA Property Account', (v) => v('Revenue Property Account') - v('Property Expense')],
+      ['EBITDA Operation Account', (v) => v('Revenue Operation Account') - v('Operation Expense')],
+      // PAT = EBITDA sesudah bunga & pajak; NPAT menjumlah keduanya. Induk 'NPAT' bertipe
+      // 'hitung' dan anaknya ada yang bernama 'NPAT' juga (begitu berkasnya) — satu baris ini
+      // mengisi keduanya sekaligus, persis seperti di kamus FA.
+      ['PAT Property Account', (v, r) => Math.round(v('EBITDA Property Account') * r(0.62, 0.72))],
+      ['PAT Operation Account', (v, r) => Math.round(v('EBITDA Operation Account') * r(0.60, 0.70))],
+      ['NPAT', (v) => v('PAT Property Account') + v('PAT Operation Account')],
+      // NPBI = laba sebelum bunga, jadi ia sebagian dari EBITDA — selalu di bawahnya. Ditulis
+      // dari kedua account, bukan dari v('EBITDA'): induk EBITDA bertipe 'jumlah' dan nilainya
+      // baru lahir waktu pohon diagregasi, sesudah seluruh TURUNAN selesai dihitung.
+      ['Net Profit Before Interest (NPBI)', (v, r) => Math.round(
+        (v('EBITDA Property Account') + v('EBITDA Operation Account')) * r(0.55, 0.75))],
+      // Collection = tagihan yang tertagih, jadi ia sepadan dengan Revenue dan selalu di
+      // bawahnya. Sampai 2 September ia metrik akar bersatuan PERSEN (92-99%); sejak berkasnya
+      // menaruhnya di bawah ACCOUNT RECEIVABLE ia bersatuan rupiah, seperti di kamus FA.
+      ['Collection', (v, r) => Math.round(v('REVENUE') * r(0.85, 0.98))],
     ],
   };
 
@@ -2805,7 +2862,14 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
     operation: { 'Power House': { status: 'Draft', kosong: true },
                  'Jumlah followers Youtube': { status: 'Menunggu Review' } },
     hotel:     { 'NO OF GUEST': { status: 'Menunggu Approval' } },
-    spm:       { 'Audit Implementasi Sistem Manajemen': { status: 'Draft', kosong: true } },
+    // Kuncinya berlaku per NAMA, dan sejak 2 September ia MATI tanpa satu pun error: kamus SPM
+    // berganti ejaan jadi huruf besar sementara kunci di sini tetap Title Case, jadi badge
+    // Draft di Office Building hilang diam-diam. Metriknya sendiri sudah tidak ada lagi
+    // (3 September), jadi penandanya pindah ke 'Operation Expense'. TANPA `kosong`: EXPENSE
+    // induknya bertipe 'jumlah', dan mengosongkan satu anaknya membuat Expense yang dipajang
+    // tidak lagi sepadan dengan Revenue di sebelahnya. Penjaganya 'kelima halaman punya simpul
+    // yang belum final' di data.test.js — supaya kunci mati tidak bisa diam lagi.
+    spm:       { 'Operation Expense': { status: 'Menunggu Approval' } },
   };
 
   const bulat = (v, satuan) => (['persen', 'indeks', 'rasio'].includes(satuan)
