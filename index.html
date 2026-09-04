@@ -1016,6 +1016,65 @@ html, body { overflow-x: hidden; }
 }
 .pr-fp-nota-banding .bi { flex: none; margin-top: 1px; opacity: .75; }
 
+/* ── Dashboard Perbandingan (4 September 2026) ────────────────────────────────────────────
+   Deretan chart kecil: grid yang membungkus sendiri, minimal 200px per kotak. Sumbu Y-nya
+   sama untuk semua kotak (diurus render.js lewat `domain`), jadi yang perlu diurus di sini
+   hanya supaya kotaknya sama lebar — kotak yang lebarnya berbeda membuat kemiringan garis
+   tidak sebanding walaupun sumbunya sama. */
+.pr-bd-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-3);
+}
+.pr-bd-kotak {
+  border: 1px solid var(--t-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-2);
+  background: var(--t-surf);
+}
+.pr-bd-kesimpulan {
+  margin: 0 0 var(--space-3);
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--t-text);
+}
+.pr-bd-pilih {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  margin-top: var(--space-2);
+}
+.pr-bd-centang {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--t-text);
+  cursor: pointer;
+}
+/* Centang terakhir dikunci supaya tidak bisa jadi nol sub unit — ia harus TERLIHAT terkunci,
+   bukan diam-diam tidak menanggapi klik. */
+.pr-bd-centang input:disabled { cursor: not-allowed; }
+.pr-bd-centang:has(input:disabled) { color: var(--t-text-muted); cursor: not-allowed; }
+
+/* Keterangan kenapa YoY satu baris kosong. Serupa .pr-fp-nota-banding di kartu, tetapi di
+   dalam sel tabel: ia harus turun ke baris sendiri dan tidak boleh melebarkan kolomnya. */
+.pr-bd-nota-yoy {
+  display: block;
+  margin-top: 2px;
+  font-size: 11.5px;
+  font-weight: 400;
+  line-height: 1.4;
+  color: var(--t-text-muted);
+  white-space: normal;
+  max-width: 22ch;
+}
+
+.pr-legend-cat-1 { border-top-color: var(--pr-cat-1); }
+.pr-legend-cat-2 { border-top-color: var(--pr-cat-2); }
+.pr-legend-cat-3 { border-top-color: var(--pr-cat-3); }
+
 </style>
 </head>
 <body>
@@ -2110,6 +2169,39 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
   //
   // Menambah sub unit berikutnya: jalankan `node tools/impor-data.mjs` dengan berkasnya
   // terdaftar di konverter, lalu tambahkan kodenya ke `subUnit` di sini.
+
+  /** **Katalog metrik yang bisa DIADU di Dashboard Perbandingan**, dikelompokkan per dashboard
+   *  asalnya dan urut seperti sidebar.
+   *
+   *  Diturunkan dari `HALAMAN`, BUKAN ditulis tangan — daftar tulisan tangan mati diam-diam
+   *  waktu kamus berubah, dan kamus proyek ini sudah berubah enam kali.
+   *
+   *  Metrik bertipe `grup` DIBUANG: ia tidak punya angkanya sendiri (turunannya bersatuan
+   *  campur sehingga tidak dijumlahkan), jadi mengadunya berarti mengadu '—' dengan '—'.
+   *  Delapan dari 65 metrik akar begitu — ACCOUNT RECEIVABLE, RASIO, ONTIME RENEWAL,
+   *  RENEWAL TENANT, TRAFFIC AVERAGE, JUMLAH MEMBER, DIGITAL MEDIA. */
+  const metrikBanding = (kodeUnitBisnis) => HALAMAN
+    .filter((h) => h.unitBisnis === kodeUnitBisnis && h.metrik?.length)
+    .map((h) => ({
+      halaman: h.kode,
+      judulDashboard: h.judul,
+      metrik: h.metrik.filter((m) => m.tipe !== 'grup')
+        .map((m) => ({ nama: m.nama, satuan: m.satuan })),
+    }))
+    .filter((g) => g.metrik.length);
+
+  /** Metrik awal satu unit bisnis: yang pertama di dashboard pertamanya. Dipakai waktu halaman
+   *  dibuka dan waktu unit bisnisnya berganti — `NLA` tidak ada di Hotel, dan mempertahankan
+   *  metrik yang tidak ada berarti halaman kosong tanpa sebab yang terlihat. */
+  const metrikBandingAwal = (kodeUnitBisnis) => {
+    const g = metrikBanding(kodeUnitBisnis)[0];
+    return g ? { halaman: g.halaman, nama: g.metrik[0].nama } : null;
+  };
+
+  /** Acuan `{halaman, nama}` masih ada di unit bisnis ini? */
+  const metrikBandingAda = (kodeUnitBisnis, ref) => !!ref && metrikBanding(kodeUnitBisnis)
+    .some((g) => g.halaman === ref.halaman && g.metrik.some((m) => m.nama === ref.nama));
+
   const DATA_NYATA = [
     // 4 September: Kelapa Gading & Bandung menyusul, jadi **4 dari 6 mall**. Yang belum
     // mengirim berkas FA: Villagio dan Samasta.
@@ -2175,6 +2267,14 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
     // Nama-nama ini ditetapkan pemilik 13 Agustus 2026 supaya seluruh menu berawalan "Dashboard".
     { kode: 'ringkasan', judul: 'Dashboard Management', unitBisnis: null, metrik: [],
       kpi: ['PT SMIP', 'MALL', 'HOTEL', 'OFFICE BUILDING'] },
+    // **Dashboard Perbandingan (4 September 2026).** `unitBisnis: null` seperti `ringkasan`,
+    // karena halamannya sendiri punya kontrol Unit Bisnis dan melayani ketiganya.
+    //
+    // **Itu juga yang membuatnya berbahaya**: sampai hari ini `!h.unitBisnis` dipakai render.js
+    // sebagai "ini halaman Ringkasan" di DUA tempat (router dan sidebar). Keduanya diubah jadi
+    // memeriksa KODE, bukan ketiadaan unit bisnis — lihat catatannya di sana.
+    { kode: 'perbandingan', judul: 'Dashboard Perbandingan', unitBisnis: null, metrik: [],
+      kpi: [] },
     // `seksi` + `entitas` (23 Agustus): kelima menu ini MENJADI halaman detail seksinya, lengkap
     // dengan telusur — permintaan pemilik, yang menyebutkan pasangannya satu per satu. Ditulis
     // eksplisit, BUKAN diturunkan otomatis: untuk entitas HOTEL dan SPM, seksi 'finansial' dan
@@ -2966,7 +3066,7 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
     GRUP_MALL, seksiRata,
     entitasDari, entitasDariNama, seksiUntuk, seksiRingkasanUntuk,
     unitBisnisDari, namaUnitBisnis, judulPilUnit, labelSubUnit, namaSemuaSubUnit,
-    namaSubUnit,
+    namaSubUnit, metrikBanding, metrikBandingAwal, metrikBandingAda,
     aturanTahunan, ATURAN_TAHUNAN_NAMA,
     KARTU_FINANSIAL, kartuFinansialUntuk, KARTU_SEKSI, kartuChartSeksi,
     SEKSIDETAIL, judulSeksiDetail, halamanSumberSeksi, urutanKartuAkar,
@@ -4714,6 +4814,14 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
   const D = P.dictionary;
   const A = P.aggregate;
 
+  // Tarif dan rasio dirata-rata antar sub unit; kuantitas dijumlahkan. `rp` = tarif seperti
+  // AVERAGE ROOM RATE, `rp_m2` = tarif per m2 seperti AVERAGE RENTAL — keduanya rupiah tapi
+  // BUKAN aliran, jadi menjumlahkannya salah dengan cara yang tidak kelihatan (tidak ada NaN).
+  // SATU daftar dipakai `gabung()` (konsolidasi pohon organisasi) DAN `perbandingan()`
+  // (Dashboard Perbandingan) — daftar kedua yang menduplikasi ini bisa diam-diam menyimpang
+  // kalau salah satu diubah tanpa yang lain ikut berubah.
+  const SATUAN_DIRATA_RATA = ['persen', 'indeks', 'rasio', 'rp', 'rp_m2'];
+
   // ── PRNG deterministik ──
   function benih(s) {
     let h = 2166136261 >>> 0;
@@ -5133,10 +5241,9 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
       if (perluNilai) {
         const nilai = nodes.map((n) => n.aktual).filter((v) => v !== null && v !== undefined);
         const bud = nodes.map((n) => n.budget).filter((v) => v !== null && v !== undefined);
-        // Tarif dan rasio dirata-rata antar sub unit; kuantitas dijumlahkan.
-        // `rp` = tarif seperti AVERAGE ROOM RATE, `rp_m2` = tarif per m2 seperti AVERAGE RENTAL.
-        const SATUAN_TARIF = ['persen', 'indeks', 'rasio', 'rp', 'rp_m2'];
-        const rerata = SATUAN_TARIF.includes(dasar.satuan);
+        // Tarif dan rasio dirata-rata antar sub unit; kuantitas dijumlahkan (daftar satuannya
+        // di atas fungsi ini, `SATUAN_DIRATA_RATA`).
+        const rerata = SATUAN_DIRATA_RATA.includes(dasar.satuan);
 
         // **Rasio yang punya penyebut di kamus dirata-rata BERBOBOT** (3 September, malam).
         // Rata-rata datar sebuah rasio hanya benar kalau sub unitnya sama besar, dan di MALL
@@ -5207,7 +5314,7 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
       // memberi "103,7%" dan NPAT MARGIN "461,6%", karena nilai gabungannya bukan jumlah
       // anggotanya. Di sana satu anggota baru SELALU mengubah basis rata-ratanya, jadi yang
       // dipakai keberadaannya, bukan besarannya.
-      const dirataRata = ['persen', 'indeks', 'rasio', 'rp', 'rp_m2'].includes(dasar.satuan);
+      const dirataRata = SATUAN_DIRATA_RATA.includes(dasar.satuan);
       const susunanBerubah = subTanpaBanding > 0 && (dirataRata
         ? true
         : (besaranBaru > 0 && besaranTotal > 0 && besaranBaru / besaranTotal >= 0.01));
@@ -5424,6 +5531,100 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
         nilai: cariNode(pohonMetrik(kodeHalaman, s.kode, kodePeriode), namaMetrik)?.aktual ?? null,
       }))
       .sort((a, b) => b.nilai - a.nilai);
+  }
+
+  /** **Satu metrik diadu antar sub unit dalam satu unit bisnis** — bentuk siap pajang untuk
+   *  Dashboard Perbandingan (4 September 2026, permintaan Tim Manajemen lewat pemilik).
+   *
+   *  Mengembalikan SATU bentuk, bukan bahan mentah — pola yang sama dengan `matriksSubUnit()`
+   *  dan `pendukung()`. Kalau halamannya merakit sendiri dari lima panggilan, tiap perubahan
+   *  aturan harus dicari di lima tempat.
+   *
+   *  `ref` = `{halaman, nama}`, TIDAK PERNAH nama telanjang: `REVENUE`, `EXPENSE`, `EBITDA`,
+   *  dan `NPAT` ada di Dashboard FA (MALL) DAN Dashboard Office Building, jadi nama telanjang
+   *  menunjuk metrik yang berbeda begitu unit bisnisnya berganti.
+   *
+   *  Nilai dan YoY DIBACA dari pohon yang sama dengan halaman dashboardnya, tidak dihitung
+   *  ulang — kalau tidak, halaman ini akan memajang angka yang dibantah halaman sebelahnya. */
+  function perbandingan(kodeUnitBisnis, ref, kodeSubUnit, kodePeriode) {
+    const grup = D.metrikBanding(kodeUnitBisnis).find((g) => g.halaman === ref.halaman);
+    const def = grup?.metrik.find((m) => m.nama === ref.nama);
+    if (!def) return null;
+
+    const dipilihSet = new Set(kodeSubUnit);
+    const subs = (D.SUB_UNIT[kodeUnitBisnis] || []).filter((s) => dipilihSet.has(s.kode));
+
+    const baris = subs.map((s) => {
+      const n = cariNode(pohonMetrik(ref.halaman, s.kode, kodePeriode), ref.nama);
+      return {
+        kode: s.kode,
+        nama: s.nama,
+        // Nama SINGKAT untuk label chart (batang peringkat & judul kotak tren) — konvensi 23
+        // Agustus yang sama dengan perSubUnit(): fallback ke nama LENGKAP kalau sub unitnya
+        // tidak punya `singkat` di kamus, bukan dipotong di sini. `nama` di atas tetap dipakai
+        // tabel rincian dan kalimat kesimpulan, tempat yang ada ruang dan presisi penting.
+        singkat: s.singkat || s.nama,
+        nilai: n?.aktual ?? null,
+        yoy: n?.yoy ?? null,
+        yoyTanpaBanding: n?.yoyTanpaBanding ?? null,
+        yoyMenyumbang: n?.yoyMenyumbang ?? null,
+        porsi: null,
+        peringkat: null,
+        tren12: tren12(ref.halaman, s.kode, kodePeriode, ref.nama),
+      };
+    });
+
+    // Urut menurun; yang tanpa data selalu di bawah, bukan diselipkan di tengah sebagai nol.
+    // Nol berarti "tidak menghasilkan apa-apa"; yang benar "belum ada datanya". Di antara yang
+    // tanpa data, comparator TIDAK memutuskan urutannya (return 0) — `.sort()` array dijamin
+    // stabil sejak ES2019, jadi urutan aslinya bertahan: urutan `D.SUB_UNIT[kodeUnitBisnis]`,
+    // yang juga urutan sidebar filter Sub Unit. Sempat dicoba `a.nama.localeCompare(b.nama)`
+    // (alfabetis), tapi itu menaruh Villagio SEBELUM Samasta Jimbaran Bali secara alfabetis —
+    // dua sub unit ini justru sudah terurut SVLG-lalu-SSJB di kamus, dan mengurutkan ulang
+    // menurut nama cuma membuat baris tanpa data melompat-lompat setiap kali daftar sub unit
+    // yang dipilih berubah, padahal urutan kamusnya sendiri sudah tetap.
+    baris.sort((a, b) => {
+      if (a.nilai === null && b.nilai === null) return 0;
+      if (a.nilai === null) return 1;
+      if (b.nilai === null) return -1;
+      return b.nilai - a.nilai;
+    });
+
+    const berisi = baris.filter((b) => b.nilai !== null);
+    berisi.forEach((b, i) => { b.peringkat = i + 1; });
+
+    // **Metrik yang dirata-rata tidak punya "porsi" maupun "kelipatan".** Porsi Occupancy Rate
+    // terhadap total occupancy keenam mall bukan apa-apa. Daftar satuannya adalah
+    // `SATUAN_DIRATA_RATA` di atas berkas ini — dipakai juga oleh `gabung()` — bukan daftar
+    // kedua yang bisa menyimpang darinya.
+    const dirataRata = SATUAN_DIRATA_RATA.includes(def.satuan);
+
+    const total = berisi.length ? berisi.reduce((t, b) => t + b.nilai, 0) : null;
+    if (!dirataRata && total) {
+      for (const b of berisi) b.porsi = Math.round((b.nilai / total) * 1000) / 10;
+    }
+
+    const terbesar = berisi[0] || null;
+    const terkecil = berisi[berisi.length - 1] || null;
+    const kelipatan = (!dirataRata && berisi.length >= 2 && terkecil.nilai > 0)
+      ? terbesar.nilai / terkecil.nilai : null;
+
+    const berYoy = berisi.filter((b) => typeof b.yoy === 'number');
+    const tumbuhTercepat = berYoy.length
+      ? berYoy.reduce((a, b) => (b.yoy > a.yoy ? b : a)) : null;
+
+    return {
+      metrik: { halaman: ref.halaman, nama: ref.nama, satuan: def.satuan,
+                judulDashboard: grup.judulDashboard, dirataRata },
+      baris,
+      total: dirataRata ? null : total,
+      terbesar,
+      terkecil,
+      kelipatan,
+      tumbuhTercepat,
+      berdata: berisi.length,
+      dipilih: baris.length,
+    };
   }
 
   /** Matriks laporan satu seksi: metrik akar jadi BARIS, sub unit jadi KOLOM, satu periode.
@@ -5820,7 +6021,7 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
              matriksSubUnit, pohonMetrikTahun, bulanTahunan, gabungTahunan,
              matriksTahun, matriksTahunJalur, tigaTahun, pohonOrganisasiTahun,
              trenTahunJalur, matriksSubUnitTahun,
-             periode12, cariNode, simpulJalur, pendukung, BASIS };
+             periode12, cariNode, simpulJalur, pendukung, perbandingan, BASIS };
 })(globalThis.PROTO = globalThis.PROTO || {});
 
 /* ── src/js/chart.js ── */
@@ -6034,14 +6235,20 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
    *  halaman awal sudah dua kali dinilai pemilik ("terlalu besar, di rubah sedang saja"), dan
    *  itu diatur CSS, bukan di sini. Yang di sini hanya viewBox-nya. */
   function garis({ labels = [], aktual = [], budget = [], w = 490, h = 166,
-                   langkahLabel = 2, area = false, warna = WARNA.seri, satuan } = {}) {
+                   langkahLabel = 2, area = false, warna = WARNA.seri, satuan,
+                   domain = null } = {}) {
     const pad = { atas: 12, kanan: 8, bawah: 26, kiri: 46 };
     const kw = w - pad.kiri - pad.kanan;
     const kh = h - pad.atas - pad.bawah;
 
     const semua = [...aktual, ...budget].filter((v) => typeof v === 'number' && !Number.isNaN(v));
     if (!semua.length) return kosongKanvas(w, h, 'Tidak ada data');
-    let min = Math.min(...semua), max = Math.max(...semua);
+    // **`domain` dipakai apa adanya kalau diberikan.** Ia yang membuat deretan chart kecil di
+    // Dashboard Perbandingan jujur: kalau tiap kotak menskalakan dirinya sendiri, mall dengan
+    // NLA 6.255 akan tampak setinggi mall dengan NLA 112.454 — chart yang berbohong tanpa satu
+    // pun angka yang salah. Tanpa `domain`, perilakunya persis seperti sebelumnya.
+    let min = domain ? domain[0] : Math.min(...semua);
+    let max = domain ? domain[1] : Math.max(...semua);
     if (min === max) { min -= 1; max += 1; }          // hindari pembagian nol
     const n = Math.max(labels.length, aktual.length, budget.length);
 
@@ -6145,6 +6352,54 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
            // Band hover ditaruh PALING AKHIR supaya ia di atas seluruh mark — kalau tidak,
            // garis dan titiknya yang menerima pointer dan band-nya tidak pernah kena.
            `${bands}</svg>`, sumbu);
+  }
+
+  /** **Beberapa seri dalam satu sumbu — untuk adu langsung 2–3 sub unit.**
+   *
+   *  `garis()` sengaja TIDAK digeneralisasi jadi ini: di sana `aktual` dan `budget` punya arti
+   *  khusus (budget digambar putus-putus, legendanya menyebut "Budget belum tersedia"), dan
+   *  banyak penjaga bergantung padanya. Dua fungsi kecil lebih aman daripada satu refactor.
+   *
+   *  Dipakai hanya waktu sub unit yang dipilih <= 3. Di atas itu Dashboard Perbandingan
+   *  memakai deretan chart kecil bersumbu sama — empat garis dalam satu sumbu sudah mulai
+   *  saling menutup, dan sub unit yang diadu belum tentu sekelas skalanya. */
+  function garisBanyak({ labels = [], seri = [], w = 490, h = 166,
+                         langkahLabel = 2, satuan } = {}) {
+    const pad = { atas: 12, kanan: 8, bawah: 26, kiri: 46 };
+    const kw = w - pad.kiri - pad.kanan;
+    const kh = h - pad.atas - pad.bawah;
+
+    const semua = seri.flatMap((s) => s.nilai).filter(angka);
+    if (!semua.length) return kosongKanvas(w, h, 'Tidak ada data');
+    let min = Math.min(...semua), max = Math.max(...semua);
+    if (min === max) { min -= 1; max += 1; }
+    const n = Math.max(labels.length, ...seri.map((s) => s.nilai.length));
+
+    const x = (i) => bulat(pad.kiri + (n <= 1 ? kw / 2 : (i * kw) / (n - 1)));
+    const y = (v) => bulat(pad.atas + kh - ((v - min) / (max - min)) * kh);
+
+    // Null jadi JEDA, bukan nol — aturan yang sama dengan garis(). Nilai yang belum masuk
+    // dan digambar sebagai nol terbaca sebagai "turun ke nol", bukan "belum ada datanya".
+    const ruas = (arr) => {
+      const out = []; let kini = [];
+      arr.forEach((v, i) => {
+        if (angka(v)) { kini.push(`${x(i)},${y(v)}`); return; }
+        if (kini.length) { out.push(kini); kini = []; }
+      });
+      if (kini.length) out.push(kini);
+      return out;
+    };
+
+    const jalur = seri.map((s, i) => {
+      const w2 = WARNA.kategori[i % WARNA.kategori.length];
+      return ruas(s.nilai).map((r) => (r.length === 1
+        ? `<circle cx="${r[0].split(',')[0]}" cy="${r[0].split(',')[1]}" r="2" fill="${w2}"/>`
+        : `<polyline fill="none" stroke="${w2}" stroke-width="2" stroke-linejoin="round" `
+          + `stroke-linecap="round" points="${r.join(' ')}"/>`)).join('');
+    }).join('');
+
+    return `<svg viewBox="0 0 ${w} ${h}" role="img" aria-label="Perbandingan tren">`
+      + jalur + `</svg>`;
   }
 
   /** Kolom tegak dengan garis nol — dipakai kartu Financial Performance untuk SELISIH aktual
@@ -6454,7 +6709,7 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
       iris.join('') + hit.join('') + `</svg>`;
   }
 
-  P.chart = { garis, kolom, bar, bullet, donat, WARNA };
+  P.chart = { garis, garisBanyak, kolom, bar, bullet, donat, WARNA };
 })(globalThis.PROTO = globalThis.PROTO || {});
 
 /* ── src/js/render.js ── */
@@ -9095,6 +9350,19 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
       if (!D.DATA_NYATA.length) return 'contoh';
       return halamanSeksiSemua().every((h) => D.halamanNyata(h)) ? 'nyata' : 'campuran';
     }
+    // **Dashboard Perbandingan (4 September).** Kodenya sendiri, 'perbandingan', TIDAK PERNAH
+    // terdaftar di `DATA_NYATA` — halaman ini tidak punya berkas sumber sendiri, ia hanya
+    // membaca ulang angka dari halaman metrik yang DIPILIH pengguna. Baris di bawah,
+    // `!D.halamanNyata(state.halaman)`, mengasumsikan kode halaman ITU SENDIRI adalah sumber
+    // angkanya — pengandaian yang sama yang membuat router dan sidebar tadinya salah. Kalau
+    // dibiarkan, badge-nya akan selalu 'contoh', membohongi angka Dashboard FA yang nyata di
+    // baliknya. Diselesaikan lewat halaman SUMBER metriknya (`state.bandingMetrik.halaman`),
+    // bukan lewat daftar kode yang harus dirawat manual: `D.halamanNyata` sudah membaca
+    // `DATA_NYATA` secara dinamis, jadi kamus dashboard baru yang belum berdata otomatis
+    // jatuh ke 'contoh' sendiri, tanpa baris tambahan di sini.
+    if (state.halaman === 'perbandingan') {
+      return D.halamanNyata(state.bandingMetrik?.halaman) ? 'nyata' : 'contoh';
+    }
     if (!D.halamanNyata(state.halaman)) return 'contoh';
     const sub = state.subUnit;
     if (!sub || sub === 'SEMUA') return 'nyata';        // konsolidasi: sebagian mall nyata
@@ -9104,6 +9372,40 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
   /** Keterangan cakupan konsolidasi, mis. "2 dari 6 mall" — supaya angka gabungan tidak
    *  terbaca sebagai SELURUH unit bisnisnya. Angkanya dihitung dari kamus, bukan diketik:
    *  begitu mall ketiga berkasnya datang, keterangannya ikut sendiri. */
+  /**
+   * Merangkai daftar nama jadi satu frasa yang masih bisa DIBACA sebagai daftar.
+   *
+   * Aturannya lahir dari tiga kali pembetulan atas satu kalimat, dan ketiganya keadaan yang
+   * benar-benar terjadi di layar:
+   *
+   *  - dua nama → "A & B";
+   *  - **tiga nama atau lebih** → "A, B & C". Dengan '&' di tiap sambungan, "Kelapa Gading &
+   *    Villagio & Samasta Jimbaran Bali" terbaca seperti SATU nama panjang. Kejadian kedua
+   *    (4 September, sore) muncul di kalimat kesimpulan Dashboard Perbandingan — kalimat yang
+   *    justru dirancang jadi hal PERTAMA yang dibaca BOD.
+   *  - **ada nama yang MEMUAT KOMA** → seluruhnya dipisah ' · '. Seksi halaman utama bernama
+   *    "Operation, Marketing, HRD", dan dengan koma sebagai pemisah hasilnya "Financial
+   *    Performance, Hotel, Office Building & Operation, Marketing, HRD" — enam nama yang tidak
+   *    bisa dibedakan dari empat.
+   *
+   * Ia SATU fungsi untuk kedua pemakainya justru karena tempat kedua mengulangi cacat yang
+   * tempat pertama sudah selesai betulkan. Dua salinan aturan = cacat yang sama dua kali.
+   *
+   * **Aturan koma BELUM TERCAPAI di keadaan data sekarang — dan JANGAN dibuang karena itu.**
+   * Satu-satunya nama bermuatan koma "Operation, Marketing, HRD" ada di kaki halaman utama,
+   * dan kaki itu berhenti memakai daftar seksi begitu KELIMA seksinya berdata nyata (3
+   * September) — ia berganti jadi keterangan cakupan. Jadi cabang ini tidak dilewati satu
+   * test pun, bukan karena tidak berlaku melainkan karena keadaannya sedang tidak muncul.
+   * Ia kembali terpakai begitu ada seksi yang tidak lagi nyata, atau begitu ada sub unit
+   * bernama-koma. Cacatnya dulu nyata: empat seksi terbaca seperti enam.
+   */
+  function rangkaiNama (nama) {
+    if (!nama.length) return '';
+    if (nama.length === 1) return nama[0];
+    if (nama.some((n) => n.includes(','))) return nama.join(' · ');
+    return `${nama.slice(0, -1).join(', ')} & ${nama.at(-1)}`;
+  }
+
   function labelCakupanSubUnit(state) {
     if (!state) return null;
     // Halaman campuran: yang perlu disebut bukan cakupan sub unit melainkan seksi MANA yang
@@ -9120,20 +9422,17 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
       }
       const seksi = seksiNyata();
       if (!seksi.length) return null;
-      // Perangkaiannya ikut ISI daftarnya, dan itu perlu dua kali dibetulkan dalam satu hari:
-      //
-      //  - dua nama → "A & B" (keadaan sampai Office Building masuk);
-      //  - tiga nama pendek → "A, B & C" — rantai '&' mulai terbaca sebagai satu nama panjang;
-      //  - **ada nama yang MEMUAT KOMA** → seluruhnya dipisah ' · '. Seksi keempat bernama
-      //    "Operation, Marketing, HRD", dan dengan koma sebagai pemisah daftarnya hasilnya
-      //    "Financial Performance, Hotel, Office Building & Operation, Marketing, HRD" — enam
-      //    nama yang tidak bisa dibedakan dari empat.
-      const adaKoma = seksi.some((s) => s.includes(','));
-      const daftar = seksi.length === 1 ? seksi[0]
-        : adaKoma ? seksi.join(' · ')
-          : `${seksi.slice(0, -1).join(', ')} & ${seksi.at(-1)}`;
-      return `${daftar} berdata nyata`;
+      return `${rangkaiNama(seksi)} berdata nyata`;
     }
+    // **Dashboard Perbandingan.** Halaman ini menulis keterangan cakupannya SENDIRI di dalam
+    // `bagian` (mis. "4 dari 6 mall berdata"), dihitung dari sub unit yang DIPILIH pengguna
+    // (`state.bandingPilih`) — sesuatu yang penolong ini tidak bisa tahu, sebab ia hanya
+    // membaca `state.subUnit`, milik halaman modul biasa, yang halaman ini tidak pernah pakai.
+    // Tanpa cabang ini kode di bawah akan mencari `h.unitBisnis` (null di sini) lalu
+    // `D.SUB_UNIT[null]` (selalu kosong), dan hasilnya kebetulan `null` hari ini — bukan
+    // sesuatu yang boleh diandalkan begitu bentuk `D.SUB_UNIT` berubah. Kalaupun ia tidak
+    // kebetulan `null`, hasilnya akan MENDUPLIKASI keterangan yang sudah ditulis `bagian`.
+    if (state.halaman === 'perbandingan') return null;
     if (!D.halamanNyata(state.halaman)) return null;
     if (state.subUnit && state.subUnit !== 'SEMUA') return null;
     const h = D.HALAMAN.find((x) => x.kode === state.halaman);
@@ -9371,6 +9670,239 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
       `<div class="pr-cv">${seksi.map(seksiAtau).join('')}</div>`;
   }
 
+  /** Dashboard Perbandingan — satu metrik diadu antar sub unit. Isinya dibangun bertahap:
+   *  kerangka di sini (Task 5), peringkat & tabel di Task 6, tren di Task 7. */
+  function halamanPerbandingan(state) {
+    const unit = state.bandingUnit || 'MALL';
+    const ref = state.bandingMetrik || D.metrikBandingAwal(unit);
+    const pilih = state.bandingPilih || (D.SUB_UNIT[unit] || []).map((s) => s.kode);
+    const h = G.perbandingan(unit, ref, pilih, state.periode);
+    if (!h) return kepalaHalaman('Dashboard Perbandingan', [], '', state);
+
+    // ── Kontrol (4 September 2026) ────────────────────────────────────────────────────────
+    // Tidak ada opsi SEMUA di Unit Bisnis: mengadu Mall dengan Hotel tidak bermakna — unitnya
+    // beda, skalanya beda. `D.UNIT_BISNIS` sendiri sudah cuma memuat MALL/HOTEL/SPM, jadi
+    // opsinya diturunkan darinya apa adanya, tidak ditulis tangan di sini.
+    const opsiUnit = D.UNIT_BISNIS.map((u) =>
+      `<option value="${esc(u.kode)}"${u.kode === unit ? ' selected' : ''}>` +
+      `${esc(D.namaUnitBisnis(u.kode))}</option>`).join('');
+
+    // Nilai option membawa JALUR `halaman|nama`, bukan nama telanjang: REVENUE, EXPENSE,
+    // EBITDA, dan NPAT ada di dua unit bisnis sekaligus (MALL dan Office Building), jadi nama
+    // saja tidak cukup untuk menunjuk metrik yang benar begitu unit bisnisnya berganti.
+    const nilaiRef = `${ref.halaman}|${ref.nama}`;
+    const opsiMetrik = D.metrikBanding(unit).map((grp) =>
+      `<optgroup label="${esc(grp.judulDashboard)}">` + grp.metrik.map((m) => {
+        const v = `${grp.halaman}|${m.nama}`;
+        return `<option value="${esc(v)}"${v === nilaiRef ? ' selected' : ''}>` +
+               `${esc(m.nama)}</option>`;
+      }).join('') + `</optgroup>`).join('');
+
+    // Centang terakhir DIKUNCI: nol sub unit terpilih bukan keadaan yang berarti, dan mencegah
+    // lebih baik daripada memajang halaman kosong lalu menjelaskan mengapa. Penguncian di sini
+    // adalah pagar PERTAMA; pagar kedua ada di penangan `change` app.js untuk pemakai yang
+    // memaksa lewat DevTools atau race event.
+    const centang = (D.SUB_UNIT[unit] || []).map((sub) => {
+      const on = pilih.includes(sub.kode);
+      const kunci = on && pilih.length === 1 ? ' disabled' : '';
+      return `<label class="pr-bd-centang"><input type="checkbox" name="bandingPilih" ` +
+        `value="${esc(sub.kode)}"${on ? ' checked' : ''}${kunci}> ${esc(sub.nama)}</label>`;
+    }).join('');
+
+    // `filterPeriode(state, { denganMode: false })`: halaman ini TIDAK punya jalur tahunan sama
+    // sekali (tren 12 bulan sudah menjawab arah), jadi kontrol Mode di sini akan menawarkan
+    // Bulanan/Tahunan/Perbandingan 3 Tahun yang diam-diam merender salah — tidak ada satu pun
+    // cabang render tahunan di halamanPerbandingan.
+    const kontrol = `<section class="ds-section"><div class="pr-filter">` +
+      `<div class="pr-filter-field"><label class="ds-label" for="filterBandingUnit">Unit Bisnis` +
+        `</label><select class="ds-input" id="filterBandingUnit">${opsiUnit}</select></div>` +
+      `<div class="pr-filter-field"><label class="ds-label" for="filterBandingMetrik">Metrik` +
+        `</label><select class="ds-input" id="filterBandingMetrik">${opsiMetrik}</select></div>` +
+      filterPeriode(state, { denganMode: false }) +
+      `</div><div class="pr-bd-pilih"><span class="ds-label">Bandingkan</span>${centang}</div>` +
+      `</section>`;
+
+    if (!h.berdata) {
+      return kepalaHalaman('Dashboard Perbandingan',
+        [D.namaUnitBisnis(unit), h.metrik.nama, labelPeriode(state)], '', state) +
+        kontrol +
+        `<div class="ds-empty-state"><div class="ds-empty-icon">` +
+        `<i class="bi bi-bar-chart-steps"></i></div>` +
+        `<h3>Belum ada data untuk periode ini</h3>` +
+        `<p>Tak satu pun ${esc(D.labelSubUnit(unit).toLowerCase())} yang dipilih punya angka ` +
+        `<strong>${esc(h.metrik.nama)}</strong> untuk ` +
+        `<strong>${esc(labelPeriode(state))}</strong>.</p></div>`;
+    }
+
+    const cakupan = `${h.berdata} dari ${h.dipilih} ${D.labelSubUnit(unit).toLowerCase()} berdata`;
+    const s = h.metrik.satuan;
+    const nm = (v) => F.nilai(v, s);
+
+    // Satu kalimat yang menjawab pertanyaan pertama BOD sebelum ia melihat satu chart pun.
+    // Dirakit dari bagian yang masing-masing boleh KOSONG — kalimat yang memaksa menyebut
+    // "tumbuh tercepat" waktu tak satu pun punya pembanding akan mengarang.
+    const bagian = [];
+    if (h.terbesar) {
+      // Bukan F.nilai(..., 'rasio'): kamus itu memberi DUA desimal ("4,50"), presisi yang
+      // salah untuk kelipatan kasar semacam ini, dan `F.nilai(4.5, 'rasio')` sendiri
+      // menghasilkan "4,50" bukan "4,5" — kalimat kesimpulan jadi tidak cocok dengan
+      // pengujiannya. F.nilai TIDAK diubah: kamus RASIO dipakai dashboard lain, dan
+      // mengubah artinya di sana ikut menggeser tampilan yang tidak sedang disentuh di sini.
+      const kelipatanTeks = h.kelipatan
+        ? String(Math.round(h.kelipatan * 10) / 10).replace('.', ',') : '';
+      bagian.push(`<strong>${esc(h.terbesar.nama)}</strong> terbesar (${esc(nm(h.terbesar.nilai))})`
+        + (h.kelipatan ? `, ${esc(kelipatanTeks)}x ${esc(h.terkecil.nama)} yang terkecil` : ''));
+    }
+    if (h.tumbuhTercepat) {
+      // **Frasanya ikut TANDA angkanya.** Kalau SELURUH sub unit menyusut, yang teratas bukan
+      // yang "tumbuh paling cepat" melainkan yang turunnya paling sedikit — dan kalimatnya
+      // membantah angka di dalam tanda kurungnya sendiri. Office Building 4 September memberi
+      // contohnya: "Scientia Business Park tumbuh paling cepat (-3,9%)", dua gedung yang
+      // dua-duanya turun. Satu keluarga dengan cacat "badge membantah angkanya" yang sudah
+      // dua kali muncul di prototipe ini.
+      const naik = h.tumbuhTercepat.yoy >= 0;
+      bagian.push(`<strong>${esc(h.tumbuhTercepat.nama)}</strong> `
+        + `${naik ? 'tumbuh paling cepat' : 'turun paling sedikit'} `
+        + `(${esc(F.persenDelta(h.tumbuhTercepat.yoy))})`);
+    }
+    const belum = h.baris.filter((b) => b.nilai === null).map((b) => b.nama);
+    // `rangkaiNama`, BUKAN `join(' & ')`: tiga mall tanpa data memberi "Kelapa Gading &
+    // Villagio & Samasta Jimbaran Bali", yang terbaca seperti satu nama panjang.
+    if (belum.length) bagian.push(`${esc(rangkaiNama(belum))} belum berdata`);
+    const kesimpulan = bagian.length
+      ? `<p class="pr-bd-kesimpulan">${bagian.join('. ')}.</p>` : '';
+
+    // Lebar & padKiri kanvas batang (review round 1, Finding B-1): kanvas ber-viewBox menskala
+    // TINGGINYA mengikuti lebar kolom kontennya (CSS `width:100%`) — viewBox lama 490x156 (enam
+    // baris, `padKiri` bawaan 150) di kolom 1429px tampil ~455px, jauh melampaui seksi Tren
+    // (231px) dan memaksa scroll separuh layar sebelum trennya kelihatan — membantah janji
+    // "satu pertanyaan, satu layar" yang jadi dasar seluruh halaman ini. Lebar viewBox
+    // dilebarkan ke 1000: 156/1000 = 0,156, di bawah ambang 0,16 yang dijaga penjaganya, jadi di
+    // kolom 1429px tingginya <= 1429 x 0,16 ≈ 229px berapa pun baris yang tampil (maksimum enam,
+    // kamus MALL). `padKiri` ikut dilebarkan SEBANDING (150 x 1000/490 ≈ 306) supaya kolom nama
+    // tetap proporsi yang sama dari kanvas — dibiarkan 150, kolom nama menyusut jadi 15% lebar
+    // dan berisiko menabrak batang.
+    const PERINGKAT_W = 1000;
+    const peringkat = `<section class="ds-section pr-bd-peringkat">` +
+      `<div class="ds-section-title">Peringkat` +
+        `<span class="ds-section-meta">${esc(h.metrik.nama)}</span></div>` +
+      // Label SINGKAT (Finding B-2): `bar()` sendiri memotong nama di atas 26 karakter, dan
+      // nama LENGKAP sub unit MALL ("Summarecon Mall Kelapa Gading") tetap tampil terpotong
+      // walau viewBox-nya dilebarkan — konvensi 23 Agustus yang sama dengan `perSubUnit()`:
+      // label CHART memakai nama singkat, nama lengkap tetap di tabel rincian (di bawah) dan
+      // kalimat kesimpulan (di atas), tempat yang ada ruang dan presisi penting.
+      CH.bar({ items: h.baris.map((b) => ({ label: b.singkat, nilai: b.nilai })),
+               satuan: s, w: PERINGKAT_W, h: Math.max(80, h.baris.length * 26),
+               padKiri: Math.round(150 * PERINGKAT_W / 490) }) +
+    `</section>`;
+
+    // Kolom PORSI tidak lenyap untuk metrik yang dirata-rata — ia tetap TAMPIL, kosong,
+    // dengan sebabnya tertulis di kaki tabel. Kolom yang hilang tanpa jejak mengundang
+    // pertanyaan "di mana porsinya?"; kolom yang ada tapi kosong-dengan-keterangan menjawab
+    // pertanyaan itu sendiri, di layar yang sama.
+    const notaPorsi = h.metrik.dirataRata
+      ? `<p class="pr-dr-nota">Kolom PORSI kosong: <strong>${esc(h.metrik.nama)}</strong> `
+        + `dirata-rata antar sub unit, tidak dijumlahkan — porsinya terhadap "total" tidak `
+        + `punya arti.</p>`
+      : '';
+
+    const barisTabel = h.baris.map((b) => `<tr>` +
+      `<td>${esc(b.nama)}</td>` +
+      `<td class="pr-num">${esc(nm(b.nilai))}</td>` +
+      `<td class="pr-num">${esc(F.persenDelta(b.yoy))}` +
+        // Keterangan ikut terbawa dari simpulnya, TIDAK dihitung ulang di sini — spec butir 7.
+        // Simpul yang sama dibaca dashboard aslinya; tanpa ini Perbandingan memajang '—'
+        // telanjang sementara halaman sebelahnya menjelaskan sebabnya, dan dua layar jadi
+        // tidak sepakat padahal membaca angka yang sama persis.
+        (b.yoyTanpaBanding
+          ? `<span class="pr-bd-nota-yoy">Tidak dibandingkan: ${b.yoyTanpaBanding} dari ` +
+            `${b.yoyMenyumbang} bagian belum ada di periode pembandingnya.</span>`
+          : '') +
+      `</td>` +
+      `<td class="pr-num">${esc(b.porsi === null ? F.KOSONG : F.nilai(b.porsi, 'persen'))}</td>` +
+      `<td class="pr-num">${esc(b.peringkat === null ? F.KOSONG : String(b.peringkat))}</td>` +
+    `</tr>`).join('');
+
+    // Baris tanpa data TAMPIL apa adanya, bukan disaring keluar — "sub unit ini belum
+    // melapor" adalah sebuah jawaban yang perlu dilihat BOD, bukan ketiadaan yang menyamar
+    // sebagai daftar yang rapi.
+    // Meta-nya menyebut NAMA metrik (sama pola dengan seksi Peringkat di atas), BUKAN
+    // `cakupan` — `cakupan` sudah tertulis di subjudul kepala halaman lewat `kepalaHalaman()`
+    // di bawah. Sempat ditulis `esc(cakupan)` di sini (mengikuti draf awal), tapi itu membuat
+    // frasa "N dari M mall" muncul DUA kali di satu layar dan menjatuhkan penjaga yang justru
+    // dipasang untuk mencegah persis kecacatan ini (lihat 'subjudul ... hanya memuat satu
+    // frasa cakupan' di perbandingan.test.js).
+    // **Domain BERSAMA untuk seluruh kotak.** Ini inti bentuknya: kalau tiap kotak menskalakan
+    // dirinya sendiri, sub unit dengan NLA 6.255 akan TAMPAK setinggi yang 112.454 — chart yang
+    // berbohong tanpa satu pun angka yang salah. Dihitung dari SELURUH titik keduabelas bulan
+    // di seluruh sub unit yang dipilih, bukan dari nilai bulan ini saja — domain dari satu bulan
+    // akan memotong garis yang justru memuncak di bulan lain.
+    const semuaTitik = h.baris.flatMap((b) => b.tren12?.aktual || [])
+      .filter((v) => typeof v === 'number' && !Number.isNaN(v));
+    const domainBersama = semuaTitik.length
+      ? [Math.min(...semuaTitik), Math.max(...semuaTitik)] : null;
+
+    // **Ambangnya 3, bukan "kurang dari semua".** Empat garis dalam satu sumbu sudah mulai
+    // saling menutup, dan empat sub unit yang dipilih belum tentu sekelas skalanya — kotak
+    // berjajar bersumbu sama tetap lebih jujur daripada mengadu langsung di atas ambang ini.
+    const AMBANG_ADU = 3;
+    const berisiTren = h.baris.filter((b) => (b.tren12?.aktual || []).some((v) => v !== null));
+
+    let isiTren;
+    if (h.dipilih === 1) {
+      isiTren = `<p class="pr-dr-nota">Satu ${esc(D.labelSubUnit(unit).toLowerCase())} terpilih — `
+        + `pilih minimal dua untuk membandingkan.</p>`;
+    } else if (h.dipilih <= AMBANG_ADU) {
+      // Adu langsung: satu sumbu, satu garis per sub unit berdata. Sub unit tanpa data tidak
+      // ikut ditarik garisnya — `garisBanyak` sendiri sudah memperlakukan bulan kosong sebagai
+      // JEDA, bukan turun ke nol, jadi baris kosong total di sini hanya menambah legenda tanpa
+      // satu titik pun.
+      isiTren = CH.garisBanyak({
+        labels: berisiTren[0]?.tren12.labels || [],
+        seri: berisiTren.map((b) => ({ label: b.nama, nilai: b.tren12.aktual })),
+        satuan: s,
+      }) + `<div class="pr-chart-legend">` + berisiTren.map((b, i) =>
+        `<span><i class="pr-legend-key pr-legend-cat-${i + 1}"></i>${esc(b.nama)}</span>`)
+        .join('') + `</div>`;
+    } else {
+      // Kotak berjajar: SEMUA sub unit yang dipilih tampil, termasuk yang tanpa data — kotaknya
+      // sendiri menyatakan diri "Tidak ada data" (aturan `garis()`, bukan kekosongan yang diam).
+      // `domain` yang sama diteruskan ke SETIAP kotak — itulah yang membuat sumbu Y-nya identik.
+      // Judul kotak juga label chart (Finding B-2) — nama singkat, kotaknya sendiri cuma
+      // 240px lebar, jauh lebih sempit dari kolom nama batang peringkat di atas.
+      isiTren = `<div class="pr-bd-grid">` + h.baris.map((b) =>
+        `<div class="pr-bd-kotak"><div class="pr-chart-title">${esc(b.singkat)}</div>` +
+        CH.garis({ labels: b.tren12?.labels || [], aktual: b.tren12?.aktual || [],
+                   domain: domainBersama, w: 240, h: 120, langkahLabel: 4, satuan: s }) +
+        `</div>`).join('') + `</div>`;
+    }
+
+    // Meta-nya harus menyebut apa yang SUNGGUH tergambar di bawahnya, bukan cuma dua kasus
+    // (Task 7 hanya menulis dua). Sampai perbaikan ini, satu sub unit terpilih tetap memajang
+    // "adu langsung" padahal isinya bukan chart sama sekali, melainkan catatan "pilih minimal
+    // dua" — kepala seksi yang membantah isinya sendiri.
+    const metaTren = h.dipilih === 1 ? 'pilih minimal dua'
+      : h.dipilih <= AMBANG_ADU ? 'adu langsung'
+      : 'sumbu Y sama untuk semua';
+    const tren = `<section class="ds-section pr-bd-tren">` +
+      `<div class="ds-section-title">Tren 12 Bulan` +
+        `<span class="ds-section-meta">${esc(metaTren)}</span></div>` +
+      isiTren + `</section>`;
+
+    const tabel = `<section class="ds-section pr-bd-tabel">` +
+      `<div class="ds-section-title">Rincian` +
+        `<span class="ds-section-meta">${esc(h.metrik.nama)}</span></div>` +
+      `<div class="pr-dr-tabel"><table class="ds-table ds-table-sm ds-table-striped">` +
+        `<thead><tr><th>${esc(D.labelSubUnit(unit))}</th>` +
+          `<th class="pr-num">AKTUAL</th><th class="pr-num">YoY%</th>` +
+          `<th class="pr-num">PORSI</th><th class="pr-num">PERINGKAT</th></tr></thead>` +
+        `<tbody>${barisTabel}</tbody></table></div>${notaPorsi}</section>`;
+
+    return kepalaHalaman('Dashboard Perbandingan',
+      [D.namaUnitBisnis(unit), h.metrik.nama, labelPeriode(state), cakupan], '', state) +
+      kontrol + kesimpulan + peringkat + tren + tabel;
+  }
+
   function halaman(state) {
     if (state.halaman === D.DETAIL.kode) return halamanDetail(state);
     if (state.halaman === D.SEKSIDETAIL.kode) return halamanSeksiDetail(state);
@@ -9378,7 +9910,13 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
     if (daunSumber) return halamanSumberData(daunSumber);
 
     const h = D.HALAMAN.find((x) => x.kode === state.halaman);
-    if (!h.unitBisnis) return halamanRingkasan(state, h);
+    // Dirutekan lewat KODE, bukan lewat ketiadaan `unitBisnis`. Sampai 4 September baris ini
+    // berbunyi `if (!h.unitBisnis) return halamanRingkasan(...)`, dan itu benar selama hanya
+    // ADA SATU halaman tanpa unit bisnis. Dashboard Perbandingan membatalkan pengandaian itu:
+    // ia juga tanpa unit bisnis, dan dengan aturan lama ia akan diam-diam dirender sebagai
+    // Dashboard Management — halaman yang salah, tanpa satu pun error.
+    if (state.halaman === 'perbandingan') return halamanPerbandingan(state);
+    if (h.kode === 'ringkasan') return halamanRingkasan(state, h);
 
     // Kelima menu dashboard MENJADI halaman detail seksinya (permintaan pemilik 23 Agustus:
     // "Dashboard FA di rubah disamakan dengan Financial Performance Detail … bisa di telusuri jg").
@@ -9418,10 +9956,19 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
     // Label diambil dari kamus, bukan ditulis ulang di sini: dulu nama ini dua kali ditulis
     // (kamus + literal di baris ini), sehingga mengganti nama menu di kamus meninggalkan
     // sidebar memakai nama lama. Ikonnya saja yang beda dari menu anak (bi-dot).
-    const hRingkasan = D.HALAMAN.find((h) => !h.unitBisnis);
+    // Dicari lewat KODE, bukan `!h.unitBisnis` — sejak Dashboard Perbandingan masuk (4 September)
+    // ada DUA halaman tanpa unit bisnis, dan `.find((h) => !h.unitBisnis)` akan diam-diam
+    // mengembalikan yang manapun yang muncul lebih dulu di `D.HALAMAN`, bukan selalu Ringkasan.
+    const hRingkasan = D.HALAMAN.find((h) => h.kode === 'ringkasan');
+    const hBanding = D.HALAMAN.find((h) => h.kode === 'perbandingan');
     let html = `<li class="nav-item"><a href="#" class="nav-link` +
       `${kodeAktif === hRingkasan.kode ? ' active' : ''}" data-halaman="${esc(hRingkasan.kode)}">` +
       `<i class="bi bi-columns-gap nav-icon"></i><p>${esc(hRingkasan.judul)}</p></a></li>`;
+    // Menu kedua sejajar Ringkasan, BUKAN di dalam grup unit bisnis — halaman ini melayani
+    // ketiga unit bisnis sekaligus lewat kontrolnya sendiri, jadi ia tidak dimiliki satu grup.
+    html += `<li class="nav-item"><a href="#" class="nav-link` +
+      `${kodeAktif === hBanding.kode ? ' active' : ''}" data-halaman="${esc(hBanding.kode)}">` +
+      `<i class="bi bi-bar-chart-steps nav-icon"></i><p>${esc(hBanding.judul)}</p></a></li>`;
 
     // Grup yang bisa dibuka-tutup. `data-grup` menandainya BUKAN navigasi, dan app.js yang
     // menangani toggle-nya: portal-ui.js memang mengikat `.has-treeview > .nav-link`, tetapi
@@ -9453,7 +10000,7 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
                halamanSumberData, kartuSummary, sidebar,
                halamanDetail, halamanRingkasan, seksiCollapse, isiFinansial,
                isiSeksiKartu, kartuFinansial, keKuartal, porsiKartu,
-               halamanSeksiDetail, blokTelusur };
+               halamanSeksiDetail, blokTelusur, halamanPerbandingan };
 })(globalThis.PROTO = globalThis.PROTO || {});
 
 /* ── src/js/app.js ── */
@@ -9484,7 +10031,15 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
   const state = { halaman: 'ringkasan', unitBisnis: 'SEMUA', subUnit: 'SEMUA',
                   periode: D.PERIODE_DEFAULT, modePeriode: 'bulan',
                   entitas: null, seksiTerbuka: null, collapseView: false,
-                  jalur: [], asal: null, seksiDetail: null, pendukung: null };
+                  jalur: [], asal: null, seksiDetail: null, pendukung: null,
+                  // Dashboard Perbandingan (4 September 2026). `bandingMetrik` berjalur
+                  // `{halaman, nama}`, bukan nama telanjang — REVENUE ada di dua unit bisnis
+                  // (MALL dan Office Building), dan nama saja tidak cukup untuk menunjuk yang
+                  // benar. `bandingPilih` awalnya SELURUH sub unit MALL, sama dengan urutan
+                  // filter Sub Unit lainnya di prototype ini: bawaannya "tampilkan semuanya".
+                  bandingUnit: 'MALL',
+                  bandingMetrik: D.metrikBandingAwal('MALL'),
+                  bandingPilih: D.SUB_UNIT.MALL.map((s) => s.kode) };
 
   // Nama yang dipajang datang dari kamus (`D.namaUnitBisnis`), BUKAN ditulis di sini. Sampai
   // 27 Agustus berkas ini menuliskan sendiri `kode === 'SPM' ? 'OFFICE BUILDING SPM' : kode`,
@@ -9826,6 +10381,41 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
         const tahun = e.target.id === 'filterTahun' ? e.target.value : state.periode.slice(0, 4);
         const bulan = e.target.id === 'filterBulan' ? e.target.value : state.periode.slice(5);
         state.periode = D.periodeTerdekat(tahun, bulan) || state.periode;
+        gambar();
+      }
+      // ── Dashboard Perbandingan (4 September 2026) ───────────────────────────────────────
+      if (e.target.id === 'filterBandingUnit') {
+        state.bandingUnit = e.target.value;
+        // Metrik di-RESET, tidak dipertahankan — sama pola dengan reset `subUnit` di
+        // filterUnitBisnis di atas. `NLA` tidak ada di Hotel; mempertahankan acuan yang tidak
+        // ada di unit yang baru berarti halaman kosong tanpa sebab yang terlihat.
+        if (!D.metrikBandingAda(state.bandingUnit, state.bandingMetrik)) {
+          state.bandingMetrik = D.metrikBandingAwal(state.bandingUnit);
+        }
+        // Sub unit terpilih ikut diganti SELURUHNYA: daftar sub unit unit yang lama tidak
+        // berlaku di unit yang baru (kode Mall tidak ada di daftar Hotel), jadi mempertahankan
+        // `bandingPilih` lama akan memilih nol sub unit yang benar-benar ada.
+        state.bandingPilih = D.SUB_UNIT[state.bandingUnit].map((s) => s.kode);
+        gambar();
+      }
+      if (e.target.id === 'filterBandingMetrik') {
+        // Nilainya berjalur "halaman|nama" (lihat kamus D.metrikBanding). Dipisah dengan
+        // `sisa.join('|')`, bukan `sisa[0]`: sudah dipastikan tak satu pun dari 65 metrik akar
+        // memuat '|' di namanya, tapi menjaga pemisahan ini tetap AMAN kalau kelak ada nama
+        // yang memuatnya — yang tidak boleh memuat '|' hanya kode halamannya.
+        const [halaman, ...sisa] = e.target.value.split('|');
+        state.bandingMetrik = { halaman, nama: sisa.join('|') };
+        gambar();
+      }
+      if (e.target.name === 'bandingPilih') {
+        const kode = e.target.value;
+        const kini = new Set(state.bandingPilih);
+        if (e.target.checked) kini.add(kode); else kini.delete(kode);
+        // Nol sub unit bukan keadaan yang berarti; centang terakhir sudah dikunci di markup
+        // (lihat `centang` di halamanPerbandingan), jadi baris ini pagar KEDUA — bukan
+        // pengganti pagar pertama, melainkan jaring untuk pemakai yang memaksanya lewat
+        // DevTools atau perubahan DOM yang tidak lewat markup normal.
+        if (kini.size) state.bandingPilih = [...kini];
         gambar();
       }
     });
