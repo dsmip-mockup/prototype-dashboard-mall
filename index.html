@@ -1055,25 +1055,170 @@ html, body { overflow-x: hidden; }
   line-height: 1.6;
   color: var(--t-text);
 }
-.pr-bd-pilih {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-2) var(--space-3);
-  margin-top: var(--space-2);
+/* ── Daftar batang peringkat (7 September 2026) ───────────────────────────────────────
+   Menggantikan kanvas ber-viewBox di seksi Peringkat. Sebabnya di chart.js barDaftar(); yang
+   penting di sini: TINGGI BARIS diatur px oleh CSS, jadi ia tidak lagi punya hubungan apa pun
+   dengan lebar layar. Di kanvas lama tinggi baris = lebar kolom x 0,16 / jumlah baris, yang di
+   HP jatuh ke ~7 px sementara hurufnya tetap 12 px — label bertumpuk, dan itu yang dilihat
+   pemilik di HP-nya.
+
+   Tiga kolom di desktop, DUA BARIS di HP. Yang pindah cuma palungnya: nama & angka tetap
+   sebaris supaya pasangan "siapa - berapa" tidak pernah terpisah. */
+.pr-bl {
+  --pr-bl-nama: 150px;      /* kolom nama desktop; nama singkat, sisanya elipsis */
+  --pr-bl-nilai: 68px;      /* talang angka: "1.805.827" pada 12px tabular ~62px */
+  --pr-bl-baris: 28px;      /* 8 baris x 28 = 224px, sepadan seksi Tren (231px) */
+  --pr-bl-baris-hp: 40px;   /* dua baris + palung; 8 x 40 = 320px, dan HP memang menggulir */
+  list-style: none;
+  margin: 0;
+  padding: 0;
 }
-.pr-bd-centang {
+.pr-bl-baris {
+  display: grid;
+  grid-template-areas: "nama palung nilai";
+  grid-template-columns: var(--pr-bl-nama) minmax(0, 1fr) var(--pr-bl-nilai);
+  align-items: center;
+  column-gap: var(--space-2);
+  min-height: var(--pr-bl-baris);
+  font-size: 12px;
+}
+/* Garis rambut antar baris, satu langkah dari permukaannya — pemisah baris, bukan kotak
+   di sekeliling mark (lihat anti-pattern "border around marks"). */
+.pr-bl-baris + .pr-bl-baris { border-top: 1px solid var(--t-border); }
+.pr-bl-baris:hover,
+.pr-bl-baris.pr-hit-aktif { background: var(--t-surf-2); }
+.pr-bl-nama {
+  grid-area: nama;
+  color: var(--t-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* Sub unit yang sedang dipilih ditebalkan — jangkar yang sama dengan .pr-bar-aktif di kanvas. */
+.pr-bl-baris .pr-bar-aktif { font-weight: 600; color: var(--t-text); }
+.pr-bl-palung {
+  grid-area: palung;
+  height: 10px;                      /* mark tipis; tinggi barisnya yang memberi ruang */
+  background: var(--t-surf-2);
+  border-radius: 5px;
+  overflow: hidden;
+}
+.pr-bl-isi {
+  display: block;
+  height: 100%;
+  /* Ujung DATA membulat 4px, pangkalnya rata di garis dasarnya. */
+  border-radius: 1px 4px 4px 1px;
+  /* Nilai bukan-nol tidak boleh tampil setipis nol: Samasta 1.102 dari maksimum 71.404 = 1,5%,
+     yang di HP jatuh ke ~5 px dan di kartu sempit bisa kurang dari 1 px. */
+  min-width: 2px;
+}
+.pr-bl-nilai {
+  grid-area: nilai;
+  text-align: right;
+  color: var(--t-text-muted);
+  /* tabular-nums memang di sini: angkanya berjajar tegak antar baris (lihat anti-pattern —
+     yang dilarang tabular pada angka besar yang berdiri sendiri). */
+  font-variant-numeric: tabular-nums;
+}
+.pr-bl-kosong { color: var(--t-text-muted); }
+.pr-bl-hampa { font-size: 12px; color: var(--t-text-muted); margin: 0; }
+/* HP: palung turun ke barisnya sendiri, selebar penuh. Ini yang membuat tumpukan label
+   MUSTAHIL, bukan sekadar dihindari — tidak ada lagi angka tinggi yang ikut lebar layar. */
+@media (max-width: 719px) {
+  .pr-bl-baris {
+    grid-template-areas: "nama nilai" "palung palung";
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: var(--space-2);
+    row-gap: 4px;
+    min-height: var(--pr-bl-baris-hp);
+    padding-block: 6px;
+  }
+  /* Di HP kolomnya selebar layar, jadi nama singkat muat utuh — elipsisnya tinggal jaring. */
+  .pr-bl-nama { color: var(--t-text); }
+}
+
+/* ── Ceklist "Bandingkan" sebagai chip (7 September 2026) ─────────────────────────────
+   Permintaan pemilik: *"Tolong buat yg rapih dan modern untuk ceklist Bandingkan"*. Sampai
+   hari ini isinya kotak centang bawaan browser yang mengalir dalam satu baris flex bersama
+   labelnya, dan di HP hasilnya: kotak centang sebesar jempol, "Bandingkan" berbagi baris
+   dengan sub unit pertama, lalu dua per baris yang tidak sejajar.
+
+   Yang dipilih pemilik dari tiga bentuk: chip bisa ditekan. Bidang tekannya SELURUH chip
+   (min 34px, di atas ambang ~24px panduan dataviz), bukan kotak 13px di sebelah teks.
+
+   SATU penyimpangan dari sketsa yang disetujui, dan ini sebabnya: sketsanya menyebut yang
+   terpilih "berlatar penuh". Delapan chip berlatar oranye penuh adalah blok jenuh besar —
+   justru yang dilarang panduan dataviz ("saturated fills are for small marks and accents,
+   never large blocks") — dan latar terang pilihan itu tidak punya padanan yang sah di tema
+   dark tanpa mengarang langkah warna baru. Jadi yang terisi PERMUKAANNYA (--t-surf-2, token
+   bertema) sementara warnanya dibawa TEPI dan CENTANGNYA. Bacaan terisi-lawan-bertepi tetap,
+   ongkos tintanya tidak. */
+.pr-bd-pilih { margin-top: var(--space-3); }
+.pr-bd-pilih-kepala {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+.pr-bd-hitung { font-size: 12px; color: var(--t-text-muted); font-variant-numeric: tabular-nums; }
+.pr-bd-cips { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+/* Input menutupi chip-nya dan transparan: satu bidang tekan, dan keadaan :checked/:disabled
+   tetap milik input sungguhan — bukan div ber-ARIA yang harus dijaga sendiri. */
+.pr-bd-cip { position: relative; display: inline-flex; }
+.pr-bd-cip input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.pr-bd-cip-isi {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  min-height: 34px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--t-border);
+  border-radius: 999px;
+  background: var(--t-surf);
+  color: var(--t-text-muted);
   font-size: 12px;
+}
+/* Centangnya SELALU ada, disembunyikan lewat visibility waktu lepas — kalau ia dihilangkan
+   dari aliran, lebar chip berubah tiap klik dan seluruh barisnya bergeser. */
+.pr-bd-cip-tanda { visibility: hidden; color: var(--pr-c-1); font-size: 14px; line-height: 1; }
+.pr-bd-cip:has(input:checked) .pr-bd-cip-isi {
+  background: var(--t-surf-2);
+  border-color: var(--pr-c-1);
   color: var(--t-text);
-  cursor: pointer;
+  font-weight: 600;
+}
+.pr-bd-cip:has(input:checked) .pr-bd-cip-tanda { visibility: visible; }
+/* **Tidak ada pengecualian tema dark di sini, dan itu hasil pengukuran — bukan kelalaian.**
+   Sempat ditambahkan, lalu DICABUT: di tema dark `--t-surf-2` memang lebih gelap daripada
+   `--t-surf` (kebalikan tema terang), dan dari situ tampak seperti chip terpilih jadi cekung.
+   Yang menentukan ternyata bukan terang-gelap absolut melainkan hubungannya dengan PERMUKAAN
+   KARTUNYA, dan `--t-surf` adalah permukaan kartu itu di KEDUA tema (terukur di browser: kartu
+   rgb 255,255,255 di terang dan rgb 39,39,42 di dark, dua-duanya sama dengan `--t-surf`). Jadi
+   aturan di atas sudah benar apa adanya: chip yang LEPAS melebur ke kartunya, yang TERPILIH
+   memakai permukaan satunya sehingga menonjol — arah yang sama di terang maupun dark.
+   Pengecualian yang sempat ditulis justru membuat chip terpilih di dark sewarna kartunya.
+   (Angka rgb, bukan heks — penjaga `prototype.css bebas hex hardcode` memindai komentar juga.) */
+.pr-bd-cip:has(input:focus-visible) .pr-bd-cip-isi {
+  outline: 2px solid var(--pr-c-1);
+  outline-offset: 2px;
 }
 /* Centang terakhir dikunci supaya tidak bisa jadi nol sub unit — ia harus TERLIHAT terkunci,
    bukan diam-diam tidak menanggapi klik. */
-.pr-bd-centang input:disabled { cursor: not-allowed; }
-.pr-bd-centang:has(input:disabled) { color: var(--t-text-muted); cursor: not-allowed; }
+.pr-bd-cip input:disabled { cursor: not-allowed; }
+.pr-bd-cip:has(input:disabled) .pr-bd-cip-isi {
+  border-style: dashed;
+  color: var(--t-text-muted);
+  cursor: not-allowed;
+}
 
 /* Keterangan kenapa YoY satu baris kosong. Serupa .pr-fp-nota-banding di kartu, tetapi di
    dalam sel tabel: ia harus turun ke baris sendiri dan tidak boleh melebarkan kolomnya. */
@@ -7389,6 +7534,76 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
       label);
   }
 
+  /** ── Daftar batang: baris HTML, BUKAN kanvas ber-viewBox (7 September 2026) ───────────
+   *
+   *  Ditulis karena `bar()` runtuh di HP, dan sebabnya struktural — bukan angka yang bisa
+   *  disetel. Di `bar()` tinggi kanvas terikat rasio `h/w` (`width:100%` + viewBox), sementara
+   *  label barisnya HTML berukuran px TETAP. Jadi tinggi per baris menyusut bersama lebar
+   *  layar sedangkan hurufnya tidak:
+   *
+   *  | lebar konten | tinggi kanvas (rasio 0,16) | per baris (8) | huruf |
+   *  |---|---|---|---|
+   *  | 1429 px | ~229 px | ~28,6 px | 12 px — muat |
+   *  | ~360 px (HP) | **~58 px** | **~7,2 px** | 12 px — **bertumpuk ~5 px** |
+   *
+   *  Rasio 0,16 itu sendiri dipasang 6 September supaya seksi Peringkat tidak mendorong seksi
+   *  Tren keluar layar di desktop, dan alasannya masih benar — yang salah menyandarkan TINGGI
+   *  BARIS pada lebar kanvas. Di sini tinggi baris px, diatur CSS, jadi ia tidak lagi punya
+   *  hubungan apa pun dengan lebar layar dan tumpukan itu **mustahil terjadi**, bukan
+   *  dihindari dengan angka yang pas.
+   *
+   *  Dua hal lain yang ikut membaik, dan keduanya terukur pada delapan sub unit MALL:
+   *   - kolom nama & talang angka `bar()` dalam satuan viewBox, jadi di HP keduanya menyusut
+   *     jadi ~85 px dan ~17 px. Di sini nama satu baris penuh dan angkanya `auto`.
+   *   - batang terpendek (Samasta 1.102 dari maksimum 71.404 = 1,5%) di palung selebar kolom:
+   *     ~15 px di desktop, ~5 px di HP, dan berlantai `min-width` supaya nilai bukan-nol tidak
+   *     pernah tampil setipis nol.
+   *
+   *  Tooltipnya memakai mekanisme yang SAMA (`.pr-hit` + `data-tt-*`, didelegasikan di
+   *  document) — app.js tidak tahu dan tidak perlu tahu bahwa hit target kali ini elemen HTML,
+   *  bukan `<g>` di dalam SVG: ia cuma memanggil `getBoundingClientRect()`. Penelusuran
+   *  keyboard juga utuh, karena `atributKanvas()` dipasang di wadahnya dan app.js mencari
+   *  `.pr-hit` DI DALAM `[data-pr-titik]`.
+   *
+   *  Namanya SINGKAT, sama seperti di `bar()` (konvensi 23 Agustus): nama lengkap tetap milik
+   *  tabel rincian di bawahnya. Tooltipnya pun singkat — memasukkan nama lengkap ke sini
+   *  berarti melemahkan penjaga Finding B-2 yang menagih nama lengkap TIDAK ada di blok
+   *  Peringkat, dan imbalannya kecil karena "Mall Kelapa Gading" sendiri sudah tidak ambigu. */
+  function barDaftar({ items = [], satuan, label = 'Perbandingan antar sub unit' } = {}) {
+    if (!items.length) return `<p class="pr-bl-hampa">Tidak ada data</p>`;
+    // Hanya nilai yang benar-benar angka boleh masuk skala — `Math.max(...[null], 1)` = NaN,
+    // dan seluruh lebar persennya ikut ber-NaN. Aturan yang sama dengan bar() dan garis().
+    const terisi = items.filter((it) => angka(it.nilai));
+    const max = Math.max(...terisi.map((it) => it.nilai), 1);   // 1 = jaga bagi nol
+
+    const baris = items.map((it) => {
+      const tebal = it.aktif ? ' pr-bar-aktif' : '';
+      const nama = `<span class="pr-bl-nama${tebal}">${esc(it.label)}</span>`;
+      // "Kosong bukan nol" (aturan yang sama dengan bar() dan garis()): nilai yang belum masuk
+      // TIDAK digambar sebagai batang selebar nol. Batang nol bertulisan "0" terbaca sebagai
+      // angka yang seolah pasti nol, padahal yang benar "belum diketahui".
+      const isi = angka(it.nilai)
+        ? `<span class="pr-bl-isi" style="width:${bulat((Math.max(0, it.nilai) / max) * 100)}%` +
+          `;background:${it.warna || WARNA.seri}"></span>`
+        : '';
+      const nilai = angka(it.nilai)
+        ? `<span class="pr-bl-nilai">` +
+          `${esc(Math.round(it.nilai).toLocaleString('id-ID'))}</span>`
+        : `<span class="pr-bl-nilai pr-bl-kosong">${esc(KOSONG)}</span>`;
+      return `<li class="pr-bl-baris pr-hit" data-tt-judul="${esc(it.label)}" ` +
+        `data-tt-label="Nilai" data-tt-nilai="${esc(F.nilai(it.nilai, satuan))}" ` +
+        `data-tt-warna="${esc(it.warna || WARNA.seri)}">` +
+        nama + nilai + `<span class="pr-bl-palung">${isi}</span></li>`;
+    }).join('');
+
+    // `role="img"` + aria-label: satu benda yang dibacakan sebagai satu chart, sama seperti
+    // kanvas SVG-nya — bukan daftar delapan butir yang diumumkan satu per satu. Angkanya
+    // sendiri tetap teks sungguhan di dalamnya, jadi tidak ada nilai yang hanya bisa dicapai
+    // lewat tooltip.
+    return `<ol class="pr-bl" role="img" aria-label="${esc(label)}"` +
+      `${atributKanvas(items.length)}>${baris}</ol>`;
+  }
+
   /** Batang bullet untuk kartu summary FA 2: satu batang aktual di dalam palung, dengan
    *  penanda tegak di posisi budget. Acuan pemilik memberi keempat metrik laba rugi
    *  `viz:"bullet"`, dan bentuk ini yang paling ringkas menjawab "aktual sudah sampai mana
@@ -7524,7 +7739,7 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
       iris.join('') + hit.join('') + `</svg>`;
   }
 
-  P.chart = { garis, garisBanyak, kolom, bar, bullet, donat, WARNA };
+  P.chart = { garis, garisBanyak, kolom, bar, barDaftar, bullet, donat, WARNA };
 })(globalThis.PROTO = globalThis.PROTO || {});
 
 /* ── src/js/render.js ── */
@@ -9861,6 +10076,51 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
         ` &middot; YoY ${F.persenDelta(utama.yoy)}`
       : `${daftar[0].judul} &middot; ${namaPeriode}`;
 
+    // ── Tautan "Bandingkan" (7 September 2026) ────────────────────────────────────────────
+    // Permintaan pemilik: *"tambahkan dihalaman Dashboard Management Detail ada fitur link
+    // Bandingkan nanti ketika di klik akan mengarah ke halaman Dashboard Perbandingan"*.
+    //
+    // Ia membawa KONTEKSNYA, bukan cuma berpindah halaman: unit bisnis entitasnya DAN metrik
+    // utama seksi ini — metrik yang sama yang sudah disebut kalimat `ringkas` di kaki ini. Jadi
+    // pembaca mendarat pada perbandingan yang sedang dilihatnya, bukan halaman bawaan yang
+    // harus difilter ulang dua kali.
+    //
+    // Tiga syarat, dan ketiganya DITURUNKAN — tidak satu pun daftar tulisan tangan:
+    //   1. halamannya Dashboard Management Detail. Kaki ini dipakai bersama halaman awal, dan
+    //      yang diminta pemilik halaman detailnya; menaruhnya di kedua tempat menambah tombol
+    //      ke layar yang tidak diminta.
+    //   2. entitasnya punya unit bisnis. PT SMIP tidak punya — Dashboard Perbandingan sendiri
+    //      tidak menawarkan opsi SEMUA (mengadu Mall dengan Hotel tidak bermakna), jadi dari
+    //      halaman PT SMIP tidak ada unit yang bisa dibawa.
+    //   3. metriknya ADA di katalog perbandingan (`metrikBandingAda`) — kalau tidak, ia jatuh ke
+    //      metrik bawaan unit itu, TIDAK menghilangkan tombolnya.
+    //
+    // Butir 3 punya sejarahnya sendiri, dan itu sebabnya ia berjalan mundur alih-alih menyerah.
+    // Katalog perbandingan cuma menawarkan metrik AKAR, sementara kartu utama seksi tidak selalu
+    // akar: kartu pertama seksi Hotel `ROOM REVENUE`, yang di kamus adalah ANAK `TOTAL REVENUE`
+    // (Room + F&B + M.O.D). Menyerah berarti halaman detail HOTEL sama sekali tanpa tombol
+    // Bandingkan, dan halaman yang kehilangan satu fitur tanpa sebab yang terlihat terbaca
+    // seperti rusak. Jadi ia mendarat di `TOTAL REVENUE` — induk dari kartu yang sedang dibaca.
+    //
+    // Yang HARUS ikut: `aria-label` menyebut metrik yang BENAR-BENAR akan dibuka, bukan judul
+    // kartunya. Tombol yang menjanjikan "ROOM REVENUE" lalu membuka "TOTAL REVENUE" adalah
+    // keluarga cacat yang sudah dua kali muncul di prototipe ini — badge yang membantah angkanya.
+    const entBanding = D.entitasDari(bukaDetail);
+    const unitBanding = entBanding && entBanding.unitBisnis;
+    const refUtama = daftar[0] && { halaman: daftar[0].halaman, nama: daftar[0].metrik };
+    const refBanding = unitBanding
+      ? (D.metrikBandingAda(unitBanding, refUtama)
+          ? refUtama : D.metrikBandingAwal(unitBanding))
+      : null;
+    const bandingkan = state.halaman === D.DETAIL.kode && unitBanding && refBanding
+      ? `<button class="ds-btn ds-btn-sm ds-btn-ghost" type="button" ` +
+          `data-bd-unit="${esc(unitBanding)}" ` +
+          `data-bd-metrik="${esc(`${refBanding.halaman}|${refBanding.nama}`)}" ` +
+          `aria-label="Bandingkan ${esc(refBanding.nama)} antar ` +
+            `${esc(D.labelSubUnit(unitBanding).toLowerCase())}">` +
+          `Bandingkan <i class="bi bi-bar-chart-steps"></i></button>`
+      : '';
+
     return `<div class="pr-fp-grid">` +
         daftar.map((def) => kartuFinansial(state, def, namaPeriode, subUnit)).join('') +
       `</div>` +
@@ -9868,6 +10128,7 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
         `<span class="pr-fp-ringkas">${ringkas}` +
           `${sumber ? ` &middot; ${esc(sumber)}` : ''}</span>` +
         `<span class="pr-fp-aksi">` +
+          bandingkan +
           // Seksi yang belum punya halaman detailnya tetap memajang tombolnya dalam keadaan
           // mati, bukan menghilangkannya: ia bagian dari konsep acuan, dan tombol hidup yang
           // tidak membuka apa pun lebih membingungkan daripada yang jelas belum aktif.
@@ -10694,11 +10955,27 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
     // lebih baik daripada memajang halaman kosong lalu menjelaskan mengapa. Penguncian di sini
     // adalah pagar PERTAMA; pagar kedua ada di penangan `change` app.js untuk pemakai yang
     // memaksa lewat DevTools atau race event.
+    // **Bentuknya chip sejak 7 September 2026**, permintaan pemilik: *"Tolong buat yg rapih dan
+    // modern untuk ceklist Bandingkan"*. Kotak centang bawaan browser di dalam satu baris flex
+    // bersama labelnya mengalir tak beraturan di HP — terlihat di foto layar HP beliau.
+    //
+    // Labelnya nama SINGKAT (`singkat || nama`), konvensi 23 Agustus yang sama dengan label
+    // chart: delapan chip bernama "Summarecon Mall …" penuh mengisi tiga baris sendiri di
+    // desktop dan mendorong seluruh grafiknya turun. Nama lengkap tetap di tabel rincian.
+    // `title` membawa nama lengkapnya, jadi bentuk panjangnya tetap bisa dicapai.
+    //
+    // Ikonnya ditulis LENGKAP di satu tempat, tidak dirangkai saat berjalan — penjaga
+    // build.test.js tidak bisa memeriksa nama ikon yang dirangkai (jebakan `bi-caret-${…}`).
     const centang = (D.SUB_UNIT[unit] || []).map((sub) => {
       const on = pilih.includes(sub.kode);
       const kunci = on && pilih.length === 1 ? ' disabled' : '';
-      return `<label class="pr-bd-centang"><input type="checkbox" name="bandingPilih" ` +
-        `value="${esc(sub.kode)}"${on ? ' checked' : ''}${kunci}> ${esc(sub.nama)}</label>`;
+      const namaSingkat = sub.singkat || sub.nama;
+      return `<label class="pr-bd-cip" title="${esc(sub.nama)}">` +
+        `<input type="checkbox" name="bandingPilih" value="${esc(sub.kode)}"` +
+        `${on ? ' checked' : ''}${kunci} aria-label="${esc(sub.nama)}">` +
+        `<span class="pr-bd-cip-isi">` +
+          `<i class="bi bi-check2 pr-bd-cip-tanda" aria-hidden="true"></i>` +
+          `${esc(namaSingkat)}</span></label>`;
     }).join('');
 
     // `modeTersedia: MODE_BANDING` — Bulanan & Tahunan saja. Sampai 6 September di sini
@@ -10711,8 +10988,14 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
       `<div class="pr-filter-field"><label class="ds-label" for="filterBandingMetrik">Metrik` +
         `</label><select class="ds-input" id="filterBandingMetrik">${opsiMetrik}</select></div>` +
       filterPeriode(state, { modeTersedia: MODE_BANDING }) +
-      `</div><div class="pr-bd-pilih"><span class="ds-label">Bandingkan</span>${centang}</div>` +
-      `</section>`;
+      `</div><div class="pr-bd-pilih">` +
+        `<div class="pr-bd-pilih-kepala"><span class="ds-label">Bandingkan</span>` +
+          // Hitungannya dari daftar yang SAMA dengan chip-nya, bukan dihitung ulang: dua
+          // sumber untuk satu angka akan menua jadi dua angka yang berbeda.
+          `<span class="pr-bd-hitung">${pilih.length} dari ` +
+          `${(D.SUB_UNIT[unit] || []).length}</span></div>` +
+        `<div class="pr-bd-cips">${centang}</div>` +
+      `</div></section>`;
 
     if (!h.berdata) {
       return kepalaHalaman('Dashboard Perbandingan',
@@ -10764,36 +11047,32 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
     const kesimpulan = bagian.length
       ? `<p class="pr-bd-kesimpulan">${bagian.join('. ')}.</p>` : '';
 
-    // Lebar & padKiri kanvas batang (review round 1, Finding B-1): kanvas ber-viewBox menskala
-    // TINGGINYA mengikuti lebar kolom kontennya (CSS `width:100%`) — viewBox lama 490x156 (enam
-    // baris, `padKiri` bawaan 150) di kolom 1429px tampil ~455px, jauh melampaui seksi Tren
-    // (231px) dan memaksa scroll separuh layar sebelum trennya kelihatan — membantah janji
-    // "satu pertanyaan, satu layar" yang jadi dasar seluruh halaman ini. Lebar viewBox
-    // dilebarkan ke 1000: 156/1000 = 0,156, di bawah ambang 0,16 yang dijaga penjaganya, jadi di
-    // kolom 1429px tingginya <= 1429 x 0,16 ≈ 229px. `padKiri` ikut dilebarkan SEBANDING
-    // (150 x 1000/490 ≈ 306) supaya kolom nama tetap proporsi yang sama dari kanvas — dibiarkan
-    // 150, kolom nama menyusut jadi 15% lebar dan berisiko menabrak batang.
+    // **Bukan kanvas lagi sejak 7 September 2026** — `CH.barDaftar()`, baris HTML.
     //
-    // Lebarnya DIHITUNG dari rasionya, bukan angka tetap 1000 (6 September 2026). Angka 1000 itu
-    // benar hanya selama barisnya paling banyak enam — asumsi yang ditulis di komentar ini
-    // sendiri ("maksimum enam, kamus MALL") dan yang MATI hari itu juga waktu pemilik memasukkan
-    // Scientia Square Park & Hub: delapan baris jadi 8 x 26 = 208, rasionya 0,208, dan seksi
-    // Peringkat kembali mendorong Tren keluar layar. Tingginya PER BARIS dibiarkan 26 — itu yang
-    // membuat batangnya cukup tebal untuk dibaca — jadi yang menyesuaikan lebarnya. Sekarang
-    // ambang 0,16 itu dijaga oleh RUMUSNYA, bukan oleh jumlah sub unit yang kebetulan berlaku.
-    const PERINGKAT_H = Math.max(80, h.baris.length * 26);
-    const PERINGKAT_W = Math.max(1000, Math.ceil(PERINGKAT_H / 0.16));
+    // Sampai hari ini di sini ada dua angka yang dihitung dengan susah payah: `PERINGKAT_H`
+    // (baris x 26) dan `PERINGKAT_W` (dilebarkan supaya rasio h/w <= 0,16, ambang yang menjaga
+    // seksi ini tidak mendorong seksi Tren keluar layar di desktop). Keduanya benar untuk
+    // masalah yang mereka pecahkan, dan keduanya **meruntuhkan halaman ini di HP**: rasio yang
+    // menjaga tingginya di desktop adalah rasio yang sama yang memerasnya jadi ~58px di layar
+    // 360px — delapan baris berbagi 58px sementara labelnya tetap 12px, dan pemilik
+    // memfotonya. Lengkapnya di chart.js `barDaftar()`.
+    //
+    // Yang berubah bukan angkanya, tapi SIAPA yang menentukan tinggi baris: dulu lebar kanvas,
+    // sekarang CSS (`--pr-bl-baris`, 28px). Rasio, `padKiri` sebanding, dan seluruh
+    // aritmetikanya ikut hilang — bersama satu kelas cacat yang tidak bisa lagi terjadi.
+    //
+    // Label SINGKAT tetap (Finding B-2, konvensi 23 Agustus yang sama dengan `perSubUnit()`):
+    // label CHART memakai nama singkat, nama lengkap tetap di tabel rincian (di bawah) dan
+    // kalimat kesimpulan (di atas), tempat yang ada ruang dan presisi penting. Sekarang
+    // elipsisnya CSS, bukan potongan 26 karakter di JS — jadi di HP, yang kolomnya selebar
+    // layar, nama singkatnya tampil UTUH.
     const peringkat = `<section class="ds-section pr-bd-peringkat">` +
       `<div class="ds-section-title">Peringkat` +
         `<span class="ds-section-meta">${esc(h.metrik.nama)}</span></div>` +
-      // Label SINGKAT (Finding B-2): `bar()` sendiri memotong nama di atas 26 karakter, dan
-      // nama LENGKAP sub unit MALL ("Summarecon Mall Kelapa Gading") tetap tampil terpotong
-      // walau viewBox-nya dilebarkan — konvensi 23 Agustus yang sama dengan `perSubUnit()`:
-      // label CHART memakai nama singkat, nama lengkap tetap di tabel rincian (di bawah) dan
-      // kalimat kesimpulan (di atas), tempat yang ada ruang dan presisi penting.
-      CH.bar({ items: h.baris.map((b) => ({ label: b.singkat, nilai: b.nilai })),
-               satuan: s, w: PERINGKAT_W, h: PERINGKAT_H,
-               padKiri: Math.round(150 * PERINGKAT_W / 490) }) +
+      CH.barDaftar({ items: h.baris.map((b) => ({ label: b.singkat, nilai: b.nilai })),
+                     satuan: s,
+                     label: `Peringkat ${h.metrik.nama} antar ` +
+                            `${D.labelSubUnit(unit).toLowerCase()}` }) +
     `</section>`;
 
     // Kolom PORSI tidak lenyap untuk metrik yang dirata-rata — ia tetap TAMPIL, kosong,
@@ -11261,6 +11540,35 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
     gambar();
   }
 
+  /** Buka Dashboard Perbandingan dari tautan "Bandingkan" di kaki seksi halaman detail
+   *  (permintaan pemilik 7 September 2026). `metrik` berjalur "halaman|nama", bentuk yang sama
+   *  dengan `value` pemilih metrik di halaman itu.
+   *
+   *  KETIGA medan banding di-set, dan itu bukan kehati-hatian berlebih: pola yang sama sudah
+   *  ada di penangan `filterBandingUnit`, dan sebabnya di sana berlaku persis di sini —
+   *  `bandingPilih` yang terbawa dari unit LAIN memilih nol sub unit yang benar-benar ada
+   *  (kode Mall tidak ada di daftar Hotel), dan halamannya kosong tanpa sebab yang terlihat.
+   *
+   *  Metriknya masih diperiksa ulang walau render.js sudah memastikannya ada di katalog
+   *  sebelum memancarkan tombolnya: yang di markup bisa usang satu gambar, dan pagar kedua di
+   *  sini murah. Sama pola dengan pagar kedua centang `bandingPilih`. */
+  function bukaPerbandingan(kodeUnit, metrik) {
+    const [halaman, ...sisa] = String(metrik || '').split('|');
+    const ref = { halaman, nama: sisa.join('|') };
+    state.halaman = D.HALAMAN.find((h) => h.kode === 'perbandingan').kode;
+    state.bandingUnit = kodeUnit;
+    state.bandingMetrik = D.metrikBandingAda(kodeUnit, ref) ? ref : D.metrikBandingAwal(kodeUnit);
+    state.bandingPilih = D.SUB_UNIT[kodeUnit].map((s) => s.kode);
+    // Keadaan halaman ASAL tidak boleh terbawa: jalur telusur, donut Laporan Pendukung, entitas,
+    // dan seksi yang terbuka semuanya milik halaman detail yang baru ditinggalkan.
+    state.entitas = null;
+    state.seksiDetail = null;
+    state.jalur = [];
+    state.pendukung = null;
+    state.seksiTerbuka = null;
+    gambar();
+  }
+
   function pasangListener() {
     document.addEventListener('click', (e) => {
       // ── Financial Performance Detail ──
@@ -11291,6 +11599,14 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
       if (e.target.closest('[data-pd-kembali]')) { telusurPendukung(null); return; }
 
       // ── Dashboard Management Detail ──
+      // Diperiksa SEBELUM `[data-detail-entitas]`: tombol Bandingkan duduk di kaki seksi, di
+      // dalam halaman yang seluruh kartunya membawa atribut detail — kalau urutannya dibalik,
+      // klik yang sama bisa dipungut penangan yang salah begitu markupnya bersarang lebih dalam.
+      const bdBuka = e.target.closest('[data-bd-unit]');
+      if (bdBuka) {
+        bukaPerbandingan(bdBuka.dataset.bdUnit, bdBuka.dataset.bdMetrik);
+        return;
+      }
       const kartuDetail = e.target.closest('[data-detail-entitas]');
       if (kartuDetail) { bukaDetail(kartuDetail.dataset.detailEntitas); return; }
       if (e.target.closest('[data-detail-kembali]')) {
