@@ -1361,7 +1361,7 @@ html, body { overflow-x: hidden; }
          yang berlaku di SEMUA halaman; cakupan per halaman ada di penanda kepalanya, yang
          memang tahu sub unit mana yang berkasnya sudah dikirim. -->
     <span>Prototype Dashboard Data Management &middot; PT SMIP &middot; <strong>Kelima dashboard memakai angka riil</strong> dari Tim Management &mdash; penanda di kepala tiap halaman menyebutkan cakupannya.</span>
-    <span class="pr-versi">Versi 7 September 2026, 10.18</span>
+    <span class="pr-versi">Versi 7 September 2026, 10.54</span>
   </footer>
 </div>
 </div>
@@ -1472,11 +1472,24 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
   const UNIT_BISNIS = [
     { kode: 'MALL',  nama: 'MALL',            subNama: 'Mall',   merekSub: 'Summarecon Mall' },
     { kode: 'HOTEL', nama: 'HOTEL',           subNama: 'Hotel' },
-    // **'OFFICES', bukan 'OFFICE BUILDING' sejak 6 September 2026** — permintaan pemilik
-    // (*"Untuk penamaan Office Building juga di rubah saja jadi Offices"*), dan itu nama yang
-    // dipakai berkas pemetaannya sendiri. KODE-nya tetap `SPM`: ia kunci, dipakai `nyata.js`
-    // dan kamus halaman, dan pemilik memang menuliskannya begitu di kolom Kode Bisnis.
-    { kode: 'SPM',   nama: 'OFFICES',         subNama: 'Gedung' },
+    // 'OFFICE BUILDING' (27 Agustus) → 'OFFICES' (6 September) → **'OFFICE' sejak 7 September
+    // 2026**, keputusan pemilik waktu beliau sendiri menanyakannya: *"untuk kata Offices lebih
+    // bagus Offices atau Office ya?"*
+    //
+    // Yang memutuskan bukan selera melainkan **dua saudaranya di daftar ini**: MALL punya
+    // delapan mall dan HOTEL punya lima hotel, dan keduanya bernama TUNGGAL — ketiganya nama
+    // KATEGORI, bukan hitungan. 'OFFICES' satu-satunya yang jamak, dan ketidakteraturan itu
+    // terlihat begitu ketiganya berjajar di sidebar. (Di laporan properti pun segmennya lazim
+    // tunggal: Retail · Office · Hospitality.)
+    //
+    // **PERINGATAN untuk siapa pun yang membandingkan dengan berkas pemetaan pemilik:
+    // `REKAP_DASHBOARD\Bisnis.xlsx` MASIH menulis `OFFICES` di kolom Bisnis.** Perbedaan itu
+    // DISENGAJA dan sudah disepakati — pemilik memilih `OFFICE` untuk dashboard dan menunda
+    // penyuntingan berkasnya (*"Untuk file excel Bisnis nanti saja ya"*). **Jangan
+    // "memperbaiki" nama ini kembali jadi OFFICES karena berkasnya berkata begitu**; yang
+    // menyusul justru berkasnya. Sampai berkasnya disunting, kamus inilah yang berwenang atas
+    // nama TAMPILAN — sementara KODE (`SPM`) tetap milik berkas itu.
+    { kode: 'SPM',   nama: 'OFFICE',          subNama: 'Gedung' },
   ];
 
   // ── Menjadikan angka bulanan jadi angka tahunan (23 Agustus 2026) ───────────────────────
@@ -2615,7 +2628,7 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
     // `judul` dipakai di tiga tempat sekaligus: menu sidebar, breadcrumb, dan judul halaman (h1).
     // Nama-nama ini ditetapkan pemilik 13 Agustus 2026 supaya seluruh menu berawalan "Dashboard".
     { kode: 'ringkasan', judul: 'Dashboard Management', unitBisnis: null, metrik: [],
-      kpi: ['PT SMIP', 'MALL', 'HOTEL', 'OFFICES'] },
+      kpi: ['PT SMIP', 'MALL', 'HOTEL', 'OFFICE'] },
     // **Dashboard Perbandingan (4 September 2026).** `unitBisnis: null` seperti `ringkasan`,
     // karena halamannya sendiri punya kontrol Unit Bisnis dan melayani ketiganya.
     //
@@ -2649,10 +2662,11 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
     // "Dashboard SPM" -> "Dashboard Office Building" (27 Agustus, permintaan pemilik menyusul
     // pemendekan nama unit bisnisnya). Kode halamannya tetap 'spm': ia dipakai `state.halaman`,
     // penanda menu aktif di sidebar, dan pasangan seksi/entitas di bawah ini.
-    // **'Dashboard Offices' sejak 6 September 2026**, mengikuti nama unit bisnisnya yang
-    // diganti pemilik hari itu (*"Untuk penamaan Office Building jg di rubah saja jadi
-    // Offices"*). Kode halamannya tetap 'spm'.
-    { kode: 'spm', judul: 'Dashboard Offices', unitBisnis: 'SPM', metrik: SPM,
+    // 'Dashboard Offices' (6 September) → **'Dashboard Office' sejak 7 September 2026**: judul
+    // ini MENGIKUTI nama unit bisnisnya, jadi ia bergerak setiap kali nama itu bergerak. Alasan
+    // lengkap pilihan tunggal-lawan-jamak ada di `UNIT_BISNIS` — termasuk peringatan bahwa
+    // berkas pemetaan pemilik masih menulis 'OFFICES'. Kode halamannya tetap 'spm'.
+    { kode: 'spm', judul: 'Dashboard Office', unitBisnis: 'SPM', metrik: SPM,
       seksi: 'spm', entitas: 'SPM',
       // CUSTOMER SATISFACTION INDEX dihapus dari kamus SPM 3 September bersama enam metrik
       // non-finansial lainnya, dan NPBI berpindah nama mengikuti kolom Detail berkasnya —
@@ -2749,7 +2763,7 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
       warna: 'pr-c-1' },
     { kode: 'HOTEL', nama: 'HOTEL',               unitBisnis: 'HOTEL', ikon: 'bi-house-door',
       warna: 'pr-c-2' },
-    { kode: 'SPM',   nama: 'OFFICES',             unitBisnis: 'SPM',   ikon: 'bi-building',
+    { kode: 'SPM',   nama: 'OFFICE',              unitBisnis: 'SPM',   ikon: 'bi-building',
       warna: 'pr-c-3' },
   ];
 
@@ -2782,7 +2796,7 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
     // keduanya tetap: di sanalah mereka membedakan satu unit bisnis dari yang lain.
     { kode: 'hotel',     judul: 'Hotel',                 ikon: 'bi-house-door',
       untuk: ['SMIP'] },
-    { kode: 'spm',       judul: 'Offices',               ikon: 'bi-building',
+    { kode: 'spm',       judul: 'Office',                ikon: 'bi-building',
       untuk: ['SMIP'] },
   ];
 
@@ -2831,14 +2845,14 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
       // dan EMPLOYEE COST — ketiganya tetap ada sebagai kartu metrik di halaman
       // Financial Performance Detail, jadi tidak ada angka yang hilang dari prototype.
       { judul: 'EXPENSE', halaman: 'keuangan', metrik: 'EXPENSE', chart: 'garis',
-        catatan: 'Sumber: FA MALL — metrik ini belum ada di HOTEL & OFFICES' },
+        catatan: 'Sumber: FA MALL — metrik ini belum ada di HOTEL & OFFICE' },
       { judul: 'EBITDA', halaman: 'keuangan', metrik: 'EBITDA', chart: 'area',
-        catatan: 'Sumber: FA MALL — metrik ini belum ada di HOTEL & OFFICES' },
+        catatan: 'Sumber: FA MALL — metrik ini belum ada di HOTEL & OFFICE' },
       // 'NPAT' ada DUA KALI di kamus FA (induk 'hitung' dan detail di bawahnya). Yang terambil
       // di sini yang pertama ditemukan, yaitu induknya — dan itu memang yang benar: nilainya
       // sendiri yang dihitung dari kedua PAT, bukan salah satu barisnya.
       { judul: 'NPAT', halaman: 'keuangan', metrik: 'NPAT', chart: 'kolom',
-        catatan: 'Sumber: FA MALL — metrik ini belum ada di HOTEL & OFFICES' },
+        catatan: 'Sumber: FA MALL — metrik ini belum ada di HOTEL & OFFICE' },
       // ACCOUNT RECEIVABLE bertipe `grup`: ia TIDAK punya angka sendiri, hanya dua turunan yang
       // artinya berlawanan (Collection = sudah tertagih, Aging > 60 = tertunggak). Menjumlahkan
       // keduanya bukan angka yang lazim, dan kartu bertanda '—' terbaca seperti data yang
@@ -2979,7 +2993,7 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
       ],
     },
     spm: {
-      sumber: 'Dashboard Offices',
+      sumber: 'Dashboard Office',
       // Keempatnya ditetapkan pemilik 1 September, sesudah Hotel dan dengan pola yang sama:
       // EXPENSE · EBITDA · NET PROFIT BEFORE INTEREST (NPBI) · COLLECTION, yaitu No. 2, 3, 4,
       // dan 5 berkas acuan `SPM\DASHBOARD_UTAMA_SPM.xlsx`, berurutan seperti di berkasnya.
@@ -10076,51 +10090,10 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
         ` &middot; YoY ${F.persenDelta(utama.yoy)}`
       : `${daftar[0].judul} &middot; ${namaPeriode}`;
 
-    // ── Tautan "Bandingkan" (7 September 2026) ────────────────────────────────────────────
-    // Permintaan pemilik: *"tambahkan dihalaman Dashboard Management Detail ada fitur link
-    // Bandingkan nanti ketika di klik akan mengarah ke halaman Dashboard Perbandingan"*.
-    //
-    // Ia membawa KONTEKSNYA, bukan cuma berpindah halaman: unit bisnis entitasnya DAN metrik
-    // utama seksi ini — metrik yang sama yang sudah disebut kalimat `ringkas` di kaki ini. Jadi
-    // pembaca mendarat pada perbandingan yang sedang dilihatnya, bukan halaman bawaan yang
-    // harus difilter ulang dua kali.
-    //
-    // Tiga syarat, dan ketiganya DITURUNKAN — tidak satu pun daftar tulisan tangan:
-    //   1. halamannya Dashboard Management Detail. Kaki ini dipakai bersama halaman awal, dan
-    //      yang diminta pemilik halaman detailnya; menaruhnya di kedua tempat menambah tombol
-    //      ke layar yang tidak diminta.
-    //   2. entitasnya punya unit bisnis. PT SMIP tidak punya — Dashboard Perbandingan sendiri
-    //      tidak menawarkan opsi SEMUA (mengadu Mall dengan Hotel tidak bermakna), jadi dari
-    //      halaman PT SMIP tidak ada unit yang bisa dibawa.
-    //   3. metriknya ADA di katalog perbandingan (`metrikBandingAda`) — kalau tidak, ia jatuh ke
-    //      metrik bawaan unit itu, TIDAK menghilangkan tombolnya.
-    //
-    // Butir 3 punya sejarahnya sendiri, dan itu sebabnya ia berjalan mundur alih-alih menyerah.
-    // Katalog perbandingan cuma menawarkan metrik AKAR, sementara kartu utama seksi tidak selalu
-    // akar: kartu pertama seksi Hotel `ROOM REVENUE`, yang di kamus adalah ANAK `TOTAL REVENUE`
-    // (Room + F&B + M.O.D). Menyerah berarti halaman detail HOTEL sama sekali tanpa tombol
-    // Bandingkan, dan halaman yang kehilangan satu fitur tanpa sebab yang terlihat terbaca
-    // seperti rusak. Jadi ia mendarat di `TOTAL REVENUE` — induk dari kartu yang sedang dibaca.
-    //
-    // Yang HARUS ikut: `aria-label` menyebut metrik yang BENAR-BENAR akan dibuka, bukan judul
-    // kartunya. Tombol yang menjanjikan "ROOM REVENUE" lalu membuka "TOTAL REVENUE" adalah
-    // keluarga cacat yang sudah dua kali muncul di prototipe ini — badge yang membantah angkanya.
-    const entBanding = D.entitasDari(bukaDetail);
-    const unitBanding = entBanding && entBanding.unitBisnis;
-    const refUtama = daftar[0] && { halaman: daftar[0].halaman, nama: daftar[0].metrik };
-    const refBanding = unitBanding
-      ? (D.metrikBandingAda(unitBanding, refUtama)
-          ? refUtama : D.metrikBandingAwal(unitBanding))
-      : null;
-    const bandingkan = state.halaman === D.DETAIL.kode && unitBanding && refBanding
-      ? `<button class="ds-btn ds-btn-sm ds-btn-ghost" type="button" ` +
-          `data-bd-unit="${esc(unitBanding)}" ` +
-          `data-bd-metrik="${esc(`${refBanding.halaman}|${refBanding.nama}`)}" ` +
-          `aria-label="Bandingkan ${esc(refBanding.nama)} antar ` +
-            `${esc(D.labelSubUnit(unitBanding).toLowerCase())}">` +
-          `Bandingkan <i class="bi bi-bar-chart-steps"></i></button>`
-      : '';
-
+    // Tautan "Bandingkan" sempat ada DI SINI (7 September 2026, pagi), satu per kaki seksi,
+    // membawa metrik utama seksinya masing-masing. **Dipindahkan ke baris filter atas beberapa
+    // jam kemudian**, permintaan pemilik: *"Untuk klik Bandingkan letakan di card filter atas
+    // saja samping colapse view"*. Lihat `halamanDetail()`.
     return `<div class="pr-fp-grid">` +
         daftar.map((def) => kartuFinansial(state, def, namaPeriode, subUnit)).join('') +
       `</div>` +
@@ -10128,7 +10101,6 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
         `<span class="pr-fp-ringkas">${ringkas}` +
           `${sumber ? ` &middot; ${esc(sumber)}` : ''}</span>` +
         `<span class="pr-fp-aksi">` +
-          bandingkan +
           // Seksi yang belum punya halaman detailnya tetap memajang tombolnya dalam keadaan
           // mati, bukan menghilangkannya: ia bagian dari konsep acuan, dan tombol hidup yang
           // tidak membuka apa pun lebih membingungkan daripada yang jelas belum aktif.
@@ -10435,12 +10407,41 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
 
     // `state` ikut sejak 5 September (sore): tanpa itu `penandaSumber(null)` selalu memberi
     // 'contoh', dan halaman ini memajang "DATA CONTOH" di atas angka Tim Finance yang nyata.
+    // ── Tautan "Bandingkan" di baris filter atas ─────────────────────────────────────────
+    // Permintaan pemilik 7 September 2026: *"Untuk klik Bandingkan letakan di card filter atas
+    // saja samping colapse view"*. Sebelumnya ia ada satu per KAKI SEKSI (tiga di halaman MALL),
+    // masing-masing membawa metrik utama seksinya.
+    //
+    // **Konsekuensi pemindahan ini, dan ia harus disebut:** satu tombol untuk seluruh halaman
+    // tidak bisa tahu seksi mana yang sedang dibaca, jadi metrik yang dibawanya **metrik bawaan
+    // unit bisnisnya** (`metrikBandingAwal` — REVENUE untuk MALL, TOTAL REVENUE untuk HOTEL).
+    // Sifat "mendarat pada metrik yang sedang dilihat" memang hilang; yang tinggal "mendarat
+    // pada unit bisnis yang sedang dilihat", dan itu yang diminta.
+    //
+    // Ditaruh di KIRI sakelar Collapse View, bukan kanannya: sakelar itu sudah menempati ujung
+    // kanan baris filter sejak 20 Agustus dan pemakainya mencarinya di sana. Menyisipkan tombol
+    // di kanannya memindahkan sakelarnya dari tempat yang sudah dikenal.
+    //
+    // Dua syarat, keduanya diturunkan: entitasnya punya unit bisnis (PT SMIP tidak — Dashboard
+    // Perbandingan tidak menawarkan opsi SEMUA, karena mengadu Mall dengan Hotel tidak
+    // bermakna), dan unit itu punya metrik di katalog perbandingan. `aria-label` menyebut metrik
+    // yang BENAR-BENAR dibuka, bukan kata "Bandingkan" telanjang.
+    const refBanding = ent.unitBisnis ? D.metrikBandingAwal(ent.unitBisnis) : null;
+    const bandingkan = refBanding
+      ? `<button class="ds-btn ds-btn-sm ds-btn-secondary" type="button" ` +
+          `data-bd-unit="${esc(ent.unitBisnis)}" ` +
+          `data-bd-metrik="${esc(`${refBanding.halaman}|${refBanding.nama}`)}" ` +
+          `aria-label="Bandingkan ${esc(refBanding.nama)} antar ` +
+            `${esc(D.labelSubUnit(ent.unitBisnis).toLowerCase())}">` +
+          `<i class="bi bi-bar-chart-steps"></i><span>Bandingkan</span></button>`
+      : '';
+
     return kepalaHalaman(D.DETAIL.judul, [ent.nama, namaPeriode],
         `<button class="ds-btn ds-btn-sm ds-btn-secondary" type="button" data-detail-kembali>` +
           `<i class="bi bi-arrow-left"></i><span>Dashboard Management</span></button>`, state) +
       `<section class="ds-section"><div class="pr-filter">` +
         filterPeriode(state) +
-        `<div class="pr-filter-spacer"></div>` + sakelarCollapse(state) +
+        `<div class="pr-filter-spacer"></div>` + bandingkan + sakelarCollapse(state) +
       `</div></section>` +
       `<div class="pr-cv">${seksi}</div>`;
   }
