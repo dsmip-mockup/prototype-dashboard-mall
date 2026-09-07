@@ -607,7 +607,13 @@ select.ds-input:read-only { padding-right: 2.25rem; }
    permukaan kartu (--t-surf), bukan terhadap latar halaman. Alasan yang sama, dan cacat yang
    sama, dengan .pr-dr-panel 24 Agustus. */
 .pr-donat-panel { display: grid; grid-template-columns: minmax(0, 15rem) minmax(0, 1fr);
-                  gap: var(--space-5); align-items: center;
+                  /* **`--space-5` TIDAK ADA di portal-ui** (skalanya 1·2·3·4·6·8·12·16), jadi
+                     sampai 7 September 2026 (19.50) gap ini diam-diam TIDAK BERLAKU — donut
+                     dan tabelnya berdampingan tanpa jarak. Ditemukan penjaga token CSS baru
+                     di tampilan.test.js, bukan oleh mata. Dipakai `--space-4` (16px), sama
+                     dengan padding panelnya, jadi donut berjarak sama dari tepi panel dan
+                     dari tabelnya. */
+                  gap: var(--space-4); align-items: center;
                   background: var(--t-surf); border: 1px solid var(--t-border);
                   border-radius: var(--radius-lg); padding: var(--space-4);
                   margin-bottom: var(--space-4); }
@@ -1153,6 +1159,88 @@ html, body { overflow-x: hidden; }
    dark tanpa mengarang langkah warna baru. Jadi yang terisi PERMUKAANNYA (--t-surf-2, token
    bertema) sementara warnanya dibawa TEPI dan CENTANGNYA. Bacaan terisi-lawan-bertepi tetap,
    ongkos tintanya tidak. */
+
+/* ── Dropdown METRIK berisi ceklist (7 September 2026, 19.50) ────────────────────────────
+
+   Permintaan pemilik: satu dropdown Metrik, isinya ceklist, maksimum dua. Dibangun dari
+   `<details>`/`<summary>` supaya buka-tutup, fokus keyboard, dan Esc datang dari browsernya
+   — bukan dari JS yang harus dijaga sendiri. Chip di dalamnya memakai `.pr-bd-cip` yang sama
+   dengan ceklist "Bandingkan", jadi satu halaman ini tidak punya dua bahasa memilih.
+
+   `list-style: none` + `::-webkit-details-marker` dua-duanya dibutuhkan: Firefox memakai yang
+   pertama, Safari lama masih memakai yang kedua. Tanpa keduanya panah bawaan berdiri di
+   samping panah kita sendiri. */
+.pr-bd-met-field { position: relative; }
+.pr-bd-met { position: relative; }
+.pr-bd-met-ringkas {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 38px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--t-border);
+  border-radius: var(--radius-md);
+  background: var(--t-surf);
+  color: var(--t-text);
+  font-size: 13px;
+  cursor: pointer;
+  list-style: none;
+}
+.pr-bd-met-ringkas::-webkit-details-marker { display: none; }
+.pr-bd-met-ringkas:hover { border-color: var(--pr-c-1); }
+.pr-bd-met[open] .pr-bd-met-ringkas { border-color: var(--pr-c-1); }
+.pr-bd-met-ringkas:focus-visible {
+  outline: 2px solid var(--pr-c-1);
+  outline-offset: 2px;
+}
+/* Nama metrik yang terpilih mengambil ruang sisa dan dipotong kalau kurang — hitungan dan
+   panah di sebelahnya tidak boleh terdorong keluar kotak di layar sempit. */
+.pr-bd-met-teks {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
+}
+.pr-bd-met-tanda { flex: 0 0 auto; font-size: 12px; color: var(--t-text-muted); }
+.pr-bd-met[open] .pr-bd-met-tanda { transform: rotate(180deg); }
+/* Panelnya MENGAPUNG di atas isi halaman, tidak mendorongnya: kontrol ini duduk di baris
+   filter, dan panel yang mendorong akan menggeser seluruh chart tiap kali dibuka. */
+.pr-bd-met-isi {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + var(--space-1));
+  left: 0;
+  min-width: 300px;
+  max-width: min(420px, calc(100vw - 2 * var(--space-4)));
+  max-height: 320px;
+  overflow-y: auto;
+  padding: var(--space-3);
+  border: 1px solid var(--t-border);
+  border-radius: var(--radius-md);
+  background: var(--t-surf);
+  box-shadow: var(--shadow-md, 0 8px 24px rgb(0 0 0 / 12%));
+}
+.pr-bd-met-grup + .pr-bd-met-grup { margin-top: var(--space-3); }
+.pr-bd-met-judul {
+  display: block;
+  margin-bottom: var(--space-2);
+  /* 12px, bukan 11: batas 11,5 px datang dari keluhan Tim Manajemen sesudah presentasi
+     Zoom, dan penjaga di tampilan.test.js menagihnya. Judul grup memang boleh paling kecil
+     di panel ini, tetapi tidak di bawah batas itu. */
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--t-text-muted);
+}
+/* Di layar sempit panelnya melebar sepenuh baris filter — 260px minimum di atas akan
+   menyembul keluar viewport HP kalau kolomnya lebih sempit dari itu. */
+@media (max-width: 640px) {
+  .pr-bd-met-isi { left: 0; right: 0; min-width: 0; }
+}
+
 .pr-bd-pilih { margin-top: var(--space-3); }
 .pr-bd-pilih-kepala {
   display: flex;
@@ -1386,7 +1474,7 @@ html, body { overflow-x: hidden; }
          yang berlaku di SEMUA halaman; cakupan per halaman ada di penanda kepalanya, yang
          memang tahu sub unit mana yang berkasnya sudah dikirim. -->
     <span>Prototype Dashboard Data Management &middot; PT SMIP &middot; <strong>Kelima dashboard memakai angka riil</strong> dari Tim Management &mdash; penanda di kepala tiap halaman menyebutkan cakupannya.</span>
-    <span class="pr-versi">Versi 7 September 2026, 19.12</span>
+    <span class="pr-versi">Versi 7 September 2026, 20.06</span>
   </footer>
 </div>
 </div>
@@ -2274,21 +2362,47 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
     d('CUSTOMER SATISFACTION INDEX', 'indeks'),
     d('TENANT SATISFACTION INDEX', 'indeks'),
     // 'grup' — Member Aktif beririsan dengan Gold/Green, penjumlahan tidak bermakna.
-    g('JUMLAH MEMBER', 'orang', 'grup', [
+  // ── `JUMLAH MEMBER` jadi 'jumlah', dan `Member Aktif` KELUAR — pemilik 7 Sep 19.30 ──────
+  //
+  // Pemilik: *"untuk MEMBER ini yg di hitung hanya Gold Member & Green Member saja untuk
+  // Member Aktif itu maksudnya data member aktif yg ada di Gold Member & Green Member."*
+  //
+  // Dua hal berubah. **Induknya jadi 'jumlah'** — sampai sore itu ia `grup`, jadi angkanya
+  // sengaja kosong dan kartu MEMBER di dashboard memajang `Member Aktif` sebagai gantinya
+  // (12.983 untuk Kelapa Gading Agustus 2026). Itu yang dikoreksi pemilik: jumlah membernya
+  // **Gold + Green** (8.592 + 21.744 = 30.336), bukan yang aktif saja.
+  //
+  // **Dan `Member Aktif` KELUAR dari anak-anaknya, jadi metrik AKAR sendiri.** Ia HIMPUNAN
+  // BAGIAN dari Gold & Green, bukan kategori ketiga — dan `jumlah` menjumlahkan SEMUA
+  // anaknya tanpa kecuali, jadi membiarkannya di sana akan menghitung member aktif dua kali
+  // (30.336 + 12.983 = 43.319, angka yang tidak berarti apa pun). Tidak ada cara menandai
+  // satu anak "jangan dijumlah" di kamus ini, dan menambahkannya hanya untuk kasus ini akan
+  // jadi mekanisme yang cuma dipakai sekali.
+  //
+  // Pemetaan barisnya ada di `OP_JALUR` konverter (`JUMLAH MEMBER > Member Aktif` →
+  // `Member Aktif`), dan konverter memeriksa bahwa ia TIDAK melebihi Gold + Green — sebuah
+  // himpunan bagian tidak bisa lebih besar dari himpunannya. Bandung melanggarnya (Gold 316 +
+  // Green 91 = 407 lawan Member Aktif 2.525), dan itu dilaporkan tiap kali konverter jalan.
+  g('JUMLAH MEMBER', 'orang', 'jumlah', [
+    d('Gold Member', 'orang'),
+    d('Green Member', 'orang'),
+    // **Villagio berjenjang sendiri**: keanggotaannya VPC dengan tiga tingkat (Red · Silver ·
+    // Gold), bukan Gold/Green seperti lima mall lain. Masuk sebagai cabang SENDIRI atas
+    // keputusan pemilik — menyamakan "Gold Member VPC" dengan "Gold Member" mall lain akan
+    // membandingkan dua jenjang yang berbeda. Induknya 'jumlah': ketiga tingkat itu memang
+    // pemecahan satu populasi.
+    //
+    // Ia IKUT dijumlah ke `JUMLAH MEMBER`, dan itu bukan pelanggaran "hanya Gold & Green":
+    // VPC memang skema keanggotaan Villagio, padanan Gold/Green-nya. Kalau ia dikeluarkan,
+    // kartu MEMBER Villagio jadi `—` walau berkasnya memuat 27.278 member.
+    g('Jumlah Member VPC', 'orang', 'jumlah', [
+      d('Red Member', 'orang'),
+      d('Silver Member', 'orang'),
       d('Gold Member', 'orang'),
-      d('Green Member', 'orang'),
-      // **Villagio berjenjang sendiri**: keanggotaannya VPC dengan tiga tingkat (Red · Silver ·
-      // Gold), bukan Gold/Green seperti lima mall lain. Masuk sebagai cabang SENDIRI atas
-      // keputusan pemilik — menyamakan "Gold Member VPC" dengan "Gold Member" mall lain akan
-      // membandingkan dua jenjang yang berbeda. Induknya 'jumlah': ketiga tingkat itu memang
-      // pemecahan satu populasi.
-      g('Jumlah Member VPC', 'orang', 'jumlah', [
-        d('Red Member', 'orang'),
-        d('Silver Member', 'orang'),
-        d('Gold Member', 'orang'),
-      ]),
-      d('Member Aktif', 'orang'),
     ]),
+  ]),
+  // Himpunan bagian dari Gold & Green — lihat catatan di atas. Akar, bukan anak.
+  d('Member Aktif', 'orang'),
     // Gabungan rincian keenam berkas. Ejaan disatukan di tempat yang cuma berbeda huruf besar
     // (`Sinpasa` Serpong & Bekasi → `SINPASA`, `Salsa` Serpong → `SALSA`); nama yang berbeda
     // sungguhan dibiarkan berbeda.
@@ -2418,20 +2532,30 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
       d('MOBIL', 'unit'),
       d('MOTOR', 'unit'),
     ]),
+    // ── Satu metrik pengunjung, diisi baris PPC CCTV — keputusan pemilik 7 September 19.30 ──
+    //
+    // Pemilik: *"Untuk TOTAL TRAFFIC PENGUNJUNG yg digunakan adalah BUDGET TRAFFIC PENGUNJUNG
+    // (PPC CCTV) dan ACTUAL TRAFFIC PENGUNJUNG (PPC CCTV). Jadi yg BUDGET TRAFFIC PENGUNJUNG
+    // (DC) dan ACTUAL TRAFFIC PENGUNJUNG (DC) tidak digunakan dan sudah sy revisi Excelnya …
+    // Nanti mall lainnya mengikuti ini."*
+    //
+    // **Ini menutup pertanyaan tertua untuk berkas Operation.** Sejak 6 September berkas Kelapa
+    // Gading memuat DUA penghitung pengunjung — `DC` (door counter di pintu) dan `PPC CCTV`
+    // (kamera penghitung orang) — dengan budget DAN aktual untuk keduanya, berbeda ~14%
+    // (Januari 2024: 2.492.316 lawan 2.138.192), dan tak satu pun keterangan di berkasnya yang
+    // menyatakan mana yang berlaku. Konverter memakai DC (blok pertama di berkasnya) dan
+    // menaruh CCTV sebagai metrik KEDUA supaya keduanya bisa dibandingkan — bentuk sementara
+    // yang sengaja dibuat agar pemilik bisa memilih.
+    //
+    // Beliau memilih **PPC CCTV**, dan menghapus baris DC dari Excel-nya. Jadi metrik kedua
+    // `TOTAL TRAFFIC PENGUNJUNG (PPC CCTV)` DIHAPUS dari kamus, dan baris PPC CCTV mengisi
+    // metrik pengunjung yang SATU ini — lihat `OP_JALUR`/`OP_JALUR_BUDGET` di konverter.
+    //
+    // Angka yang tampil karena itu TIDAK berubah untuk Kelapa Gading (tetap 2.138.192 untuk
+    // Januari 2024 aktual); yang berubah tempatnya, dari metrik kedua ke metrik utama. Kelima
+    // mall lain tidak tersentuh — berkas mereka hanya punya satu penghitung, dan namanya bukan
+    // PPC CCTV.
     d('TOTAL TRAFFIC PENGUNJUNG', 'orang'),
-    // **Kelapa Gading menghitung pengunjungnya DUA KALI, dengan dua alat** (6 September 2026):
-    // `DC` (door counter di pintu) dan `PPC CCTV` (kamera penghitung orang). Berkasnya memuat
-    // budget DAN aktual untuk keduanya, dan angkanya berbeda ~14% — Januari 2024: 2.492.316
-    // lawan 2.138.192. Lima mall lain hanya punya satu penghitung.
-    //
-    // Yang dipakai mengisi `TOTAL TRAFFIC PENGUNJUNG` di atas: **DC**, karena ia blok PERTAMA
-    // di berkasnya dan door counter memang ukuran trafik mall yang lazim. Angka CCTV-nya TIDAK
-    // dibuang — ia baris sendiri di sini, supaya keduanya bisa dibandingkan dan pemilik bisa
-    // memindahkan yang mana yang jadi angka utama dengan satu baris di konverter.
-    //
-    // Barisnya '—' untuk kelima mall lain, dan itu bentuk yang sudah dipakai kamus ini sejak
-    // `LUAS AREA` Villagio: yang hanya dipunyai satu mall tetap masuk apa adanya.
-    d('TOTAL TRAFFIC PENGUNJUNG (PPC CCTV)', 'orang'),
   ];
 
   // ── HOTEL (12 kelompok) — Lampiran A.4 ──
@@ -3038,15 +3162,48 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
       sumber: 'Leasing MALL',
       // Urutannya ditetapkan Tim Manajemen 27 Agustus (NLA · TOTAL TENANT · OCCUPANCY RATE % ·
       // AVERAGE RENTAL) — persis urutan berkas acuannya. Metriknya sendiri tidak berubah:
-      // berkas itu memang memuat tepat empat metrik ini. Bentuk chart mengikuti posisi, jadi
-      // OCCUPANCY RATE % dan TOTAL TENANT bertukar bentuk ikut bertukar tempat.
+      // berkas itu memang memuat tepat empat metrik ini.
+      //
+      // ── Bentuk chart OCCUPANCY RATE % & AVERAGE RENTAL DIUBAH 7 September 2026 (19.30) ──
+      //
+      // **Keputusan pemilik, dan keluhannya menyebutkan gejalanya lebih dulu**: *"Ada koreksi
+      // di grafik OCCUPANCY RATE % ini grafiknya kebawah semua. Jadi sebenarnya OCCUPANCY
+      // RATE % ini berpasangan Occupancy Rate % (ACTUAL) vs Target Occupancy Rate % (BUDGET)
+      // dan untuk AVERAGE RENTAL juga berpasangan."*
+      //
+      // Gejala itu bisa dipertanggungkan: `chart: 'kolom'` menggambar SELISIH terhadap budget,
+      // bukan nilainya. Occupancy aktual hampir selalu di BAWAH target di kedelapan mall
+      // (Kelapa Gading Agustus 2026: aktual 86,31 lawan target 87,15), jadi tiap batangnya
+      // negatif — dan chart yang seluruh batangnya ke bawah terbaca seperti kinerja yang
+      // runtuh, padahal ia jarak ke target yang wajar. Bentuk itu tepat untuk metrik laba
+      // rugi yang bisa melampaui budget ke dua arah; untuk occupancy ia menyesatkan.
+      //
+      // `AVERAGE RENTAL` sebelumnya `chart: 'subunit'` — membandingkan antar mall, jadi
+      // targetnya TIDAK tergambar sama sekali walau datanya ada.
+      //
+      // Keduanya sekarang `garis`: aktual garis penuh, budget/target garis putus-putus, dan
+      // judulnya berbunyi "Aktual vs Budget" — pasangan yang dimaksud pemilik. Datanya sudah
+      // ada sejak awal (importir memetakan `Target Occupancy Rate %` dan `Target Average
+      // Rental` ke medan budget); yang salah cuma bentuk chartnya.
+      //
+      // Akibatnya ragam bentuk seksi ini turun dari empat jadi dua (garis & area). Itu
+      // ditukar sadar: kedua metrik ini PUNYA pembanding, dan menyembunyikan pembandingnya
+      // demi ragam bentuk adalah pilihan yang salah. Penjaga "empat bentuk berbeda" di
+      // `tests/detail.test.js` disesuaikan bersama ini — bukan dilonggarkan: yang ditagih
+      // sekarang bahwa kedua metrik berpasangan itu memakai bentuk yang MENGGAMBAR
+      // pembandingnya (`garis` atau `area`), plus tiap nilai `chart` dikenali.
+      //
+      // `AVERAGE RENTAL` diberi `area`, bukan `garis` kedua: `area` tetap menggambar garis
+      // budget putus-putus di belakang arsirannya (lihat `garis()` di chart.js — `arsir()`
+      // lalu `garisSeri(budget)`), jadi pasangannya utuh sementara kedua kartu tetap bisa
+      // dibedakan sekilas.
       kartu: [
         { judul: 'NLA', halaman: 'leasing', metrik: 'NLA', chart: 'garis' },
         { judul: 'TOTAL TENANT', halaman: 'leasing', metrik: 'TOTAL TENANT', chart: 'area' },
         { judul: 'OCCUPANCY RATE %', halaman: 'leasing', metrik: 'OCCUPANCY RATE %',
-          chart: 'kolom' },
+          chart: 'garis' },
         { judul: 'AVERAGE RENTAL', halaman: 'leasing', metrik: 'AVERAGE RENTAL',
-          chart: 'subunit' },
+          chart: 'area' },
       ],
     },
     operation: {
@@ -3064,10 +3221,13 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
           metrik: 'TOTAL TRAFFIC KENDARAAN', chart: 'garis' },
         { judul: 'TOTAL TRAFFIC PENGUNJUNG', halaman: 'operation',
           metrik: 'TOTAL TRAFFIC PENGUNJUNG', chart: 'area' },
-        // Marketing. Judulnya 'MEMBER' seperti yang diminta Tim Manajemen; metriknya
-        // 'Member Aktif', BUKAN induk 'JUMLAH MEMBER' — induk itu bertipe `grup` sehingga
-        // angkanya sengaja kosong, dan kartu berangka '—' terbaca seperti data yang hilang.
-        { judul: 'MEMBER', halaman: 'operation', metrik: 'Member Aktif', chart: 'kolom' },
+        // Marketing. Judulnya 'MEMBER' seperti yang diminta Tim Manajemen, dan metriknya
+        // **`JUMLAH MEMBER` sejak 7 September (19.30)** — sampai sore itu `Member Aktif`,
+        // karena induknya bertipe `grup` sehingga angkanya kosong dan kartu berangka '—'
+        // terbaca seperti data yang hilang. Pemilik mengoreksi artinya: jumlah membernya Gold
+        // + Green, dan yang aktif itu himpunan bagiannya — jadi induknya sekarang menjumlah
+        // dan kartunya memajang TOTALNYA, bukan bagiannya.
+        { judul: 'MEMBER', halaman: 'operation', metrik: 'JUMLAH MEMBER', chart: 'kolom' },
         // HR.
         { judul: 'TOTAL KARYAWAN', halaman: 'operation', metrik: 'TOTAL KARYAWAN',
           chart: 'komposisi' },
@@ -3381,11 +3541,15 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
     operation: [
       { kode: 'grup-operation', judul: 'Operation', ikon: 'bi-gear', metrik: [
         'JUMLAH LOT PARKIR', 'TRAFFIC AVERAGE', 'TOTAL TRAFFIC KENDARAAN',
-        // Penghitung KEDUA Kelapa Gading, tepat di samping yang pertama supaya keduanya
-        // terbaca berpasangan — lihat catatannya di kamus Operation.
-        'TOTAL TRAFFIC PENGUNJUNG', 'TOTAL TRAFFIC PENGUNJUNG (PPC CCTV)',
+        // Satu metrik pengunjung sejak 7 September (19.30) — penghitung KEDUA (PPC CCTV)
+        // dihapus dari kamus atas keputusan pemilik, dan baris PPC CCTV yang mengisi metrik
+        // ini. Lihat catatannya di kamus Operation.
+        'TOTAL TRAFFIC PENGUNJUNG',
         'CUSTOMER SATISFACTION INDEX',
-        'TENANT SATISFACTION INDEX', 'JUMLAH MEMBER', 'LUAS GFA',
+        'TENANT SATISFACTION INDEX', 'JUMLAH MEMBER',
+        // `Member Aktif` jadi akar 7 September (19.30) — himpunan bagian Gold & Green, jadi
+        // ia tidak boleh ikut dijumlah ke induknya. Tempatnya tepat di samping induknya.
+        'Member Aktif', 'LUAS GFA',
         // `LUAS AREA` masuk 3 September (sore) bersama data nyata — hanya Villagio yang
         // memuatnya, dan tempatnya di sini bersama luas yang lain.
         'LUAS AREA',
@@ -5134,7 +5298,7 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
             "TENANT SATISFACTION INDEX": {"2024-01":8.26,"2024-02":8.29,"2024-03":8.29,"2024-04":8.32,"2024-05":8.3,"2024-06":8.32,"2024-07":8.31,"2024-08":8.32,"2024-09":8.32,"2024-10":8.33,"2024-11":8.33,"2024-12":8.33,"2025-01":8.34,"2025-02":8.33,"2025-03":8.32,"2025-04":8.35,"2025-05":8.34,"2025-06":8.35,"2025-07":8.34,"2025-08":8.34,"2025-09":8.34,"2025-10":8.34,"2025-11":8.34,"2025-12":8.33,"2026-01":8.36,"2026-02":8.37,"2026-03":8.35,"2026-04":8.34,"2026-05":8.36,"2026-06":8.35,"2026-07":8.33,"2026-08":8.33},
             "JUMLAH MEMBER/Gold Member": {"2024-01":5455,"2024-02":5587,"2024-03":5659,"2024-04":5752,"2024-05":5837,"2024-06":5925,"2024-07":5997,"2024-08":6105,"2024-09":6182,"2024-10":6274,"2024-11":6370,"2024-12":6491,"2025-01":6630,"2025-02":6764,"2025-03":6875,"2025-04":6992,"2025-05":7104,"2025-06":7213,"2025-07":7346,"2025-08":7477,"2025-09":7576,"2025-10":7698,"2025-11":7796,"2025-12":7892,"2026-01":7917,"2026-02":8073,"2026-03":8220,"2026-04":8332,"2026-05":8427,"2026-06":8492,"2026-07":8540,"2026-08":8592},
             "JUMLAH MEMBER/Green Member": {"2024-01":11229,"2024-02":11581,"2024-03":11841,"2024-04":12183,"2024-05":12554,"2024-06":12830,"2024-07":13073,"2024-08":13379,"2024-09":13618,"2024-10":13890,"2024-11":14175,"2024-12":14629,"2025-01":15076,"2025-02":15361,"2025-03":15644,"2025-04":15988,"2025-05":16360,"2025-06":16713,"2025-07":17178,"2025-08":17574,"2025-09":17904,"2025-10":18311,"2025-11":18636,"2025-12":18991,"2026-01":19111,"2026-02":19583,"2026-03":19966,"2026-04":20343,"2026-05":20747,"2026-06":21048,"2026-07":21378,"2026-08":21744},
-            "JUMLAH MEMBER/Member Aktif": {"2024-01":7341,"2024-02":7505,"2024-03":7629,"2024-04":7826,"2024-05":7953,"2024-06":8173,"2024-07":8181,"2024-08":8300,"2024-09":8278,"2024-10":8193,"2024-11":8625,"2024-12":9524,"2025-01":9399,"2025-02":9399,"2025-03":9399,"2025-04":9399,"2025-05":9399,"2025-06":9399,"2025-07":9399,"2025-08":11658,"2025-09":11536,"2025-10":11804,"2025-11":12600,"2025-12":13266,"2026-01":13182,"2026-02":14205,"2026-03":13114,"2026-04":12611,"2026-05":13333,"2026-06":13001,"2026-07":13167,"2026-08":12983},
+            "Member Aktif": {"2024-01":7341,"2024-02":7505,"2024-03":7629,"2024-04":7826,"2024-05":7953,"2024-06":8173,"2024-07":8181,"2024-08":8300,"2024-09":8278,"2024-10":8193,"2024-11":8625,"2024-12":9524,"2025-01":9399,"2025-02":9399,"2025-03":9399,"2025-04":9399,"2025-05":9399,"2025-06":9399,"2025-07":9399,"2025-08":11658,"2025-09":11536,"2025-10":11804,"2025-11":12600,"2025-12":13266,"2026-01":13182,"2026-02":14205,"2026-03":13114,"2026-04":12611,"2026-05":13333,"2026-06":13001,"2026-07":13167,"2026-08":12983},
             "LUAS GFA/MALL (MKG 1)": {"2024-01":32961,"2024-02":32961,"2024-03":32961,"2024-04":32961,"2024-05":32961,"2024-06":32961,"2024-07":32961,"2024-08":32961,"2024-09":32961,"2024-10":32961,"2024-11":32961,"2024-12":32961,"2025-01":32961,"2025-02":32961,"2025-03":32961,"2025-04":32961,"2025-05":32961,"2025-06":32961,"2025-07":32961,"2025-08":32961,"2025-09":32961,"2025-10":32961,"2025-11":32961,"2025-12":32961,"2026-01":32961,"2026-02":32961,"2026-03":32961,"2026-04":32961,"2026-05":32961,"2026-06":32961,"2026-07":32961,"2026-08":32961},
             "LUAS GFA/MALL (MKG 2)": {"2024-01":55154,"2024-02":55154,"2024-03":55154,"2024-04":55154,"2024-05":55154,"2024-06":55154,"2024-07":55154,"2024-08":55154,"2024-09":55154,"2024-10":55154,"2024-11":55154,"2024-12":55154,"2025-01":55154,"2025-02":55154,"2025-03":55154,"2025-04":55154,"2025-05":55154,"2025-06":55154,"2025-07":55154,"2025-08":55154,"2025-09":55154,"2025-10":55154,"2025-11":55154,"2025-12":55154,"2026-01":55154,"2026-02":55154,"2026-03":55154,"2026-04":55154,"2026-05":55154,"2026-06":55169.85,"2026-07":55170,"2026-08":55226},
             "LUAS GFA/MALL (MKG 3)": {"2024-01":57719,"2024-02":57719,"2024-03":57719,"2024-04":57719,"2024-05":57719,"2024-06":57719,"2024-07":57719,"2024-08":57719,"2024-09":57719,"2024-10":57719,"2024-11":57719,"2024-12":57719,"2025-01":57719,"2025-02":57719,"2025-03":57719,"2025-04":57719,"2025-05":57719,"2025-06":57719,"2025-07":57719,"2025-08":57719,"2025-09":57719,"2025-10":57719,"2025-11":57719,"2025-12":57719,"2026-01":57719,"2026-02":57719,"2026-03":57719,"2026-04":57719,"2026-05":57719,"2026-06":57719,"2026-07":57719,"2026-08":57719},
@@ -5168,13 +5332,13 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
             "PENDIDIKAN/S3": {"2024-01":0,"2024-02":0,"2024-03":0,"2024-04":0,"2024-05":0,"2024-06":0,"2024-07":0,"2024-08":0,"2024-09":0,"2024-10":0,"2024-11":0,"2024-12":0,"2025-01":0,"2025-02":0,"2025-03":0,"2025-04":0,"2025-05":0,"2025-06":0,"2025-07":0,"2025-08":0,"2025-09":0,"2025-10":0,"2025-11":0,"2025-12":0,"2026-01":0,"2026-02":0,"2026-03":0,"2026-04":0,"2026-05":0,"2026-06":0,"2026-07":0},
             "TOTAL TRAFFIC KENDARAAN/MOBIL": {"2024-01":417757,"2024-02":388249,"2024-03":442533,"2024-04":442507,"2024-05":446763,"2024-06":446891,"2024-07":449606,"2024-08":460863,"2024-09":439816,"2024-10":424724,"2024-11":436190,"2024-12":480480,"2025-01":439948,"2025-02":377417,"2025-03":441987,"2025-04":405023,"2025-05":436318,"2025-06":419844,"2025-07":434400,"2025-08":468409,"2025-09":432444,"2025-10":435942,"2025-11":455161,"2025-12":526430,"2026-01":434803,"2026-02":408814,"2026-03":459880,"2026-04":433478,"2026-05":480370,"2026-06":438879,"2026-07":472834,"2026-08":500266},
             "TOTAL TRAFFIC KENDARAAN/MOTOR": {"2024-01":71060,"2024-02":68950,"2024-03":76954,"2024-04":79205,"2024-05":77908,"2024-06":74779,"2024-07":75452,"2024-08":77600,"2024-09":73071,"2024-10":73488,"2024-11":71863,"2024-12":75828,"2025-01":69462,"2025-02":62174,"2025-03":79506,"2025-04":72741,"2025-05":74420,"2025-06":70521,"2025-07":70154,"2025-08":71320,"2025-09":71586,"2025-10":71586,"2025-11":74183,"2025-12":79453,"2026-01":71088,"2026-02":67393,"2026-03":82987,"2026-04":74964,"2026-05":79055,"2026-06":77183,"2026-07":88894,"2026-08":94562},
-            "TOTAL TRAFFIC PENGUNJUNG (PPC CCTV)": {"2024-01":2138192,"2024-02":2017605,"2024-03":2389842,"2024-04":2505798,"2024-05":2388232,"2024-06":2368425,"2024-07":2343891,"2024-08":2504097,"2024-09":2456858,"2024-10":2349260,"2024-11":2328304,"2024-12":2530273,"2025-01":2422314,"2025-02":2153999,"2025-03":2642879,"2025-04":2486301,"2025-05":2662251,"2025-06":2536645,"2025-07":2502347,"2025-08":2692028,"2025-09":2473695,"2025-10":2363436,"2025-11":2525919,"2025-12":2949433,"2026-01":2479011,"2026-02":2254301,"2026-03":2781622,"2026-04":2412275,"2026-05":2814136,"2026-06":2544730,"2026-07":2816926,"2026-08":2915363},
+            "TOTAL TRAFFIC PENGUNJUNG": {"2024-01":2138192,"2024-02":2017605,"2024-03":2389842,"2024-04":2505798,"2024-05":2388232,"2024-06":2368425,"2024-07":2343891,"2024-08":2504097,"2024-09":2456858,"2024-10":2349260,"2024-11":2328304,"2024-12":2530273,"2025-01":2422314,"2025-02":2153999,"2025-03":2642879,"2025-04":2486301,"2025-05":2662251,"2025-06":2536645,"2025-07":2502347,"2025-08":2692028,"2025-09":2473695,"2025-10":2363436,"2025-11":2525919,"2025-12":2949433,"2026-01":2479011,"2026-02":2254301,"2026-03":2781622,"2026-04":2412275,"2026-05":2814136,"2026-06":2544730,"2026-07":2816926,"2026-08":2915363},
             "LUAS GEDUNG PARKIR (PARKIR GEDUNG & BASEMENT)": {"2024-01":115623,"2024-02":115623,"2024-03":115623,"2024-04":115623,"2024-05":115623,"2024-06":115623,"2024-07":115623,"2024-08":115623,"2024-09":115623,"2024-10":115623,"2024-11":115623,"2024-12":115623,"2025-01":115623,"2025-02":115623,"2025-03":115623,"2025-04":115623,"2025-05":115623,"2025-06":115623,"2025-07":115623,"2025-08":115623,"2025-09":115623,"2025-10":115623,"2025-11":115623,"2025-12":115623,"2026-01":115623,"2026-02":115623,"2026-03":115623,"2026-04":115623,"2026-05":115623,"2026-06":115623,"2026-07":115623,"2026-08":115623},
           },
           budget: {
             "TOTAL TRAFFIC KENDARAAN/MOBIL": {"2024-01":491504,"2024-02":450246,"2024-03":500833,"2024-04":489959,"2024-05":540486,"2024-06":534588,"2024-07":520701,"2024-08":519718,"2024-09":483031,"2024-10":493552,"2024-11":488187,"2024-12":559672,"2025-01":438645,"2025-02":407661,"2025-03":464660,"2025-04":464632,"2025-05":469101,"2025-06":469236,"2025-07":472086,"2025-08":483906,"2025-09":461807,"2025-10":446023,"2025-11":458000,"2025-12":504504,"2026-01":448747,"2026-02":384965,"2026-03":450827,"2026-04":413123,"2026-05":445044,"2026-06":428241,"2026-07":443088,"2026-08":477777,"2026-09":441093,"2026-10":444661,"2026-11":464264,"2026-12":479914},
             "TOTAL TRAFFIC KENDARAAN/MOTOR": {"2024-01":79717,"2024-02":69169,"2024-03":76311,"2024-04":85312,"2024-05":80076,"2024-06":75377,"2024-07":77991,"2024-08":80460,"2024-09":75948,"2024-10":75113,"2024-11":75726,"2024-12":75726,"2025-01":74613,"2025-02":72398,"2025-03":80802,"2025-04":83165,"2025-05":81803,"2025-06":78518,"2025-07":79725,"2025-08":81480,"2025-09":76725,"2025-10":77162,"2025-11":75456,"2025-12":79619,"2026-01":70856,"2026-02":63417,"2026-03":81096,"2026-04":74196,"2026-05":75908,"2026-06":71931,"2026-07":71557,"2026-08":72746,"2026-09":73018,"2026-10":73018,"2026-11":75667,"2026-12":81042},
-            "TOTAL TRAFFIC PENGUNJUNG (PPC CCTV)": {"2024-01":2300643.4,"2024-02":2051385.6,"2024-03":2173429.59,"2024-04":2501652.87,"2024-05":2204292.86,"2024-06":2316688.34,"2024-07":2380247.7,"2024-08":2483399.42,"2024-09":2330588.44,"2024-10":2260464.62,"2024-11":2346017.96,"2024-12":2811189.26,"2025-01":2245102,"2025-02":2118485,"2025-03":2509334,"2025-04":2631088,"2025-05":2507644,"2025-06":2486846,"2025-07":2461086,"2025-08":2629302,"2025-09":2579701,"2025-10":2466723,"2025-11":2444719,"2025-12":2656787,"2026-01":2494983.42,"2026-02":2218618.97,"2026-03":2722165.37,"2026-04":2560890.03,"2026-05":2742118.53,"2026-06":2612744.35,"2026-07":2577417.41,"2026-08":2772788.84,"2026-09":2547905.85,"2026-10":2494375,"2026-11":2471711,"2026-12":2690140},
+            "TOTAL TRAFFIC PENGUNJUNG": {"2024-01":2300643.4,"2024-02":2051385.6,"2024-03":2173429.59,"2024-04":2501652.87,"2024-05":2204292.86,"2024-06":2316688.34,"2024-07":2380247.7,"2024-08":2483399.42,"2024-09":2330588.44,"2024-10":2260464.62,"2024-11":2346017.96,"2024-12":2811189.26,"2025-01":2245102,"2025-02":2118485,"2025-03":2509334,"2025-04":2631088,"2025-05":2507644,"2025-06":2486846,"2025-07":2461086,"2025-08":2629302,"2025-09":2579701,"2025-10":2466723,"2025-11":2444719,"2025-12":2656787,"2026-01":2494983.42,"2026-02":2218618.97,"2026-03":2722165.37,"2026-04":2560890.03,"2026-05":2742118.53,"2026-06":2612744.35,"2026-07":2577417.41,"2026-08":2772788.84,"2026-09":2547905.85,"2026-10":2494375,"2026-11":2471711,"2026-12":2690140},
           },
         },
         SMPS: {
@@ -5196,7 +5360,7 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
             "TENANT SATISFACTION INDEX": {"2024-01":8.12,"2024-02":8.19,"2024-03":8.17,"2024-04":8.2,"2024-05":8.22,"2024-06":8.23,"2024-07":8.18,"2024-08":8.24,"2024-09":8.32,"2024-10":8.2,"2024-11":8.25,"2024-12":8.4,"2025-01":8.41,"2025-02":8.43,"2025-03":8.37,"2025-04":8.4,"2025-05":8.39,"2025-06":8.4,"2025-07":8.4,"2025-08":8.4,"2025-09":8.4,"2025-10":8.4,"2025-11":8.4,"2025-12":8.4,"2026-01":8.4,"2026-02":8.4,"2026-03":8.4,"2026-04":8.4,"2026-05":8.4,"2026-06":8.4,"2026-07":8.4},
             "JUMLAH MEMBER/Gold Member": {"2024-01":4004,"2024-02":4160,"2024-03":4251,"2024-04":4340,"2024-05":4393,"2024-06":4479,"2024-07":4562,"2024-08":4683,"2024-09":4787,"2024-10":4888,"2024-11":5002,"2024-12":5108,"2025-01":5197,"2025-02":5310,"2025-03":5413,"2025-04":5489,"2025-05":5586,"2025-06":5662,"2025-07":5741,"2025-08":5975,"2025-09":6144,"2025-10":6329,"2025-11":6509,"2025-12":6700,"2026-01":6857,"2026-02":7022,"2026-03":7184,"2026-04":7289,"2026-05":7397,"2026-06":7495,"2026-07":7591},
             "JUMLAH MEMBER/Green Member": {"2024-01":11187,"2024-02":11623,"2024-03":11999,"2024-04":12266,"2024-05":12480,"2024-06":12732,"2024-07":12986,"2024-08":13310,"2024-09":13565,"2024-10":14015,"2024-11":14402,"2024-12":14771,"2025-01":15083,"2025-02":15339,"2025-03":15570,"2025-04":15827,"2025-05":16067,"2025-06":16285,"2025-07":16497,"2025-08":16772,"2025-09":16973,"2025-10":17205,"2025-11":17439,"2025-12":17744,"2026-01":17992,"2026-02":18245,"2026-03":18508,"2026-04":18674,"2026-05":18879,"2026-06":19034,"2026-07":19193},
-            "JUMLAH MEMBER/Member Aktif": {"2024-01":6029,"2024-02":6115,"2024-03":5925,"2024-04":5817,"2024-05":5787,"2024-06":6073,"2024-07":6104,"2024-08":6436,"2024-09":6183,"2024-10":6563,"2024-11":6719,"2024-12":7027,"2025-01":6991,"2025-02":6029,"2025-03":6029,"2025-04":6029,"2025-05":6029,"2025-06":6029,"2025-07":6029,"2025-08":8478,"2025-09":8228,"2025-10":8560,"2025-11":9139,"2025-12":9931,"2026-01":9688,"2026-02":10358,"2026-03":9419,"2026-04":8671,"2026-05":9441,"2026-06":9154,"2026-07":9785},
+            "Member Aktif": {"2024-01":6029,"2024-02":6115,"2024-03":5925,"2024-04":5817,"2024-05":5787,"2024-06":6073,"2024-07":6104,"2024-08":6436,"2024-09":6183,"2024-10":6563,"2024-11":6719,"2024-12":7027,"2025-01":6991,"2025-02":6029,"2025-03":6029,"2025-04":6029,"2025-05":6029,"2025-06":6029,"2025-07":6029,"2025-08":8478,"2025-09":8228,"2025-10":8560,"2025-11":9139,"2025-12":9931,"2026-01":9688,"2026-02":10358,"2026-03":9419,"2026-04":8671,"2026-05":9441,"2026-06":9154,"2026-07":9785},
             "LUAS GFA/Lobby Basement": {"2024-01":2480,"2024-02":2480,"2024-03":2480,"2024-04":2480,"2024-05":2480,"2024-06":2480,"2024-07":2480,"2024-08":2650,"2024-09":2650,"2024-10":2650,"2024-11":2650,"2024-12":2650,"2025-01":2650,"2025-02":2650,"2025-03":2650,"2025-04":2650,"2025-05":2650,"2025-06":2650,"2025-07":2650,"2025-08":2650,"2025-09":2650,"2025-10":2650,"2025-11":2650,"2025-12":2650,"2026-01":2650,"2026-02":2650,"2026-03":2650,"2026-04":2650,"2026-05":2650,"2026-06":2650,"2026-07":2650},
             "LUAS GFA/GF SMS": {"2024-01":37000,"2024-02":37000,"2024-03":37000,"2024-04":37000,"2024-05":37000,"2024-06":37000,"2024-07":37000,"2024-08":37000,"2024-09":37000,"2024-10":37000,"2024-11":37000,"2024-12":37000,"2025-01":37000,"2025-02":37000,"2025-03":37000,"2025-04":37000,"2025-05":37000,"2025-06":37000,"2025-07":37000,"2025-08":37000,"2025-09":37000,"2025-10":37000,"2025-11":37000,"2025-12":37000,"2026-01":37000,"2026-02":37000,"2026-03":37000,"2026-04":37000,"2026-05":37000,"2026-06":37000,"2026-07":37000},
             "LUAS GFA/1F SMS": {"2024-01":35000,"2024-02":35000,"2024-03":35000,"2024-04":35000,"2024-05":35000,"2024-06":35000,"2024-07":35000,"2024-08":35000,"2024-09":35000,"2024-10":35000,"2024-11":35000,"2024-12":35000,"2025-01":35000,"2025-02":35000,"2025-03":35000,"2025-04":35000,"2025-05":35000,"2025-06":35000,"2025-07":35000,"2025-08":35000,"2025-09":35000,"2025-10":35000,"2025-11":35000,"2025-12":35000,"2026-01":35000,"2026-02":35000,"2026-03":35000,"2026-04":35000,"2026-05":35000,"2026-06":35000,"2026-07":35000},
@@ -5257,7 +5421,7 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
             "TENANT SATISFACTION INDEX": {"2024-01":8.42,"2024-02":8.41,"2024-03":8.44,"2024-04":8.39,"2024-05":8.41,"2024-06":8.57,"2024-07":8.55,"2024-08":8.61,"2024-09":8.55,"2024-10":8.62,"2024-11":8.59,"2024-12":8.52,"2025-01":8.54,"2025-02":8.67,"2025-03":8.65,"2025-04":8.65,"2025-05":8.46,"2025-06":8.68,"2025-07":8.62,"2025-08":8.54,"2025-09":8.52,"2025-10":8.57,"2025-11":8.52,"2025-12":8.49,"2026-01":8.6,"2026-02":8.54,"2026-03":8.54,"2026-04":8.63,"2026-05":8.68,"2026-06":8.59,"2026-07":8.6},
             "JUMLAH MEMBER/Gold Member": {"2024-01":1127,"2024-02":1159,"2024-03":1200,"2024-04":1234,"2024-05":1259,"2024-06":1304,"2024-07":1328,"2024-08":1363,"2024-09":1417,"2024-10":1459,"2024-11":1522,"2024-12":1567,"2025-01":1613,"2025-02":1651,"2025-03":1698,"2025-04":1745,"2025-05":1785,"2025-06":1865,"2025-07":1919,"2025-08":1987,"2025-09":2045,"2025-10":2103,"2025-11":2151,"2025-12":2228,"2026-01":2288,"2026-02":2534,"2026-03":2698,"2026-04":2800,"2026-05":2907,"2026-06":2971,"2026-07":3039},
             "JUMLAH MEMBER/Green Member": {"2024-01":6842,"2024-02":6990,"2024-03":7170,"2024-04":7403,"2024-05":7586,"2024-06":7831,"2024-07":7992,"2024-08":8096,"2024-09":8507,"2024-10":8679,"2024-11":9057,"2024-12":9422,"2025-01":9633,"2025-02":9775,"2025-03":10051,"2025-04":10247,"2025-05":10441,"2025-06":10895,"2025-07":11259,"2025-08":11453,"2025-09":11616,"2025-10":11781,"2025-11":11962,"2025-12":12175,"2026-01":12422,"2026-02":13606,"2026-03":14505,"2026-04":14893,"2026-05":15280,"2026-06":15622,"2026-07":15979},
-            "JUMLAH MEMBER/Member Aktif": {"2024-01":1853,"2024-02":1915,"2024-03":1846,"2024-04":1965,"2024-05":1751,"2024-06":2118,"2024-07":2072,"2024-08":2033,"2024-09":2232,"2024-10":2095,"2024-11":2345,"2024-12":2496,"2025-01":2316,"2025-02":2174,"2025-03":2555,"2025-04":2378,"2025-05":2353,"2025-06":2788,"2025-07":2762,"2025-08":2746,"2025-09":2596,"2025-10":2654,"2025-11":2836,"2025-12":3185,"2026-01":3017,"2026-02":5142,"2026-03":5845,"2026-04":5076,"2026-05":5466,"2026-06":5267,"2026-07":5483},
+            "Member Aktif": {"2024-01":1853,"2024-02":1915,"2024-03":1846,"2024-04":1965,"2024-05":1751,"2024-06":2118,"2024-07":2072,"2024-08":2033,"2024-09":2232,"2024-10":2095,"2024-11":2345,"2024-12":2496,"2025-01":2316,"2025-02":2174,"2025-03":2555,"2025-04":2378,"2025-05":2353,"2025-06":2788,"2025-07":2762,"2025-08":2746,"2025-09":2596,"2025-10":2654,"2025-11":2836,"2025-12":3185,"2026-01":3017,"2026-02":5142,"2026-03":5845,"2026-04":5076,"2026-05":5466,"2026-06":5267,"2026-07":5483},
             "LUAS GFA/MALL": {"2024-01":94450.03,"2024-02":94450.03,"2024-03":94450.03,"2024-04":94450.03,"2024-05":94450.03,"2024-06":94450.03,"2024-07":94450.03,"2024-08":94450.03,"2024-09":94450.03,"2024-10":94450.03,"2024-11":94450.03,"2024-12":94450.03,"2025-01":94450.03,"2025-02":94450.03,"2025-03":94450.03,"2025-04":94450.03,"2025-05":94450.03,"2025-06":94450.03,"2025-07":94450.03,"2025-08":94450.03,"2025-09":94450.03,"2025-10":94450.03,"2025-11":94450.03,"2025-12":94450.03,"2026-01":94450.03,"2026-02":181907.84,"2026-03":181907.84,"2026-04":181907.84,"2026-05":181907.84,"2026-06":181907.84,"2026-07":181907.84},
             "LUAS GFA/LA TERAZZA": {"2024-01":24916.7,"2024-02":24916.7,"2024-03":24916.7,"2024-04":24916.7,"2024-05":24916.7,"2024-06":24916.7,"2024-07":24916.7,"2024-08":24916.7,"2024-09":24916.7,"2024-10":24916.7,"2024-11":24916.7,"2024-12":24916.7,"2025-01":24916.7,"2025-02":24916.7,"2025-03":24916.7,"2025-04":24916.7,"2025-05":24916.7,"2025-06":24916.7,"2025-07":24916.7,"2025-08":24916.7,"2025-09":24916.7,"2025-10":24916.7,"2025-11":24916.7,"2025-12":24916.7,"2026-01":24916.7,"2026-02":24916.7,"2026-03":24916.7,"2026-04":24916.7,"2026-05":24916.7,"2026-06":24916.7,"2026-07":24916.7},
             "LUAS GFA/FOOD COURT": {"2024-01":5297.76,"2024-02":5297.76,"2024-03":5297.76,"2024-04":5297.76,"2024-05":5297.76,"2024-06":5297.76,"2024-07":5297.76,"2024-08":5297.76,"2024-09":5297.76,"2024-10":5297.76,"2024-11":5297.76,"2024-12":5297.76,"2025-01":5297.76,"2025-02":5297.76,"2025-03":5297.76,"2025-04":5297.76,"2025-05":5297.76,"2025-06":5297.76,"2025-07":5297.76,"2025-08":5297.76,"2025-09":5297.76,"2025-10":5297.76,"2025-11":5297.76,"2025-12":5297.76,"2026-01":5297.76,"2026-02":5297.76,"2026-03":5297.76,"2026-04":5297.76,"2026-05":5297.76,"2026-06":5297.76,"2026-07":5297.76},
@@ -5311,7 +5475,7 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
             "TENANT SATISFACTION INDEX": {"2024-01":8.25,"2024-02":8.37,"2024-03":8.47,"2024-04":8.39,"2024-05":8.54,"2024-06":8.4,"2024-07":8.41,"2024-08":8.36,"2024-09":8.3,"2024-10":8.3,"2024-11":8.5,"2024-12":8.45,"2025-01":8.49,"2025-02":8.48,"2025-03":8.53,"2025-04":8.58,"2025-05":8.59,"2025-06":8.52,"2025-07":8.57,"2025-08":8.52,"2025-09":8.48,"2025-10":8.51,"2025-11":8.45,"2025-12":8.69,"2026-01":8.63,"2026-02":8.56,"2026-03":8.73,"2026-04":8.61,"2026-05":8.58,"2026-06":8.57,"2026-07":8.56},
             "JUMLAH MEMBER/Gold Member": {"2024-01":249,"2024-02":77,"2024-03":81,"2024-04":80,"2024-05":221,"2024-06":92,"2024-07":79,"2024-08":120,"2024-09":150,"2024-10":55,"2024-11":107,"2024-12":434,"2025-01":2550,"2025-02":2645,"2025-03":1347,"2025-04":158,"2025-05":115,"2025-06":539,"2025-07":441,"2025-08":340,"2025-09":186,"2025-10":210,"2025-11":179,"2025-12":1068,"2026-01":543,"2026-02":659,"2026-03":1058,"2026-04":162,"2026-05":173,"2026-06":442,"2026-07":316},
             "JUMLAH MEMBER/Green Member": {"2024-01":189,"2024-02":19,"2024-03":20,"2024-04":25,"2024-05":41,"2024-06":27,"2024-07":46,"2024-08":28,"2024-09":-40,"2024-10":36,"2024-11":32,"2024-12":49,"2025-01":105,"2025-02":87,"2025-03":62,"2025-04":25,"2025-05":38,"2025-06":29,"2025-07":24,"2025-08":24,"2025-09":25,"2025-10":27,"2025-11":52,"2025-12":90,"2026-01":91,"2026-02":22,"2026-03":-130,"2026-04":52,"2026-05":67,"2026-06":84,"2026-07":91},
-            "JUMLAH MEMBER/Member Aktif": {"2024-01":353,"2024-02":378,"2024-03":392,"2024-04":382,"2024-05":398,"2024-06":484,"2024-07":479,"2024-08":570,"2024-09":564,"2024-10":543,"2024-11":686,"2024-12":1207,"2025-01":2796,"2025-02":3617,"2025-03":3021,"2025-04":1614,"2025-05":1323,"2025-06":1510,"2025-07":1845,"2025-08":1600,"2025-09":1165,"2025-10":1710,"2025-11":1834,"2025-12":2931,"2026-01":2283,"2026-02":2520,"2026-03":3041,"2026-04":2006,"2026-05":2271,"2026-06":2529,"2026-07":2525},
+            "Member Aktif": {"2024-01":353,"2024-02":378,"2024-03":392,"2024-04":382,"2024-05":398,"2024-06":484,"2024-07":479,"2024-08":570,"2024-09":564,"2024-10":543,"2024-11":686,"2024-12":1207,"2025-01":2796,"2025-02":3617,"2025-03":3021,"2025-04":1614,"2025-05":1323,"2025-06":1510,"2025-07":1845,"2025-08":1600,"2025-09":1165,"2025-10":1710,"2025-11":1834,"2025-12":2931,"2026-01":2283,"2026-02":2520,"2026-03":3041,"2026-04":2006,"2026-05":2271,"2026-06":2529,"2026-07":2525},
             "LUAS GFA/MALL": {"2024-01":67963.21,"2024-02":67963.21,"2024-03":67963.21,"2024-04":67963.21,"2024-05":67963.21,"2024-06":67963.21,"2024-07":67963.21,"2024-08":67963.21,"2024-09":67963.21,"2024-10":67963.21,"2024-11":67963.21,"2024-12":67963.21,"2025-01":67963.21,"2025-02":67963.21,"2025-03":67963.21,"2025-04":67963.21,"2025-05":67963.21,"2025-06":67963.21,"2025-07":67963.21,"2025-08":67963.21,"2025-09":67963.21,"2025-10":67963.21,"2025-11":67963.21,"2025-12":67963.21,"2026-01":67963.21,"2026-02":67963.21,"2026-03":67963.21,"2026-04":67963.21,"2026-05":67963.21,"2026-06":67963.21,"2026-07":67963.21,"2026-08":67963.21},
             "LUAS GFA/DOWNTOWN": {"2024-01":16749.07,"2024-02":16749.07,"2024-03":16749.07,"2024-04":16749.07,"2024-05":16749.07,"2024-06":16749.07,"2024-07":16749.07,"2024-08":16749.07,"2024-09":16749.07,"2024-10":16749.07,"2024-11":16749.07,"2024-12":16749.07,"2025-01":16749.07,"2025-02":16749.07,"2025-03":16749.07,"2025-04":16749.07,"2025-05":16749.07,"2025-06":16749.07,"2025-07":16749.07,"2025-08":16749.07,"2025-09":16749.07,"2025-10":16749.07,"2025-11":16749.07,"2025-12":16749.07,"2026-01":16749.07,"2026-02":16749.07,"2026-03":16749.07,"2026-04":16749.07,"2026-05":16749.07,"2026-06":16749.07,"2026-07":16749.07,"2026-08":16749.07},
             "LUAS GFA/SINPASA": {"2024-01":2059.15,"2024-02":2059.15,"2024-03":2059.15,"2024-04":2059.15,"2024-05":2059.15,"2024-06":2059.15,"2024-07":2059.15,"2024-08":2059.15,"2024-09":2059.15,"2024-10":2059.15,"2024-11":2059.15,"2024-12":2059.15,"2025-01":2059.15,"2025-02":2059.15,"2025-03":2059.15,"2025-04":2059.15,"2025-05":2059.15,"2025-06":2059.15,"2025-07":2059.15,"2025-08":2059.15,"2025-09":2059.15,"2025-10":2059.15,"2025-11":2059.15,"2025-12":2059.15,"2026-01":2059.15,"2026-02":2059.15,"2026-03":2059.15,"2026-04":2059.15,"2026-05":2059.15,"2026-06":2059.15,"2026-07":2059.15,"2026-08":2059.15},
@@ -5440,7 +5604,7 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
             "JUMLAH MEMBER/Jumlah Member VPC/Red Member": {"2025-02":461,"2025-03":1473,"2025-04":2620,"2025-05":3820,"2025-06":5392,"2025-07":7308,"2025-08":8565,"2025-09":9330,"2025-10":11790,"2025-11":12969,"2025-12":15986,"2026-01":17520,"2026-02":18592,"2026-03":19889,"2026-04":20691,"2026-05":22232,"2026-06":23282,"2026-07":24555},
             "JUMLAH MEMBER/Jumlah Member VPC/Silver Member": {"2025-02":215,"2025-03":621,"2025-04":1033,"2025-05":1216,"2025-06":1338,"2025-07":1465,"2025-08":1588,"2025-09":1658,"2025-10":1730,"2025-11":1792,"2025-12":1893,"2026-01":1952,"2026-02":2001,"2026-03":2063,"2026-04":2108,"2026-05":2180,"2026-06":2213,"2026-07":2248},
             "JUMLAH MEMBER/Jumlah Member VPC/Gold Member": {"2025-02":90,"2025-03":169,"2025-04":229,"2025-05":269,"2025-06":293,"2025-07":323,"2025-08":347,"2025-09":359,"2025-10":380,"2025-11":392,"2025-12":415,"2026-01":427,"2026-02":436,"2026-03":445,"2026-04":451,"2026-05":464,"2026-06":468,"2026-07":475},
-            "JUMLAH MEMBER/Member Aktif": {"2025-02":206,"2025-03":685,"2025-04":851,"2025-05":897,"2025-06":850,"2025-07":994,"2025-08":1032,"2025-09":707,"2025-10":920,"2025-11":827,"2025-12":1405,"2026-01":1907,"2026-02":903,"2026-03":1139,"2026-04":827,"2026-05":1146,"2026-06":997,"2026-07":1084},
+            "Member Aktif": {"2025-02":206,"2025-03":685,"2025-04":851,"2025-05":897,"2025-06":850,"2025-07":994,"2025-08":1032,"2025-09":707,"2025-10":920,"2025-11":827,"2025-12":1405,"2026-01":1907,"2026-02":903,"2026-03":1139,"2026-04":827,"2026-05":1146,"2026-06":997,"2026-07":1084},
           },
           budget: {
             "TOTAL TRAFFIC KENDARAAN/MOBIL": {"2024-01":22255,"2024-02":19580,"2024-03":23555,"2024-04":20100,"2024-05":20255,"2024-06":20255,"2024-07":21470,"2024-08":22255,"2024-09":20255,"2024-10":19570,"2024-11":20900,"2024-12":29870,"2025-01":27096,"2025-02":17396,"2025-03":22809,"2025-04":25376,"2025-05":23527,"2025-06":23527,"2025-07":24709,"2025-08":22550,"2025-09":19807,"2025-10":26100,"2025-11":24000,"2025-12":28200,"2026-01":26100,"2026-02":19000,"2026-03":24000,"2026-04":26100,"2026-05":25200,"2026-06":24000,"2026-07":26000},
@@ -11844,31 +12008,62 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
       `<option value="${esc(u.kode)}"${u.kode === unit ? ' selected' : ''}>` +
       `${esc(D.namaUnitBisnis(u.kode))}</option>`).join('');
 
-    // Nilai option membawa JALUR `halaman|nama`, bukan nama telanjang: REVENUE, EXPENSE,
+    // ── SATU dropdown metrik berisi CEKLIST, maksimum dua (7 September 2026, 19.50) ──────
+    //
+    // **Permintaan pemilik**: *"Untuk yg di Dashboard Perbandingan ketik pilih Metrik. Tolong
+    // di rubah dengan Satu drop down Metrik saja. Tapi bisa pilih ceklist-ceklist yg mana mau
+    // di bandingkan Metriknya. Pilih ceklistnya 2 Metrik saja dlu."*
+    //
+    // Sampai sore itu kontrolnya DUA `<select>` — "Metrik" dan "Metrik 2 (opsional)" — bentuk
+    // yang dipakai sejak 4 September. Yang menggantikannya satu `<details>` berisi chip
+    // centang, bentuk yang SAMA dengan ceklist "Bandingkan" di bawahnya (yang pemilik sendiri
+    // minta dibuat "rapih dan modern" pagi itu) — jadi satu halaman ini tidak punya dua cara
+    // memilih dari daftar.
+    //
+    // **`<details>`, bukan dropdown buatan sendiri.** Ia sudah membawa buka-tutup, fokus
+    // keyboard, dan Esc dari browsernya; dropdown buatan sendiri berarti menulis ulang
+    // ketiganya plus penangan klik-di-luar — dan tiap satunya bisa salah tanpa terlihat di
+    // markup. Yang tinggal ditulis cuma penampilannya.
+    //
+    // Nilai checkbox membawa JALUR `halaman|nama`, bukan nama telanjang: REVENUE, EXPENSE,
     // EBITDA, dan NPAT ada di dua unit bisnis sekaligus (MALL dan Office Building), jadi nama
     // saja tidak cukup untuk menunjuk metrik yang benar begitu unit bisnisnya berganti.
     const nilaiRef = `${ref.halaman}|${ref.nama}`;
-    const opsiMetrik = D.metrikBanding(unit).map((grp) =>
-      `<optgroup label="${esc(grp.judulDashboard)}">` + grp.metrik.map((m) => {
-        const v = `${grp.halaman}|${m.nama}`;
-        return `<option value="${esc(v)}"${v === nilaiRef ? ' selected' : ''}>` +
-               `${esc(m.nama)}</option>`;
-      }).join('') + `</optgroup>`).join('');
-
-    // Daftar yang SAMA dengan metrik pertama, dikurangi metrik pertama itu sendiri — mencegah
-    // pilihan yang hasilnya dua blok identik bersebelahan. Optgroup yang jadi kosong ikut
-    // dibuang, kalau tidak ada judul dashboard yang berdiri tanpa satu pun pilihan di bawahnya.
     const nilaiRef2 = ref2 ? `${ref2.halaman}|${ref2.nama}` : '';
-    const opsiMetrik2 = D.metrikBanding(unit).map((grp) => {
-      const isi = grp.metrik
-        .filter((m) => !(grp.halaman === ref.halaman && m.nama === ref.nama))
-        .map((m) => {
-          const v = `${grp.halaman}|${m.nama}`;
-          return `<option value="${esc(v)}"${v === nilaiRef2 ? ' selected' : ''}>`
-            + `${esc(m.nama)}</option>`;
-        }).join('');
-      return isi ? `<optgroup label="${esc(grp.judulDashboard)}">${isi}</optgroup>` : '';
+    const dipilihMetrik = [nilaiRef, ...(nilaiRef2 ? [nilaiRef2] : [])];
+    const MAKS_METRIK = 2;
+
+    // **Penguncian punya DUA sebab yang berbeda, dan keduanya perlu.** Yang terpilih dikunci
+    // waktu ia satu-satunya (nol metrik bukan keadaan yang berarti — halaman ini tidak punya
+    // apa pun untuk dibandingkan), dan yang BELUM terpilih dikunci waktu kuotanya sudah penuh
+    // (pemilik meminta dua dulu). Pagar ini yang PERTAMA; pagar kedua di penangan `change`
+    // app.js, untuk pemakai yang memaksa lewat DevTools atau race event.
+    //
+    // Ikon ditulis LENGKAP, tidak dirangkai saat berjalan — penjaga build.test.js tidak bisa
+    // memeriksa nama ikon yang dirangkai (jebakan `bi-caret-${…}`).
+    const penuh = dipilihMetrik.length >= MAKS_METRIK;
+    const cipMetrik = D.metrikBanding(unit).map((grp) => {
+      const isi = grp.metrik.map((m) => {
+        const v = `${grp.halaman}|${m.nama}`;
+        const on = dipilihMetrik.includes(v);
+        const kunci = (on && dipilihMetrik.length === 1) || (!on && penuh) ? ' disabled' : '';
+        return `<label class="pr-bd-cip" title="${esc(m.nama)}">` +
+          `<input type="checkbox" name="bandingMetrik" value="${esc(v)}"` +
+          `${on ? ' checked' : ''}${kunci} aria-label="${esc(m.nama)}">` +
+          `<span class="pr-bd-cip-isi">` +
+            `<i class="bi bi-check2 pr-bd-cip-tanda" aria-hidden="true"></i>` +
+            `${esc(m.nama)}</span></label>`;
+      }).join('');
+      return `<div class="pr-bd-met-grup">` +
+        `<span class="pr-bd-met-judul">${esc(grp.judulDashboard)}</span>` +
+        `<div class="pr-bd-cips">${isi}</div></div>`;
     }).join('');
+
+    // Ringkasan di kepala dropdown menyebut NAMA yang terpilih, bukan cuma jumlahnya: kontrol
+    // tertutup yang cuma berbunyi "2 metrik" memaksa pengguna membukanya untuk tahu isinya.
+    // Urutannya urutan PILIH, sama dengan urutan blok di bawah — jadi ringkasannya membaca
+    // seperti halamannya.
+    const namaTerpilih = [ref.nama, ...(ref2 ? [ref2.nama] : [])].map(esc).join(', ');
 
     // Centang terakhir DIKUNCI: nol sub unit terpilih bukan keadaan yang berarti, dan mencegah
     // lebih baik daripada memajang halaman kosong lalu menjelaskan mengapa. Penguncian di sini
@@ -11904,16 +12099,19 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
     const kontrol = `<section class="ds-section"><div class="pr-filter">` +
       `<div class="pr-filter-field"><label class="ds-label" for="filterBandingUnit">Unit Bisnis` +
         `</label><select class="ds-input" id="filterBandingUnit">${opsiUnit}</select></div>` +
-      `<div class="pr-filter-field"><label class="ds-label" for="filterBandingMetrik">Metrik` +
-        `</label><select class="ds-input" id="filterBandingMetrik">${opsiMetrik}</select></div>` +
-      // Metrik kedua dilabeli "(opsional)" dan pilihan pertamanya KOSONG: tanpa itu ia terbaca
-      // sebagai kontrol yang wajib diisi, dan halaman ini harus tetap berguna dengan satu
-      // metrik — bentuk yang dipakai sejak 4 September dan tidak dicabut pemilik.
-      `<div class="pr-filter-field"><label class="ds-label" for="filterBandingMetrik2">` +
-        `Metrik 2 (opsional)</label>` +
-        `<select class="ds-input" id="filterBandingMetrik2">` +
-        `<option value=""${ref2 ? '' : ' selected'}>&mdash; tidak ada &mdash;</option>` +
-        `${opsiMetrik2}</select></div>` +
+      // Satu kontrol metrik sejak 7 September (19.50) — lihat catatannya di atas. `<summary>`
+      // memuat nama yang terpilih + hitungannya; hitungannya dari daftar yang SAMA dengan
+      // chip-nya, bukan dihitung ulang.
+      `<div class="pr-filter-field pr-bd-met-field">` +
+        `<span class="ds-label" id="labelBandingMetrik">Metrik</span>` +
+        `<details class="pr-bd-met" id="filterBandingMetrik"${state.bandingMetrikBuka ? ' open' : ''}>` +
+          `<summary class="pr-bd-met-ringkas" aria-describedby="labelBandingMetrik">` +
+            `<span class="pr-bd-met-teks">${namaTerpilih}</span>` +
+            `<span class="pr-bd-hitung">${dipilihMetrik.length} dari ${MAKS_METRIK}</span>` +
+            `<i class="bi bi-chevron-down pr-bd-met-tanda" aria-hidden="true"></i>` +
+          `</summary>` +
+          `<div class="pr-bd-met-isi">${cipMetrik}</div>` +
+        `</details></div>` +
       filterPeriode(state, { modeTersedia: MODE_BANDING }) +
       `</div><div class="pr-bd-pilih">` +
         `<div class="pr-bd-pilih-kepala"><span class="ds-label">Bandingkan</span>` +
@@ -12350,6 +12548,14 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
                   // metrik kedua sendiri berarti menampilkan perbandingan yang tidak
                   // diminta siapa pun.
                   bandingMetrik2: null,
+                  // **Keadaan buka dropdown metrik** (7 September 2026, 19.50). Ia keadaan
+                  // TAMPILAN, dan menaruhnya di `state` mengikuti `seksiTerbuka` di atas —
+                  // bukan pilihan baru. Sebabnya keras: mencentang metrik memicu `gambar()`,
+                  // yang mengganti seluruh markup — tanpa medan ini panelnya MENUTUP sendiri
+                  // tiap kali satu ceklist ditekan, jadi pengguna tidak bisa melihat akibat
+                  // pilihannya maupun menambah yang kedua tanpa membukanya lagi. Terlihat di
+                  // browser, bukan dibayangkan.
+                  bandingMetrikBuka: false,
                   bandingPilih: D.SUB_UNIT.MALL.map((s) => s.kode) };
 
   // Nama yang dipajang datang dari kamus (`D.namaUnitBisnis`), BUKAN ditulis di sini. Sampai
@@ -12639,6 +12845,16 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
         gambar();
         return;
       }
+      // Kepala dropdown metrik: keadaan buka-tutupnya dicatat di `state` supaya ia bertahan
+      // melewati `gambar()`. Dibaca dari `<details>`-nya SEBELUM browser menoggle-nya (pada
+      // saat klik ia masih keadaan lama), jadi tidak ada `preventDefault` dan tidak ada
+      // `gambar()` di sini — toggle-nya tetap milik browser, kita cuma mengingatnya.
+      const kepalaMetrik = e.target.closest('.pr-bd-met-ringkas');
+      if (kepalaMetrik) {
+        const det = kepalaMetrik.closest('details');
+        state.bandingMetrikBuka = det ? !det.open : false;
+        return;
+      }
       const kepalaSeksi = e.target.closest('[data-cv-seksi]');
       if (kepalaSeksi) {
         bukaSeksi(kepalaSeksi.dataset.cvSeksi,
@@ -12755,34 +12971,48 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
         state.bandingPilih = D.SUB_UNIT[state.bandingUnit].map((s) => s.kode);
         gambar();
       }
-      if (e.target.id === 'filterBandingMetrik') {
+      if (e.target.name === 'bandingMetrik') {
+        // Panelnya tetap TERBUKA melewati render ulang: pengguna baru saja memilih di
+        // dalamnya, dan menutupnya berarti menyembunyikan sisa pilihan yang mungkin ia
+        // teruskan. Lihat `bandingMetrikBuka` di keadaan awal.
+        state.bandingMetrikBuka = true;
+        // ── Satu ceklist untuk kedua metrik (7 September 2026, 19.50) ─────────────────────
+        //
+        // Sampai sore itu ada DUA penangan di sini, satu per `<select>`. Pemilik meminta satu
+        // dropdown berisi ceklist, jadi keduanya jadi satu — dan penangannya menyimpan
+        // URUTAN PILIH, bukan urutan DOM.
+        //
+        // **Urutan itu bukan detail rapi-rapi.** Kalau state disusun ulang dari urutan
+        // checkbox di halaman, mencentang metrik yang letaknya di ATAS metrik pertama akan
+        // menukar kedua blok di bawahnya — pengguna mencentang satu hal dan dua hal lain
+        // berpindah. Jadi yang dicentang selalu jadi metrik KEDUA, dan yang dilepas
+        // menaikkan yang kedua jadi pertama.
+        //
         // Nilainya berjalur "halaman|nama" (lihat kamus D.metrikBanding). Dipisah dengan
-        // `sisa.join('|')`, bukan `sisa[0]`: sudah dipastikan tak satu pun dari 65 metrik akar
-        // memuat '|' di namanya, tapi menjaga pemisahan ini tetap AMAN kalau kelak ada nama
-        // yang memuatnya — yang tidak boleh memuat '|' hanya kode halamannya.
+        // `sisa.join('|')`, bukan `sisa[0]`: sudah dipastikan tak satu pun metrik akar memuat
+        // '|' di namanya, tapi menjaga pemisahan ini tetap AMAN kalau kelak ada nama yang
+        // memuatnya — yang tidak boleh memuat '|' hanya kode halamannya.
         const [halaman, ...sisa] = e.target.value.split('|');
-        state.bandingMetrik = { halaman, nama: sisa.join('|') };
-        // Metrik kedua yang jadi SAMA dengan yang baru dipilih ikut dikosongkan: dua
-        // blok identik bersebelahan bukan perbandingan. Penyaji juga menjaganya, tetapi
-        // kalau state-nya dibiarkan, pilihan itu akan kembali sendiri begitu pengguna
-        // mengganti metrik pertama lagi.
-        if (state.bandingMetrik2
-            && state.bandingMetrik2.halaman === halaman
-            && state.bandingMetrik2.nama === state.bandingMetrik.nama) {
+        const acuan = { halaman, nama: sisa.join('|') };
+        const sama = (a, b) => !!a && !!b && a.halaman === b.halaman && a.nama === b.nama;
+        if (e.target.checked) {
+          // Kuota penuh sudah dikunci di markup; ini pagar KEDUA, untuk pemakai yang
+          // memaksanya lewat DevTools atau perubahan DOM yang tidak lewat markup normal.
+          // Tanpa itu metrik ketiga akan diam-diam menimpa yang kedua.
+          if (sama(state.bandingMetrik, acuan) || sama(state.bandingMetrik2, acuan)) return;
+          if (state.bandingMetrik2) { e.target.checked = false; return; }
+          state.bandingMetrik2 = acuan;
+        } else if (sama(state.bandingMetrik, acuan)) {
+          // Yang pertama dilepas: yang kedua naik jadi pertama. Kalau tidak ada yang kedua,
+          // pelepasan itu DITOLAK — nol metrik bukan keadaan yang berarti, dan centangnya
+          // sudah dikunci di markup.
+          if (!state.bandingMetrik2) { e.target.checked = true; return; }
+          state.bandingMetrik = state.bandingMetrik2;
           state.bandingMetrik2 = null;
-        }
-        gambar();
-      }
-      if (e.target.id === 'filterBandingMetrik2') {
-        // Nilai kosong = tidak ada metrik kedua. Dibedakan dari nilai berjalur dengan
-        // memeriksa string kosongnya, bukan dengan `split` yang akan memberi
-        // `{halaman: '', nama: ''}` — acuan yang tidak ada dan tidak pernah tertolak.
-        const v = e.target.value;
-        if (!v) {
+        } else if (sama(state.bandingMetrik2, acuan)) {
           state.bandingMetrik2 = null;
         } else {
-          const [hal2, ...sisa2] = v.split('|');
-          state.bandingMetrik2 = { halaman: hal2, nama: sisa2.join('|') };
+          return;   // bukan salah satu yang terpilih — tidak ada yang perlu diubah
         }
         gambar();
       }
