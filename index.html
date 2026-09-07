@@ -148,9 +148,13 @@
 #smra-wrapper .ds-table td, #smra-wrapper .ds-table th { font-size: 13px; }
 /* Kaki halaman: px mati portal-ui yang KELIMA, ketemu 24 Agustus waktu memasang cap versi —
    terukur 10 px, ukuran terkecil yang tersisa di halaman. Yang ada di sana bukan hiasan:
-   peringatan **"Seluruh angka pada halaman ini adalah data contoh"**, satu-satunya penanda di
-   layar yang mencegah angka prototype dibaca sebagai angka riil di rapat. Dinaikkan ke 12 px,
-   sama dengan label sumbu chart.
+   waktu itu peringatan **"Seluruh angka pada halaman ini adalah data contoh"**, satu-satunya
+   penanda di layar yang mencegah angka prototype dibaca sebagai angka riil di rapat. Dinaikkan
+   ke 12 px, sama dengan label sumbu chart.
+
+   **Kalimatnya sudah berganti tiga kali sejak itu** dan sekarang berbunyi kebalikannya
+   ("Kelima dashboard memakai angka riil"), tetapi alasan ukurannya tidak berubah: yang berdiri
+   di sana pernyataan tentang asal SELURUH angka di layar, dan pernyataan itu harus terbaca.
 
    `span`-nya WAJIB ikut disebut: portal-ui memasang ukuran pada `.main-footer span` (0,1,1),
    dan itu mengalahkan warisan dari `.main-footer` saja. Terukur: kakinya 12 px tetapi isinya
@@ -199,7 +203,8 @@
 .pr-ax-kosong { top: 50%; left: 50%; transform: translate(-50%, -50%); }
 
 /* Cap tanggal versi di kaki halaman. Di ujung kanan dan tidak menonjol: ia informasi arsip,
-   bukan informasi rapat — yang perlu menonjol di kaki halaman tetap peringatan "data contoh".
+   bukan informasi rapat — yang perlu menonjol di kaki halaman tetap pernyataan asal angkanya
+   (dulu peringatan "data contoh", sejak 3 September "memakai angka riil").
    Tetapi ia harus TERBACA: gunanya membandingkan salinan yang beredar, dan cap yang harus
    dikira-kira tidak menyelesaikan apa pun.
 
@@ -1419,7 +1424,7 @@ html, body { overflow-x: hidden; }
   </div>
   <div class="sidebar-nav-wrap"><nav><ul class="nav nav-sidebar flex-column" id="sidebarNav"></ul></nav></div>
   <div class="sidebar-bottom">
-    <a href="#" class="nav-link"><i class="bi bi-info-circle nav-icon"></i><p>Prototype — data contoh</p></a>
+    <a href="#" class="nav-link"><i class="bi bi-info-circle nav-icon"></i><p>Prototype — angka riil</p></a>
   </div>
 </aside>
 <div id="smra-sidebar-backdrop"></div>
@@ -1474,7 +1479,7 @@ html, body { overflow-x: hidden; }
          yang berlaku di SEMUA halaman; cakupan per halaman ada di penanda kepalanya, yang
          memang tahu sub unit mana yang berkasnya sudah dikirim. -->
     <span>Prototype Dashboard Data Management &middot; PT SMIP &middot; <strong>Kelima dashboard memakai angka riil</strong> dari Tim Management &mdash; penanda di kepala tiap halaman menyebutkan cakupannya.</span>
-    <span class="pr-versi">Versi 7 September 2026, 20.06</span>
+    <span class="pr-versi">Versi 7 September 2026, 22.27</span>
   </footer>
 </div>
 </div>
@@ -1659,9 +1664,20 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
     'Anchor (m2)': 'jumlah',
   };
 
-  /** Aturan tahunan satu metrik. Urutannya penting: pengecualian nama lebih dulu (ia yang paling
-   *  spesifik), lalu heuristik "AVERAGE", baru satuannya. */
-  const aturanTahunan = (nama, satuan) => ATURAN_TAHUNAN_NAMA[nama]
+  /** Aturan tahunan satu metrik. Urutannya penting: **override per SIMPUL lebih dulu**, lalu
+   *  pengecualian nama, lalu heuristik "AVERAGE", baru satuannya.
+   *
+   *  **Argumen ketiga ada karena nama tidak selalu cukup** (7 September, permintaan pemilik atas
+   *  trafik tahunan). `ATURAN_TAHUNAN_NAMA` berkunci NAMA, dan kunci nama itu GLOBAL: `MOBIL`
+   *  dan `MOTOR` ada DUA KALI di kamus Operation — di bawah `TOTAL TRAFFIC KENDARAAN` (ALIRAN,
+   *  kendaraan yang masuk sepanjang bulan) dan di bawah `JUMLAH LOT PARKIR` (STOK, lot fisik).
+   *  Keduanya bersatuan 'unit'. Mendaftarkan `MOBIL: 'jumlah'` akan membetulkan trafik DAN
+   *  mengalikan lot parkir dua belas — tanpa error, dengan angka yang tetap tampak wajar.
+   *
+   *  Jadi simpul yang butuh aturan berbeda dari satuannya membawa `tahunan:` sendiri di kamus,
+   *  tepat di baris metriknya. Pemanggilnya (`gabung()` di data.js) mengoper `simpul.tahunan`. */
+  const aturanTahunan = (nama, satuan, tahunanSimpul = null) => tahunanSimpul
+    || ATURAN_TAHUNAN_NAMA[nama]
     || (/\bAVERAGE\b|\bAVG\b/i.test(String(nama)) ? 'ratarata' : null)
     || ATURAN_TAHUNAN_SATUAN[satuan]
     || 'jumlah';
@@ -2402,7 +2418,17 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
     ]),
   ]),
   // Himpunan bagian dari Gold & Green — lihat catatan di atas. Akar, bukan anak.
-  d('Member Aktif', 'orang'),
+  // `Member Aktif` DIHAPUS 7 September (21.55), permintaan pemilik: *"Di grafik Member
+  // maksudnya yg di hitung adalah baris Jumlah Member Gold & Green saja untuk baris Member
+  // Aktif gak perlu di hitung."*
+  //
+  // Ia baru dijadikan metrik AKAR dua jam sebelumnya (19.30) — justru supaya TIDAK ikut
+  // dijumlah ke `JUMLAH MEMBER`, karena himpunan bagian tidak boleh menambah himpunannya.
+  // Pemilik menutup pertanyaannya satu langkah lebih jauh: barisnya tidak perlu ditampilkan.
+  //
+  // Angkanya TETAP di `nyata.js` dan konverter tetap membacanya (`OP_JALUR`), termasuk
+  // pemeriksa himpunan bagian yang menemukan Bandung melanggarnya di 30 dari 31 bulan —
+  // laporan itu untuk Tim Management dan tidak bergantung pada metrik ini tampil.
     // Gabungan rincian keenam berkas. Ejaan disatukan di tempat yang cuma berbeda huruf besar
     // (`Sinpasa` Serpong & Bekasi → `SINPASA`, `Salsa` Serpong → `SALSA`); nama yang berbeda
     // sungguhan dibiarkan berbeda.
@@ -2528,10 +2554,24 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
     // Trafik juga **satu-satunya metrik halaman ini yang punya BUDGET**, jadi satu-satunya
     // yang VAR%-nya berisi di sini. Tiga mall yang belum mengirim blok ini (Kelapa Gading ·
     // Villagio · Samasta) tetap '—' berbadge "Belum ada data".
+    // ── `tahunan: 'jumlah'` — permintaan pemilik 7 September 21.55 ──
+    //
+    // *"Untuk Total Traffic Pengunjung dan Total Traffic Kendaraan jg sama Ketika di filter
+    // Tahunan 2024 (Jan s/d Des), Tahun 2025 (Jan s/d Des) dan 2026 (Jan s/d Jun)."*
+    //
+    // Satuan 'unit' dan 'orang' masuk golongan STOK di `ATURAN_TAHUNAN_SATUAN` — benar untuk
+    // luas, lot parkir, dan jumlah member, salah untuk kendaraan dan pengunjung yang MASUK
+    // sepanjang bulan. Sebelum ini kartu "2024 · Jan–Des" memajang trafik DESEMBER sebagai
+    // trafik setahun: Kelapa Gading 2.530.273 alih-alih 28.320.777, sepersebelas dari yang
+    // benar dan tetap tampak wajar untuk sebuah mall.
+    //
+    // **Ditandai PER SIMPUL, bukan lewat `ATURAN_TAHUNAN_NAMA`**: nama `MOBIL` dan `MOTOR`
+    // dipakai juga oleh `JUMLAH LOT PARKIR` di atas, yang memang stok. Kunci nama akan
+    // menumpah ke sana dan mengalikan lot parkir dua belas.
     g('TOTAL TRAFFIC KENDARAAN', 'unit', 'jumlah', [
-      d('MOBIL', 'unit'),
-      d('MOTOR', 'unit'),
-    ]),
+      d('MOBIL', 'unit', { tahunan: 'jumlah' }),
+      d('MOTOR', 'unit', { tahunan: 'jumlah' }),
+    ], { tahunan: 'jumlah' }),
     // ── Satu metrik pengunjung, diisi baris PPC CCTV — keputusan pemilik 7 September 19.30 ──
     //
     // Pemilik: *"Untuk TOTAL TRAFFIC PENGUNJUNG yg digunakan adalah BUDGET TRAFFIC PENGUNJUNG
@@ -2555,7 +2595,8 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
     // Januari 2024 aktual); yang berubah tempatnya, dari metrik kedua ke metrik utama. Kelima
     // mall lain tidak tersentuh — berkas mereka hanya punya satu penghitung, dan namanya bukan
     // PPC CCTV.
-    d('TOTAL TRAFFIC PENGUNJUNG', 'orang'),
+    // `tahunan: 'jumlah'` — alasannya di `TOTAL TRAFFIC KENDARAAN` di atas.
+    d('TOTAL TRAFFIC PENGUNJUNG', 'orang', { tahunan: 'jumlah' }),
   ];
 
   // ── HOTEL (12 kelompok) — Lampiran A.4 ──
@@ -3546,10 +3587,9 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
         // ini. Lihat catatannya di kamus Operation.
         'TOTAL TRAFFIC PENGUNJUNG',
         'CUSTOMER SATISFACTION INDEX',
-        'TENANT SATISFACTION INDEX', 'JUMLAH MEMBER',
-        // `Member Aktif` jadi akar 7 September (19.30) — himpunan bagian Gold & Green, jadi
-        // ia tidak boleh ikut dijumlah ke induknya. Tempatnya tepat di samping induknya.
-        'Member Aktif', 'LUAS GFA',
+        // `Member Aktif` sempat berdiri di sini sebagai akar (7 September 19.30) dan DIHAPUS
+        // 21.55 atas permintaan pemilik — lihat catatannya di kamus Operation.
+        'TENANT SATISFACTION INDEX', 'JUMLAH MEMBER', 'LUAS GFA',
         // `LUAS AREA` masuk 3 September (sore) bersama data nyata — hanya Villagio yang
         // memuatnya, dan tempatnya di sini bersama luas yang lain.
         'LUAS AREA',
@@ -6919,6 +6959,13 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
       // deklarasi `bobot` di kamus tidak pernah sampai ke tempat yang memakainya, dan
       // konsolidasinya diam-diam kembali jadi rata-rata datar — tanpa satu pun error.
       if (n.bobot) out.bobot = n.bobot;
+      // `tahunan` sama alasannya, dan ia jebakan yang SAMA sekali lagi (7 September, 21.55):
+      // override aturan tahunan per simpul dideklarasikan di kamus, sementara `gabung()`
+      // membacanya dari simpul POHON. Tanpa baris ini trafik tahunan tetap memajang angka SATU
+      // BULAN — tanpa error, dan penjaganya merah dengan pesan yang menunjuk kamus yang SUDAH
+      // benar. Keempat baris `if` di sekitar sini adalah daftar yang sama: apa pun yang
+      // dideklarasikan di kamus dan dibaca SESUDAH pohon dibangun wajib disalin di sini.
+      if (n.tahunan) out.tahunan = n.tahunan;
       // `dari` sama alasannya: tanpa disalin, simpul 'selisihAkar' sampai ke aggregate.js tanpa
       // tahu akar mana yang ditunjuknya, dan kartunya memajang '—' tanpa satu pun error.
       if (n.dari) out.dari = n.dari;
@@ -7063,6 +7110,11 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
       if (dasar.biaya) out.biaya = true;
       if (dasar.bobot) out.bobot = dasar.bobot;
       if (dasar.dari) out.dari = dasar.dari;
+      // Override aturan tahunan ikut ke pohon KONSOLIDASI juga. Tanpa baris ini trafik tahunan
+      // benar di tiap mall dan tetap salah di Semua (Konsolidasi) — satu-satunya angka yang
+      // dilihat lebih dulu di halaman itu. Ketemu 7 September 21.55, oleh penjaga yang sudah
+      // hijau untuk SKGM dan masih merah untuk SEMUA.
+      if (dasar.tahunan) out.tahunan = dasar.tahunan;
       // Status gabungan mengabaikan sub unit yang BELUM BERDATA, kecuali kalau semuanya
       // begitu. Alasannya badge kartu bicara soal MUTU angka yang dipajang, bukan soal
       // cakupannya: tanpa aturan ini, kartu konsolidasi FA memajang 68.867 dengan badge
@@ -7678,7 +7730,9 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
     const gabung = (jalur) => {
       const acuan = simpulJalur(pohonBulan[0], jalur);
       if (!acuan) return null;
-      const aturan = D.aturanTahunan(acuan.nama, acuan.satuan);
+      // `acuan.tahunan` — override per simpul dari kamus. Diperlukan karena nama daun bisa
+      // KEMBAR di satu kamus (`MOBIL`/`MOTOR`: trafik = aliran, lot parkir = stok).
+      const aturan = D.aturanTahunan(acuan.nama, acuan.satuan, acuan.tahunan);
       const perBulan = (medan) => pohonBulan.map((p) => simpulJalur(p, jalur)?.[medan]);
       const nilaiAktual = perBulan('aktual');
       const aktual = gabungTahunan(nilaiAktual, aturan);
@@ -9197,7 +9251,7 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
     const nama = (kode) => D.SINGKAT_BULAN[Number(kode) - 1];
     if (!bulan.length) return '';
     const dasar = `${nama(bulan[0])}–${nama(bulan[bulan.length - 1])}`;
-    return dasar + cakupanLebihPendek(state, bulan);
+    return dasar + cakupanLebihPendek(state);
   }
 
   /** Keterangan tambahan kalau data NYATA sub unit yang dipilih **lebih pendek** daripada
@@ -9211,7 +9265,7 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
    *
    *  Ditulis hanya kalau memang lebih pendek: menambahkan keterangan pada sub unit yang
    *  datanya penuh (Bekasi) justru menimbulkan pertanyaan yang tidak ada. */
-  function cakupanLebihPendek(state, bulanRentang) {
+  function cakupanLebihPendek(state) {
     if (!state || !D.halamanNyata(state.halaman)) return '';
     const sub = state.subUnit;
     if (!sub || sub === 'SEMUA' || !D.sumberNyata(state.halaman, sub)) return '';
@@ -9220,10 +9274,29 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
     const tahunTerbaru = D.TAHUN_PERIODE[D.TAHUN_PERIODE.length - 1];
     const [, akhir] = cakupan;
     if (!akhir.startsWith(`${tahunTerbaru}-`)) return '';
+    // **Jendela TAHUN TERBARU, bukan jendela tahun yang sedang dilihat** (7 September, 21.55).
+    //
+    // Sampai malam itu pembandingnya `bulanRentang` — bulan-bulan tahun yang DIPILIH — dan itu
+    // membandingkan nomor bulan LINTAS TAHUN: cakupan Kelapa Gading berakhir 2026-08, jendela
+    // 2024 berakhir bulan 12, dan `'08' < '12'` membuat halaman **2024** bersubjudul
+    // "2024 · Jan–Des (2026: Jan–Agu)". Salah dua kali sekaligus — keterangannya muncul di
+    // halaman tahun yang datanya justru LENGKAP, dan menyebut Jan–Agu padahal jendela 2026
+    // dipatok Jan–Jun oleh `CUTOFF_TAHUNAN`. Pemilik yang menemukannya:
+    // *"Dan tampilan keterangan YTD sesuai Ketika di filter Tahunan 2024 (Jan s/d Des), Tahun
+    // 2025 (Jan s/d Des) dan 2026 (Jan s/d Jun)."*
+    //
+    // Yang ditanyakan keterangan ini satu hal saja — *apakah data sub unit ini berhenti sebelum
+    // jendela tahun terbaru habis?* — dan jawabannya tidak boleh berubah karena tahun yang
+    // dilihat berganti. Ada penjaganya di tahunan.test.js.
+    const jendela = G.bulanTahunan(tahunTerbaru);
+    if (!jendela.length) return '';
     const bulanTerakhir = akhir.slice(5);
-    if (bulanTerakhir >= bulanRentang[bulanRentang.length - 1]) return '';
-    const nama = (kode) => D.NAMA_BULAN[Number(kode) - 1].slice(0, 3);
-    return ` (${tahunTerbaru}: ${nama(bulanRentang[0])}–${nama(bulanTerakhir)})`;
+    if (bulanTerakhir >= jendela[jendela.length - 1]) return '';
+    // `SINGKAT_BULAN`, bukan potongan tiga huruf: yang kedua memberi 'Agu' sementara seluruh
+    // label bulan di halaman yang sama menulis 'Ags'. Dua ejaan Agustus bersebelahan di satu
+    // layar sudah pernah terjadi 5 September dan tercatat di RINGKASAN 8.
+    const nama = (kode) => D.SINGKAT_BULAN[Number(kode) - 1];
+    return ` (${tahunTerbaru}: ${nama(jendela[0])}–${nama(bulanTerakhir)})`;
   }
 
   /** Pohon metrik yang berlaku untuk mode periode yang aktif. SATU tempat yang memutuskan, supaya

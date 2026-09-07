@@ -11,11 +11,11 @@ Dibuka langsung di browser, termasuk dari HP dan tablet.
 >
 > | Dashboard | Cakupan data riil |
 > |---|---|
-> | Financial Performance (FA) | 6 dari 8 sub unit MALL |
+> | Financial Performance (FA) | 8 dari 8 sub unit MALL |
 > | Leasing | 8 dari 8 sub unit MALL |
 > | Operation · Marketing · HRD | 6 dari 8 sub unit MALL |
 > | Hotel | 5 dari 5 hotel |
-> | OFFICES | 2 dari 2 gedung |
+> | OFFICE | 2 dari 2 gedung |
 >
 > Yang berkasnya belum dikirim memajang **`—` berpenanda "BELUM ADA DATA"** — bukan angka
 > karangan sebagai penambal. Penanda di kepala tiap halaman menyebutkan cakupannya, dan
