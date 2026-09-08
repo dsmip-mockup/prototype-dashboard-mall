@@ -55,31 +55,38 @@
   --pr-c-2: var(--color-info-500);
   --pr-c-3: var(--color-secondary-700);
   --pr-c-ref: var(--t-text-muted);
-  /* ── Badge BERPENEKANAN: hijau PENUH, bukan wash (8 September 2026) ──────────────────
-     Pemilik: *"Warna hijau kurang. Maunya warna terang agar bisa terbaca oleh BOD"*, tentang
-     kalimat kesimpulan Dashboard Perbandingan.
+  /* ── Badge kesimpulan: strip aksen, BUKAN hijau (8 September 2026) ───────────────────
+     Kalimat kesimpulan Dashboard Perbandingan, dan ia sudah tiga putaran:
 
-     **Keluhannya bisa diukur, dan angkanya buruk.** Pasangan `ds-badge-success` portal-ui
-     adalah teks `--t-success` di atas `--t-success-bg` — kontras **1,96:1**, sementara WCAG AA
-     untuk teks normal butuh 4,50:1. Untuk badge status satu-dua kata itu masih terbaca; untuk
-     KALIMAT sepanjang ini, yang justru dirancang jadi hal pertama yang dibaca BOD, tidak.
+       1. `ds-badge-success` portal-ui — teks `--t-success` di atas `--t-success-bg`. Kontras
+          **1,96:1**, sementara WCAG AA untuk teks normal butuh 4,50:1. Pemilik melaporkannya:
+          *"Warna hijau kurang. Maunya warna terang agar bisa terbaca oleh BOD."*
+       2. Hijau PENUH + teks gelap — 5,77:1. Terbaca, tapi pemilik menjelaskan maksudnya:
+          *"maksudnya badgenya jangan warna hijau juga. Klu bisa lebih modern dan clean."*
+       3. Yang sekarang: **strip aksen** — permukaan kartu, garis rambut, dan batang aksen
+          brand di tepi KIRI. Pemilik memilihnya dari tiga opsi berangka.
 
-     Yang dipakai: `--t-success` PENUH sebagai LATAR (itu "terang"-nya) dengan teks gelap di
-     atasnya. Terukur 5,77:1 di tema terang · 5,29:1 di warm · 10,30:1 di gelap — ketiganya
-     lulus AA. Alternatif "hijau penuh + teks PUTIH" ditolak karena cuma 2,54:1: ia tampak
-     terang tetapi tetap tidak terbaca, yaitu keluhan yang sama dalam bentuk lain.
+     Terukur: teks **14,63:1** terang · **13,43:1** warm · **14,27:1** gelap. Aksennya elemen
+     GRAFIS, ambangnya 3,00:1 — terukur 3,04:1 di terang/warm dan 4,18:1 di gelap.
 
-     Teksnya `--t-text` di terang/warm dan `--t-bg` di gelap — di tema gelap `--t-success`
-     justru hijau MUDA sementara `--t-text` hampir putih, jadi pasangan yang sama akan memberi
-     1,84:1. Nol warna baru: keduanya token portal-ui yang sudah ada, dan penjaga kontras di
-     `tampilan.test.js` membaca nilainya langsung dari `portal-ui.css`. */
-  --pr-badge-kuat-bg: var(--t-success);
+     **Tidak butuh override tema sama sekali**, dan itu keuntungan yang tidak dimiliki kedua
+     bentuk sebelumnya: `--t-surf` dan `--t-text` berbalik BERSAMA-SAMA di tema gelap, jadi
+     pasangannya tetap benar tanpa aturan tambahan. Bentuk hijau butuh override karena di sana
+     `--t-success` justru hijau MUDA sementara `--t-text` hampir putih (1,84:1).
+
+     Aksennya `--pr-c-1`, token peran brand prototipe ini — bukan `--smra-orange` langsung:
+     `--pr-c-1` sudah disetel per tema (langkah oranye yang berbeda di gelap), dan memakainya
+     berarti aksen badge ini sewarna dengan seri utama chart di sebelahnya. */
+  --pr-badge-kuat-bg: var(--t-surf);
   --pr-badge-kuat-teks: var(--t-text);
+  --pr-badge-kuat-aksen: var(--pr-c-1);
 }
 #smra-wrapper.dark {
   --pr-c-1: var(--color-primary-600);
   --pr-c-3: var(--color-secondary-600);
-  --pr-badge-kuat-teks: var(--t-bg);
+  /* `--pr-badge-kuat-teks` TIDAK ditimpa di sini, dan itu disengaja: `--t-surf` dan `--t-text`
+     sudah berbalik bersama-sama di tema ini, jadi pasangannya tetap 14,27:1 tanpa aturan
+     tambahan. Bentuk badge sebelumnya (hijau penuh) butuh override; strip aksen tidak. */
 }
 
 /* ── Slot KATEGORI untuk donut komposisi (26 Agustus 2026) ──────────────────────
@@ -1138,6 +1145,11 @@ html, body { overflow-x: hidden; }
      ini yang menentukan warnanya, dan penjaga kontras di tampilan.test.js mengukurnya. */
   background: var(--pr-badge-kuat-bg);
   color: var(--pr-badge-kuat-teks);
+  /* Garis rambut di tiga sisi, batang aksen 3px di kiri. `border-left` DITULIS SESUDAH
+     `border`, bukan sebelumnya: `border` menimpa keempat sisi, jadi urutan terbalik akan
+     menghapus aksennya tanpa satu pun gejala. */
+  border: 1px solid var(--t-border);
+  border-left: 3px solid var(--pr-badge-kuat-aksen);
 }
 /* ── Daftar batang peringkat (7 September 2026) ───────────────────────────────────────
    Menggantikan kanvas ber-viewBox di seksi Peringkat. Sebabnya di chart.js barDaftar(); yang
@@ -1623,7 +1635,7 @@ html, body { overflow-x: hidden; }
          untuk seluruh prototype &mdash; dan salinan statis itulah yang pernah MEMBANTAH
          penandanya (lihat catatan di atas). -->
     <span>Prototype Dashboard Data Management</span>
-    <span class="pr-versi">Versi 8 September 2026, 11.55</span>
+    <span class="pr-versi">Versi 8 September 2026, 12.14</span>
   </footer>
 </div>
 </div>
@@ -12653,11 +12665,17 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
       // dan tebal 600 (yang terakhir menebalkan seluruh kalimat sehingga `<strong>` di
       // dalamnya, nama sub unit terbesar, berhenti menonjol).
       //
-      // **Varian `ds-badge-success` DICABUT 8 September 2026 (siang).** Pemilik: *"Warna hijau
-      // kurang. Maunya warna terang agar bisa terbaca oleh BOD"* — dan keluhannya terukur:
-      // pasangan varian itu (teks #10b981 di atas #d1e7dd) cuma **1,96:1**, sementara WCAG AA
-      // butuh 4,50:1. Warnanya sekarang dari `--pr-badge-kuat-*` di prototype.css: hijau PENUH
-      // sebagai latar dengan teks gelap, 5,77:1 · 5,29:1 · 10,30:1 di ketiga tema.
+      // **Warnanya sudah TIGA putaran 8 September 2026 (siang), dan tak satu pun hijau lagi:**
+      //
+      //   1. `ds-badge-success` portal-ui — pasangannya cuma **1,96:1** (AA butuh 4,50).
+      //      Pemilik: *"Warna hijau kurang. Maunya warna terang agar bisa terbaca oleh BOD."*
+      //   2. Hijau PENUH + teks gelap — 5,77:1, terbaca. Pemilik menjelaskan maksudnya:
+      //      *"maksudnya badgenya jangan warna hijau juga. Klu bisa lebih modern dan clean."*
+      //   3. **Strip aksen** — permukaan kartu, garis rambut, batang aksen brand di tepi kiri.
+      //      Dipilih pemilik dari tiga opsi berangka. Teks 14,63 · 13,43 · 14,27:1.
+      //
+      // Warnanya dari `--pr-badge-kuat-*` di prototype.css, dan penjaga kontras di
+      // `tampilan.test.js` mengukurnya dari nilai token yang benar-benar dirujuk.
       const kesimpulan = bagian.length
         ? `<p class="pr-bd-kesimpulan">`
           + `<span class="ds-badge pr-bd-kesimpulan-badge">`
