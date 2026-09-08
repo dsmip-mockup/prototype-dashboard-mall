@@ -1635,7 +1635,7 @@ html, body { overflow-x: hidden; }
          untuk seluruh prototype &mdash; dan salinan statis itulah yang pernah MEMBANTAH
          penandanya (lihat catatan di atas). -->
     <span>Prototype Dashboard Data Management</span>
-    <span class="pr-versi">Versi 8 September 2026, 12.14</span>
+    <span class="pr-versi">Versi 8 September 2026, 14.51</span>
   </footer>
 </div>
 </div>
@@ -10860,18 +10860,34 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
         `kamus metrik yang bisa ditelusuri di sini.</p></div>`;
     }
 
-    // Di halaman gabungan PT SMIP, angka di sini milik SATU unit bisnis — Leasing dan Operation
-    // dari MALL, Hotel dari HOTEL, dan seterusnya. Tanpa keterangan ia terbaca sebagai angka
-    // seluruh perusahaan. Unit bisnisnya dibaca dari kamus sumbernya, bukan ditulis ulang.
-    const unitSumber = D.HALAMAN.find((h) => h.kode === kodeHalaman)?.unitBisnis;
-    const nota = (!ent.unitBisnis && unitSumber)
-      ? `<div class="ds-alert ds-alert-info"><i class="bi bi-info-circle"></i><div>` +
-          `Angka di halaman ini bersumber dari <strong>` +
-          `${esc(D.UNIT_BISNIS.find((u) => u.kode === unitSumber)?.nama || unitSumber)}</strong>` +
-          `, bukan konsolidasi seluruh perusahaan — metrik serinci ini hanya dipunyai unit ` +
-          `bisnis itu.` +
-        `</div></div>`
-      : '';
+    /** ── Nota sumber unit bisnis DIBUANG 8 September 2026 (siang) ───────────────────────
+     *
+     *  Permintaan pemilik, dengan foto layar menggarisi banner-nya di halaman Hotel Detail:
+     *  *"tolong untuk keterangan seperti ini ya contoh 'Angka di halaman ini bersumber dari
+     *  HOTEL, bukan konsolidasi seluruh perusahaan — metrik serinci ini hanya dipunyai unit
+     *  bisnis itu.' di hilangkan."*
+     *
+     *  **Ini kalimat TERAKHIR dari keluarga itu, dan saya menahannya pagi ini.** Waktu
+     *  kesepuluh keterangan kartu dibuang, kalimat ini sengaja ditinggalkan dengan alasan
+     *  tertulis: *"yang tinggal di sini SATU keterangan, dan ia tidak pernah beliau sebut."*
+     *  Beliau menyebutnya beberapa jam kemudian. Polanya sudah tercatat di memori cara kerja
+     *  beliau — *"hilangkan keterangan" = apa yang BELIAU LIHAT, bukan golongan yang saya
+     *  susun* — dan penahanan saya kali ini pun bertahan setengah hari saja.
+     *
+     *  Bentuk lamanya ditinggalkan di komentar, pola yang sama dengan `notaBanding()`:
+     *
+     *    const unitSumber = D.HALAMAN.find((h) => h.kode === kodeHalaman)?.unitBisnis;
+     *    const nota = (!ent.unitBisnis && unitSumber)
+     *      ? `<div class="ds-alert ds-alert-info">…Angka di halaman ini bersumber dari
+     *         <strong>${…}</strong>, bukan konsolidasi seluruh perusahaan — metrik serinci ini
+     *         hanya dipunyai unit bisnis itu.</div></div>`
+     *      : '';
+     *
+     *  **Keadaan yang dijelaskannya TIDAK hilang**, dan itu perlu diketahui pemilik: di halaman
+     *  gabungan PT SMIP, angka seksi Leasing/Operation memang angka MALL saja, Hotel memang
+     *  HOTEL saja. Yang menyebutkannya sekarang tinggal JUDUL seksinya ("Chart Hotel", "Laporan
+     *  Rincian" di halaman Hotel Detail) dan pil unit di kepala halaman. */
+    const nota = '';
 
     // Sub unit yang sedang difilter. Dijaga: state bisa memuat sub unit unit bisnis LAIN kalau
     // pemakai baru berpindah halaman, dan memakainya apa adanya menghasilkan pohon kosong tanpa
