@@ -705,8 +705,28 @@ select.ds-input:read-only { padding-right: 2.25rem; }
 /* Satuan di sebelah angka besar kartu Laporan Pendukung. Kartu metrik tidak memerlukannya —
    satuannya sudah tersirat dari nama metriknya — sementara "74.512" tanpa "m2" di sini bisa
    terbaca sebagai jumlah tenant. */
+/* Label satuan yang menempel di angka besar kartu (8 September 2026). Pemilik menanyakan
+   satuan angkanya sendiri — *"berapa juta, miliar atau triliun ya"* — dan diukur di DOM waktu
+   itu satuannya memang tidak ada di halaman kartu sama sekali.
+
+   `.pr-pd-satuan` DIPERTAHANKAN sebagai alias: penataannya identik, dan membuang selektornya
+   berarti kartu Laporan Pendukung kehilangan penataan itu di setiap tempat lain yang mungkin
+   masih memakainya.
+
+   Ukurannya caption dan bobotnya 500 — sengaja jauh di bawah angkanya (2rem/700 di
+   `.pr-k-utama`, 24px di `.ds-stat-value`): yang dibaca pertama tetap angkanya, satuannya
+   penjelas. `white-space: nowrap` supaya "Rp juta" tidak pernah pecah dua baris di kartu
+   sempit — satuan yang terpotong lebih buruk daripada satuan yang tidak ada.
+
+   Prefix `#smra-wrapper` pada varian di dalam `.ds-stat-value`: aturan portal-ui memakai
+   `#smra-wrapper .ds-stat-card .ds-stat-value { font-size: 24px }` (1,2,0), jadi aturan
+   satu-class di dalamnya akan kalah dan labelnya ikut 24 px — jebakan yang sama yang
+   menggigit badge kesimpulan 8 September pagi. */
+.pr-k-satuan,
 .pr-pd-satuan { font-size: var(--type-caption-size); font-weight: 500;
-                color: var(--t-text-muted); }
+                color: var(--t-text-muted); white-space: nowrap; }
+#smra-wrapper .ds-stat-card .ds-stat-value .pr-k-satuan {
+  font-size: var(--type-caption-size); }
 /* Bar komposisi di kartu Laporan Pendukung (26 Agustus). Tingginya disamakan dengan bullet di
    kartu metrik (8 px) supaya kedua jenis kartu berbaris rapi kalau nanti bersebelahan.
 
@@ -1635,7 +1655,7 @@ html, body { overflow-x: hidden; }
          untuk seluruh prototype &mdash; dan salinan statis itulah yang pernah MEMBANTAH
          penandanya (lihat catatan di atas). -->
     <span>Prototype Dashboard Data Management</span>
-    <span class="pr-versi">Versi 8 September 2026, 15.47</span>
+    <span class="pr-versi">Versi 8 September 2026, 16.10</span>
   </footer>
 </div>
 </div>
@@ -9241,9 +9261,42 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
     : 'turunannya bukan pemecahan satu populasi, jadi tidak dijumlahkan');
 
   const SATUAN_LABEL = {
-    rp_mn: "Rp jt", rp: 'Rp', rp_m2: 'Rp/m2', m2: 'm2',
+    // `Rp juta`, bukan `Rp jt` — DIUBAH 8 September 2026 atas pertanyaan pemilik sendiri:
+    // *"ini penyebutan angkanya berapa juta, miliar atau triliun ya"*. Kalau pemiliknya perlu
+    // menanyakannya, BOD hampir pasti juga. Singkatan `jt` dipakai sejak label ini ditulis
+    // karena kamus menyebutnya `Rp'mn`; yang ditagih sekarang keterbacaan, bukan kependekan.
+    // Ia berlaku di SELURUH tempat yang memakai label ini (kartu metrik, kartu entitas, kartu
+    // Laporan Pendukung, legenda donut, tabel matriks) — sengaja satu ejaan, karena dua ejaan
+    // untuk satuan yang sama di halaman yang sama justru menambah yang harus dijelaskan.
+    rp_mn: 'Rp juta', rp: 'Rp', rp_m2: 'Rp/m2', m2: 'm2',
     unit: 'unit', orang: 'orang', persen: '%', indeks: 'indeks', rasio: 'rasio',
   };
+
+  /** Label satuan yang menempel di angka besar kartu — DIPASANG 8 September 2026.
+   *
+   *  **Pemilik yang menanyakannya, dan itu buktinya perlu**: *"ini penyebutan angkanya berapa
+   *  juta, miliar atau triliun ya?"* dengan foto layar Dashboard Management. Diukur di DOM
+   *  sungguhan waktu itu: **nol kemunculan `Rp`, `juta`, maupun `Rp jt`** di halaman itu.
+   *  Satuannya memang cuma ada di kartu Laporan Pendukung, legenda donut, dan tabel matriks —
+   *  tiga tempat yang tidak dilihat orang yang sedang membaca kartu ringkasan.
+   *
+   *  Bukan pengembalian keterangan yang dibuang 6 & 8 September: yang dibuang KALIMAT
+   *  (cara pakai, sebab angka), yang dipasang ini SATUAN — tanpanya angkanya tidak punya arti,
+   *  bukan cuma kurang penjelasan.
+   *
+   *  **`persen` memulangkan string kosong**, karena `F.nilai()` sudah menempelkan `%` sendiri;
+   *  memasangnya lagi akan memajang `12,3% %`. Ini satu-satunya satuan yang menyebut dirinya
+   *  sendiri di formatter — jadi syaratnya diturunkan dari situ, bukan didaftar tangan.
+   *
+   *  Dipakai KETIGA penyaji angka besar lewat fungsi ini, bukan disalin tiga kali: kartu
+   *  Laporan Pendukung sudah memasangnya sendiri sejak 26 Agustus dengan potongan HTML yang
+   *  sama, dan menyalinnya lagi berarti tiga tempat yang bisa berpisah tanpa satu pun error. */
+  function satuanKartu (satuan) {
+    if (satuan === 'persen') return '';
+    const label = SATUAN_LABEL[satuan];
+    if (!label) return '';
+    return ` <span class="pr-k-satuan">${esc(label)}</span>`;
+  }
 
   /** Judul kartu angka: ia harus menyebut angka SIAPA, bukan cuma "Total Revenue" — permintaan
    *  pemilik 21 Agustus. Halaman detail satu unit bisnis memakai nama unitnya; halaman awal yang
@@ -9278,7 +9331,8 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
       ? `<div class="pr-kpi-metrik">${esc(judulMetrik)}</div>` : '';
     const isi =
       `<div class="ds-stat-label">${esc(node.nama)}</div>${metrik}` +
-      `<div class="ds-stat-value">${esc(F.nilai(node.aktual, node.satuan))}</div>` +
+      `<div class="ds-stat-value">${esc(F.nilai(node.aktual, node.satuan))}` +
+        `${satuanKartu(node.satuan)}</div>` +
       `<div class="ds-stat-delta pr-tone-${tone}">${esc(delta)}</div>` +
       notaBanding(node);
 
@@ -9817,7 +9871,8 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
     // hiasan yang tampak menyampaikan sesuatu, dan pembaca yang biasa melihat penanda budget
     // di ujungnya akan membacanya sebagai "tepat sesuai budget".
     const adaBudget = ada(node.budget) && node.budget !== 0;
-    return `<div class="pr-k-utama">${esc(F.nilai(node.aktual, node.satuan))}</div>` +
+    return `<div class="pr-k-utama">${esc(F.nilai(node.aktual, node.satuan))}` +
+        `${satuanKartu(node.satuan)}</div>` +
       (adaBudget
         ? `<div class="pr-k-bullet">${CH.bullet({ aktual: node.aktual, budget: node.budget, ...(warna ? { warna } : {}) })}</div>`
         : '') +
@@ -10250,8 +10305,12 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
     return `<article class="pr-kartu pr-kartu-bisa" data-pd-kartu="${esc(def.kode)}" ` +
         `role="button" tabindex="0" aria-label="Buka rincian ${esc(def.judul)}">` +
       `<div class="pr-k-atas"><span class="pr-k-nama">${esc(def.judul)}</span></div>` +
-      `<div class="pr-k-utama">${esc(F.nilai(hasil.total, hasil.satuan))} ` +
-        `<span class="pr-pd-satuan">${esc(SATUAN_LABEL[hasil.satuan] || hasil.satuan)}</span></div>` +
+      // Satuannya lewat `satuanKartu()` sejak 8 September 2026 — potongan HTML yang dulu
+      // ditulis di sini persis sama isinya, dan menyimpannya di dua tempat berarti dua tempat
+      // yang bisa berpisah tanpa satu pun error (ejaan labelnya baru saja berubah, dan hanya
+      // satu yang akan ikut). Class `pr-pd-satuan` DIPERTAHANKAN di CSS sebagai alias.
+      `<div class="pr-k-utama">${esc(F.nilai(hasil.total, hasil.satuan))}` +
+        `${satuanKartu(hasil.satuan)}</div>` +
       pitaPendukung(iris, hasil.satuan) +
       (teratas
         ? `<div class="pr-k-capai">Terbesar: ${esc(teratas.nama)} ` +
