@@ -412,7 +412,10 @@ select.ds-input:read-only { padding-right: 2.25rem; }
 @container (max-width: 13rem) {
   .pr-k-angka { grid-template-columns: minmax(0, 1fr); }
 }
-.pr-k-sel { display: flex; justify-content: space-between; align-items: baseline; gap: var(--space-2);
+/* `position: relative` di sini yang membuat kotak keterangan `?` mustahil keluar dari kartu:
+   ia acuan bagi `.pr-bantu::after` (8 September 2026 — lihat alasan lengkapnya di sana). */
+.pr-k-sel { position: relative;
+            display: flex; justify-content: space-between; align-items: baseline; gap: var(--space-2);
             min-width: 0; }
 .pr-k-lbl { font-size: var(--type-caption-size); color: var(--t-text-muted); }
 .pr-k-val { font-variant-numeric: tabular-nums; font-weight: 600; white-space: nowrap; }
@@ -580,15 +583,33 @@ select.ds-input:read-only { padding-right: 2.25rem; }
    dan tidak berada di dalam wadah gulir yang bisa memotongnya. Lihat KAKI_VARYOY di render.js
    untuk alasan lengkapnya. */
 .pr-varyoy { margin-top: var(--space-2); }
-.pr-bantu { position: relative; display: inline-block; cursor: help;
+/* `position: static` DISENGAJA: acuan kotak keterangannya `.pr-k-sel`, bukan ikon ini. */
+.pr-bantu { position: static; display: inline-block; cursor: help;
             color: var(--t-text-muted); font-size: .9em; vertical-align: baseline; }
 .pr-bantu:focus-visible { outline: 2px solid var(--pr-c-1); outline-offset: 2px;
                           border-radius: var(--radius-sm); }
+/* **Kotaknya diacu ke BARISNYA, bukan ke ikonnya (8 September 2026).**
+   Bentuk lamanya `left: 50%; transform: translateX(-50%)` memusatkan kotak selebar 17rem pada
+   ikon `?` yang lebarnya 12 px — jadi ia menjulur ~8,5rem ke KIRI, jatuh di luar kartu, dan
+   DIPOTONG: `.pr-cv-seksi` ber-`overflow: hidden` untuk sudut tumpulnya, dan `html, body`
+   ber-`overflow-x: hidden`. Komentar di `render.js` sempat menyatakan "di KARTU tidak ada
+   wadah yang memotong" — pemilik membuktikan sebaliknya dengan foto layar.
+
+   **Percobaan pertama menjangkarnya ke KIRI, dan itu cuma memindahkan cacatnya.** Diukur di
+   browser: sisi kirinya bersih, tetapi ikon YoY% di kartu KETIGA jadi menjulur 74 px ke KANAN
+   melewati tepi seksinya. Menjangkar ke satu sisi tidak bisa benar untuk dua-duanya — CSS
+   tidak bisa mengukur ruang yang tersisa.
+
+   Yang dipakai akhirnya: acuannya `.pr-k-sel` (barisnya sendiri, lihat `position: relative`
+   di sana) dengan `left: 0; right: 0`. Kotaknya karena itu selebar BARISNYA — jadi ia
+   mustahil keluar dari kartu, sisi mana pun, di lebar layar mana pun, tanpa satu baris
+   JavaScript. `bottom` tetap mengacu ke baris itu, jadi kotaknya tetap muncul persis di atas
+   angka yang dijelaskannya. */
 .pr-bantu::after {
   content: attr(data-bantu);
-  position: absolute; z-index: 40; left: 50%; bottom: calc(100% + 6px);
-  transform: translateX(-50%);
-  width: max-content; max-width: 17rem;
+  position: absolute; z-index: 40; left: 0; right: 0; bottom: calc(100% + 6px);
+  transform: none;
+  width: auto;
   padding: var(--space-2) var(--space-3);
   background: var(--t-surf); color: var(--t-text);
   border: 1px solid var(--t-border); border-radius: var(--radius-md);
@@ -1066,6 +1087,32 @@ html, body { overflow-x: hidden; }
   line-height: 1.6;
   color: var(--t-text);
 }
+/* Kalimat kesimpulan sebagai BADGE HIJAU (8 September 2026, permintaan pemilik).
+   Warnanya dari `ds-badge-success` portal-ui — tidak ada warna baru di sini, jadi hijaunya
+   sama dengan badge lain dan tema gelapnya sudah ikut. Yang disesuaikan hanya sifat yang
+   membuat pil portal-ui tidak cocok untuk sebuah KALIMAT:
+     - `inline-flex` + `white-space` bawaannya tidak membungkus → kalimat sepanjang ini akan
+       meluap keluar layar di HP;
+     - hurufnya 10,5 px → terlalu kecil untuk kalimat yang justru dirancang jadi hal PERTAMA
+       yang dibaca BOD;
+     - tebal 600 → menebalkan SELURUH kalimat, sehingga `<strong>` di dalamnya (nama sub unit
+       terbesar) berhenti menonjol. Itu yang membuat kalimatnya bisa dibaca sekilas.
+   Sudut tumpulnya dikurangi dari pil penuh: kotak berjari-jari 999px yang isinya tiga baris
+   terbaca seperti pil yang rusak, bukan seperti pil. */
+/* **Berprefiks `#smra-wrapper`, dan itu WAJIB.** Bentuk pertama saya menulis aturan ini
+   dengan satu class (0,1,0) — dan `#smra-wrapper .ds-badge { font-size: 11.5px }` di atas
+   menang di (1,1,0), jadi kalimatnya tetap 11,5 px di layar sementara sumbernya berbunyi
+   13px. Penjaga yang membaca SUMBER hijau; yang membocorkannya `getComputedStyle`.
+   Keluarga jebakan yang sama dengan `.ds-input:read-only` yang sudah tercatat. */
+#smra-wrapper .pr-bd-kesimpulan-badge {
+  display: inline-block;
+  white-space: normal;
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-3);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.6;
+}
 /* ── Daftar batang peringkat (7 September 2026) ───────────────────────────────────────
    Menggantikan kanvas ber-viewBox di seksi Peringkat. Sebabnya di chart.js barDaftar(); yang
    penting di sini: TINGGI BARIS diatur px oleh CSS, jadi ia tidak lagi punya hubungan apa pun
@@ -1355,6 +1402,67 @@ html, body { overflow-x: hidden; }
 .pr-legend-cat-2 { border-top-color: var(--pr-cat-2); }
 .pr-legend-cat-3 { border-top-color: var(--pr-cat-3); }
 
+/* ── Tombol Export dan panel formatnya (8 September 2026) ──────────────────────────────────
+   Permintaan pemilik: tombol Export di setiap halaman Dashboard, dengan pilihan PDF dan
+   Power Point. Kedua pilihannya BELUM aktif dan dirender `disabled` — aturan proyek ini untuk
+   keadaan yang sama (tombol mati lebih jelas daripada tombol hidup yang tidak melakukan apa
+   pun), dan sebabnya ikut tertulis di panelnya.
+
+   `<details>`/`<summary>`, pola yang sama dengan dropdown ceklist metrik: buka-tutupnya bawaan
+   browser, jadi tidak ada penangan baru yang bisa lepas saat halaman digambar ulang.
+
+   Panelnya dijangkar ke KANAN (`right: 0`), bukan kiri seperti panel metrik: tombol ini duduk
+   di ujung KANAN baris filter, dan panel yang tumbuh ke kanan dari sana akan keluar layar.
+   Pelajaran yang sama dengan kotak keterangan `?` pagi ini — menjangkar ke satu sisi hanya
+   benar kalau ruangnya memang di sisi itu. */
+.pr-ex { position: relative; flex: 0 0 auto; }
+/* Penanda segitiga bawaan `<summary>` dibuang: tombolnya sudah punya caret sendiri. */
+.pr-ex-tombol { list-style: none; cursor: pointer; }
+.pr-ex-tombol::-webkit-details-marker { display: none; }
+.pr-ex-tombol:focus-visible { outline: 2px solid var(--pr-c-1); outline-offset: 2px; }
+/* 12px, sama dengan caret dropdown metrik — batas 11,5px ditetapkan sesudah keluhan Tim
+   Manajemen soal presentasi Zoom, dan penjaganya menangkap 11px yang pertama kali saya tulis. */
+.pr-ex-tanda { font-size: 12px; color: var(--t-text-muted); }
+.pr-ex[open] .pr-ex-tanda { transform: rotate(180deg); }
+.pr-ex-isi {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + var(--space-1));
+  right: 0;
+  min-width: 220px;
+  max-width: min(320px, calc(100vw - 2 * var(--space-4)));
+  padding: var(--space-2);
+  border: 1px solid var(--t-border);
+  border-radius: var(--radius-md);
+  background: var(--t-surf);
+  box-shadow: var(--shadow-md, 0 8px 24px rgb(0 0 0 / 12%));
+}
+.pr-ex-opsi {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--t-text);
+  font-size: 13px;
+  text-align: left;
+}
+.pr-ex-opsi:not(:disabled) { cursor: pointer; }
+.pr-ex-opsi:not(:disabled):hover { background: var(--t-surf-2); }
+/* Yang mati diberi warna redup DAN kursor tak-tersedia: satu penanda saja terbaca seperti
+   pilihan biasa yang kebetulan pucat. */
+.pr-ex-opsi:disabled { color: var(--t-text-muted); cursor: not-allowed; }
+.pr-ex-nota {
+  margin: var(--space-2) 0 0;
+  padding: 0 var(--space-3);
+  font-size: var(--type-caption-size);
+  line-height: 1.5;
+  color: var(--t-text-muted);
+}
+
 </style>
 </head>
 <body>
@@ -1478,8 +1586,18 @@ html, body { overflow-x: hidden; }
          Kaki ini statis (satu untuk seluruh prototype), jadi yang disebutkannya hanya hal
          yang berlaku di SEMUA halaman; cakupan per halaman ada di penanda kepalanya, yang
          memang tahu sub unit mana yang berkasnya sudah dikirim. -->
-    <span>Prototype Dashboard Data Management &middot; PT SMIP &middot; <strong>Kelima dashboard memakai angka riil</strong> dari Tim Management &mdash; penanda di kepala tiap halaman menyebutkan cakupannya.</span>
-    <span class="pr-versi">Versi 7 September 2026, 22.27</span>
+    <!-- **DIPENDEKKAN 8 September 2026**, permintaan pemilik: foto layarnya menggarisi
+         "PT SMIP &middot; Kelima dashboard memakai angka riil dari Tim Management &mdash; penanda
+         di kepala tiap halaman menyebutkan cakupannya." dan memintanya dihilangkan. Bagian dari
+         permintaan yang lebih besar hari itu, membuang kalimat keterangan dari layar.
+
+         Yang hilang isinya, bukan alasannya: penanda 'ANGKA RIIL' di KEPALA tiap halaman tetap
+         ada dan tetap dihitung dari kamus, jadi pernyataan tentang keaslian angka masih dibuat
+         di tempat yang memang tahu cakupan per halaman. Kaki ini yang menyalinnya secara statis
+         untuk seluruh prototype &mdash; dan salinan statis itulah yang pernah MEMBANTAH
+         penandanya (lihat catatan di atas). -->
+    <span>Prototype Dashboard Data Management</span>
+    <span class="pr-versi">Versi 8 September 2026, 11.22</span>
   </footer>
 </div>
 </div>
@@ -1682,6 +1800,18 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
     || ATURAN_TAHUNAN_SATUAN[satuan]
     || 'jumlah';
 
+  /** Teks pilihan "seluruh unit bisnis", DIPAKU DI SATU TEMPAT (8 September 2026).
+   *
+   *  Ia muncul di TIGA tempat yang harus berbunyi sama — opsi filter Unit Bisnis, judul kartu
+   *  angka (`judulTotalRevenue`), dan pil unit di kepala halaman — dan sejak pemilik meminta
+   *  pil ikut filternya, ketiganya membaca satu literal. Ketiga salinan tulisan tangan itu
+   *  bisa menyimpang tanpa satu pun error, dan yang terlihat pemakai cuma dua nama berbeda
+   *  untuk pilihan yang sama.
+   *
+   *  Sebabnya sudah tercatat sejak 23 Agustus: pemilik mengganti "ALL" jadi kalimat ini justru
+   *  supaya pil dan judul memakai kata yang SAMA dengan yang tertulis di filternya. */
+  const NAMA_SEMUA_UNIT = 'Semua Unit Bisnis';
+
   const unitBisnisDari = (kode) => UNIT_BISNIS.find((u) => u.kode === kode) || null;
   /** Nama unit bisnis yang DIPAJANG ke pemakai. Satu tempat, dan itu perlu: sampai 27 Agustus
    *  tiga pemanggil (app.js dua kali, render.js dua kali) menuliskan sendiri
@@ -1700,15 +1830,35 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
    *  "Semua SPM" karena app.js menyisipkan KODE unit bisnisnya (`Semua ${h.unitBisnis}`), dan
    *  penjaga yang memindai keluaran render.js tidak bisa melihatnya. Yang ketemu di browser.
    *
-   *  Perilakunya dipertahankan apa adanya: sub unit yang dipilih memakai namanya sendiri;
-   *  tanpa pilihan, halaman modul memakai "Semua <unit bisnis>" dan halaman gabungan "PT SMIP". */
-  const judulPilUnit = (kodeUnit, kodeSub) => {
+   *  Halaman modul: sub unit yang dipilih memakai namanya sendiri; tanpa pilihan "Semua
+   *  <unit bisnis>".
+   *
+   *  **Halaman gabungan IKUT FILTER UNIT BISNIS sejak 8 September 2026.** Permintaan pemilik:
+   *  *"Untuk PT SMIP di atas tolong rubah jadi Unit Bisnis saja ketika filternya
+   *  berubah-ubah"*, dengan foto layar berpanah dari filter Unit Bisnis ke pil ini. Sampai
+   *  hari itu pil selalu berbunyi "PT SMIP" di halaman Management berapa pun filternya —
+   *  jadi memfilter ke HOTEL memberi layar penuh angka HOTEL dengan pil yang menyebut seluruh
+   *  perusahaan.
+   *
+   *  `kodeUnitFilter` hanya berlaku waktu `kodeUnit` null (halaman gabungan). Ia sengaja
+   *  parameter KETIGA dan bukan menimpa yang pertama: yang pertama berarti "halaman ini milik
+   *  unit itu", yang ketiga "pemakai sedang menyaring ke unit itu" — dua hal berbeda yang
+   *  pernah tertukar di `state.subUnit` sampai 22 Agustus.
+   *
+   *  Ikonnya diturunkan dari NAMA TAMPILAN, bukan kodenya: kode 'SPM' memberi 'SP' sementara
+   *  yang tertulis di sebelahnya 'OFFICE'. */
+  const judulPilUnit = (kodeUnit, kodeSub, kodeUnitFilter) => {
     const daftar = kodeUnit ? (SUB_UNIT[kodeUnit] || []) : UNIT_BISNIS;
     const pilih = daftar.find((s) => s.kode === kodeSub);
-    return {
-      judul: pilih ? pilih.nama : (kodeUnit ? `Semua ${namaUnitBisnis(kodeUnit)}` : 'PT SMIP'),
-      ikon: (pilih ? pilih.kode : 'SM').slice(0, 2).toUpperCase(),
-    };
+    if (pilih) return { judul: pilih.nama, ikon: pilih.kode.slice(0, 2).toUpperCase() };
+    if (kodeUnit) {
+      return { judul: `Semua ${namaUnitBisnis(kodeUnit)}`, ikon: 'SM' };
+    }
+    if (kodeUnitFilter && kodeUnitFilter !== 'SEMUA' && unitBisnisDari(kodeUnitFilter)) {
+      const nama = namaUnitBisnis(kodeUnitFilter);
+      return { judul: nama, ikon: nama.slice(0, 2).toUpperCase() };
+    }
+    return { judul: NAMA_SEMUA_UNIT, ikon: 'SM' };
   };
   /** Label kontrol sub unit (huruf besar, mengikuti label filter lain) dan teks opsi
    *  konsolidasinya. Satu tempat, supaya keduanya tidak bisa menyimpang satu dari yang lain. */
@@ -2990,10 +3140,50 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
   // ketiga — keputusan pemilik; lihat catatan panjangnya di simpulnya di atas. Urutan ini
   // wajib tetap sepakat dengan `KELOMPOK_AKAR.keuangan`, dan sesudah perubahan itu kelompok
   // "Net" berisi EBITDA sendirian.
+  // **Disusun ulang lagi 8 September 2026, dan `RASIO` KELUAR.** Permintaan pemilik:
+  // *"Urutannya REVENUE,EXPENSE,EBITDA,NPAT sisanya berikutnya"*, dan *"Untuk Rasio Hilangkan
+  // saja deh baik di card dan di list rincian"*. Urutan ini dipakai kartu DAN tabel Laporan
+  // sekaligus (lewat `urutanKartuAkar()`), jadi keduanya ikut sekali sunting — itu sebabnya
+  // `RASIO` cukup dibuang dari SATU daftar untuk hilang dari dua tempat.
+  //
+  // `RASIO` TIDAK dibuang dari kamusnya: konverter membacanya, dan nama yang hilang dari kamus
+  // membuat barisnya jatuh ke `TIDAK DIKENALI` — cacat yang sudah menggigit pagi ini juga
+  // (lihat `OP_BACA_TANPA_TAMPIL` di konverter). Yang mengeluarkannya dari layar daftar ini
+  // plus `AKAR_TIDAK_DITAMPILKAN` di bawah.
   const URUTAN_KARTU_FA = [
-    'REVENUE', 'EXPENSE', 'EBITDA',
-    'NPAT', 'OMZET REVENUE SHARING', 'EMPLOYEE COST', 'ACCOUNT RECEIVABLE',
-    'RASIO', 'INCOME NETT',
+    'REVENUE', 'EXPENSE', 'EBITDA', 'NPAT',
+    'OMZET REVENUE SHARING', 'EMPLOYEE COST', 'ACCOUNT RECEIVABLE', 'INCOME NETT',
+  ];
+
+  /** Metrik AKAR yang sengaja tidak ditampilkan di halaman detail seksinya (8 September 2026).
+   *
+   *  Daftarnya pendek dan tiap barisnya wajib menyebut sebabnya. Ia BUKAN tempat menampung
+   *  metrik yang kebetulan lupa didaftar ke kelompok — metrik seperti itu memang harus membuat
+   *  penjaga cakupan merah, karena kalau tidak ia hilang dari halaman tanpa jejak.
+   *
+   *   - `RASIO` — pemilik 8 September 2026: *"Untuk Rasio Hilangkan saja deh baik di card dan
+   *     di list rincian."* Angkanya TETAP diimpor dan tetap ada di `nyata.js`; yang dibuang
+   *     penampilannya. Kalau diminta kembali, ia dikembalikan ke `URUTAN_KARTU_FA` dan ke
+   *     kelompoknya, dan barisnya dibuang dari sini. */
+  const AKAR_TIDAK_DITAMPILKAN = {
+    keuangan: ['RASIO'],
+  };
+
+  /** Format Export yang ditawarkan tombol Export (8 September 2026).
+   *
+   *  Keputusan pemilik: *"nanti format pilihannya PDF, Power Point. Buat button pilihannya sj
+   *  dlu"* — jadi keduanya BELUM aktif, dan `render.js` merendernya mati dengan sebabnya
+   *  tertulis di panelnya.
+   *
+   *  Ada DI KAMUS karena begitu salah satunya aktif, yang mengaktifkannya butuh daftar yang
+   *  sama — dan dua daftar untuk satu maksud selalu bisa berpisah tanpa satu pun error (sudah
+   *  sekali pagi ini, `OP_BACA_TANPA_TAMPIL`). Nama ikonnya diverifikasi ada di
+   *  `portal-ui.css`; class `bi-*` yang salah tidak melempar error, ia hanya jadi kotak kosong.
+   *
+   *  `nama` ditulis "Power Point" (dua kata) mengikuti tulisan pemilik, bukan "PowerPoint". */
+  const FORMAT_EXPORT = [
+    { kode: 'pdf', nama: 'PDF', ikon: 'bi-file-earmark-pdf' },
+    { kode: 'pptx', nama: 'Power Point', ikon: 'bi-file-earmark-slides' },
   ];
 
   /** Halaman yang kamusnya memakai urutan kartu di atas. */
@@ -3128,15 +3318,18 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
       // ACCOUNT RECEIVABLE. Tiga di antaranya menggantikan INCOME NETT, OMZET REVENUE SHARING,
       // dan EMPLOYEE COST — ketiganya tetap ada sebagai kartu metrik di halaman
       // Financial Performance Detail, jadi tidak ada angka yang hilang dari prototype.
-      { judul: 'EXPENSE', halaman: 'keuangan', metrik: 'EXPENSE', chart: 'garis',
-        catatan: 'Sumber: FA MALL — metrik ini belum ada di HOTEL & OFFICE' },
-      { judul: 'EBITDA', halaman: 'keuangan', metrik: 'EBITDA', chart: 'area',
-        catatan: 'Sumber: FA MALL — metrik ini belum ada di HOTEL & OFFICE' },
+      // **Keterangan `catatan` DIBUANG 8 September 2026**, permintaan pemilik: *"untuk
+      // keterangan-keterangan di card-card tolong di hilangkan saja"* (foto layar menandai
+      // keterangan ACCOUNT RECEIVABLE dan nota budget). Yang hilang di sini: *"Sumber: FA
+      // MALL — metrik ini belum ada di HOTEL & OFFICE"* di ketiga kartu, dan keterangan
+      // ACCOUNT RECEIVABLE di bawah. Bidang `catatan` sendiri TETAP didukung penyaji supaya
+      // keterangan bisa dipasang lagi dengan satu baris kalau diminta.
+      { judul: 'EXPENSE', halaman: 'keuangan', metrik: 'EXPENSE', chart: 'garis' },
+      { judul: 'EBITDA', halaman: 'keuangan', metrik: 'EBITDA', chart: 'area' },
       // 'NPAT' ada DUA KALI di kamus FA (induk 'hitung' dan detail di bawahnya). Yang terambil
       // di sini yang pertama ditemukan, yaitu induknya — dan itu memang yang benar: nilainya
       // sendiri yang dihitung dari kedua PAT, bukan salah satu barisnya.
-      { judul: 'NPAT', halaman: 'keuangan', metrik: 'NPAT', chart: 'kolom',
-        catatan: 'Sumber: FA MALL — metrik ini belum ada di HOTEL & OFFICE' },
+      { judul: 'NPAT', halaman: 'keuangan', metrik: 'NPAT', chart: 'kolom' },
       // ACCOUNT RECEIVABLE bertipe `grup`: ia TIDAK punya angka sendiri, hanya dua turunan yang
       // artinya berlawanan (Collection = sudah tertagih, Aging > 60 = tertunggak). Menjumlahkan
       // keduanya bukan angka yang lazim, dan kartu bertanda '—' terbaca seperti data yang
@@ -3144,9 +3337,7 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
       // benar-benar tertunggak, yang memang dilihat manajemen — dan chart-nya membandingkan
       // keduanya. `nilaiDari` yang membuat itu bisa: angka besar dari turunan, chart dari induk.
       { judul: 'ACCOUNT RECEIVABLE', halaman: 'keuangan', metrik: 'ACCOUNT RECEIVABLE',
-        nilaiDari: 'Aging > 60', chart: 'komposisi',
-        catatan: 'Sumber: FA MALL · angka besar = Aging > 60 (piutang tertunggak); '
-                 + 'chart membandingkannya dengan Collection' },
+        nilaiDari: 'Aging > 60', chart: 'komposisi' },
     ],
     // MALL memakai kartu yang SAMA dengan PT SMIP sejak 2 September, permintaan pemilik: kartu
     // chart halaman detail harus sama dengan yang di Halaman Utama, dan di Halaman Utama group
@@ -3162,9 +3353,7 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
       { judul: 'EBITDA', halaman: 'keuangan', metrik: 'EBITDA', chart: 'area' },
       { judul: 'NPAT', halaman: 'keuangan', metrik: 'NPAT', chart: 'kolom' },
       { judul: 'ACCOUNT RECEIVABLE', halaman: 'keuangan', metrik: 'ACCOUNT RECEIVABLE',
-        nilaiDari: 'Aging > 60', chart: 'komposisi',
-        catatan: 'Angka besar = Aging > 60 (piutang tertunggak); '
-                 + 'chart membandingkannya dengan Collection' },
+        nilaiDari: 'Aging > 60', chart: 'komposisi' },
     ],
     // HOTEL dan SPM diisi di bawah, sesudah `KARTU_SEKSI` — lihat catatannya di sana.
   };
@@ -3549,15 +3738,23 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
     // punya barisnya SENDIRI di berkas (baris 32 dan 37), bukan diturunkan dari Revenue −
     // Expense, jadi keduanya tidak akan pernah rekonsiliasi dengan Net Income. Menaruhnya di
     // bawah judul yang sama akan menjanjikan hubungan yang tidak ada.
+    // **GROSS dan NET DIHAPUS 8 September 2026, dan isinya masuk Laporan Pendukung.**
+    // Permintaan pemilik: *"Untuk halaman Financial Performance Detail di Colapse GROSS & NET
+    // Hilangkan saja. Di gabung di Colapse Laporan Pendukung. Jadi untuk card
+    // REVENUE,EXPENSE,EBITDA Pindah ke Laporan Pendukung. Urutannya REVENUE,EXPENSE,EBITDA,NPAT
+    // sisanya berikutnya."*
+    //
+    // Ini MENCABUT pengelompokan 5 September (sore) yang beliau sendiri pilih — dan sebab
+    // pengelompokan itu tetap benar sejauh ia berlaku: sampai 7 September ada TIGA angka yang
+    // sama-sama terbaca sebagai laba bersebelahan (NET INCOME 534.252 · EBITDA 528.200 · NPAT
+    // 382.669), dan judul kelompok menjawab "yang mana bottom line-nya". **`NET INCOME` sudah
+    // dihapus 7 September**, jadi keadaan yang dulu dijawab pengelompokan itu sudah tidak ada:
+    // yang tinggal EBITDA dan NPAT, dan urutan yang diminta pemilik (REVENUE → EXPENSE →
+    // EBITDA → NPAT) sendiri sudah menyampaikan alurnya.
+    //
+    // Satu kelompok berarti satu seksi buka-tutup, dan urutannya ikut `URUTAN_KARTU_FA` —
+    // bukan urutan yang ditulis di sini. Keduanya wajib sepakat, dan ada penjaganya.
     keuangan: [
-      { kode: 'grup-gross', judul: 'Gross', ikon: 'bi-arrow-left-right',
-        metrik: ['REVENUE', 'EXPENSE'] },
-      // **Kelompok "Net" berisi EBITDA sejak 7 September (sore)**, menggantikan `NET INCOME`
-      // yang dihapus — keputusan pemilik, sebabnya di catatan simpulnya di kamus di atas.
-      // EBITDA karena itu PINDAH ke sini dari Laporan Pendukung; ia tidak boleh tinggal di
-      // keduanya, karena kartu yang sama di dua kelompok akan memajang satu angka dua kali
-      // di satu layar — persis keadaan yang membuat pemilik melaporkan hal ini.
-      { kode: 'grup-net', judul: 'Net', ikon: 'bi-wallet2', metrik: ['EBITDA'] },
       // Judulnya 'Laporan Pendukung' sejak 5 September (malam), permintaan pemilik. Nama yang
       // sama dipakai seksi donut di halaman Leasing; keduanya tidak pernah muncul di halaman
       // yang sama, dan artinya memang sama: yang MENDUKUNG angka utama, bukan angka utamanya.
@@ -3574,9 +3771,18 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
       // ("setiap metrik akar masuk tepat satu kelompok"); yang berubah kartu mana yang
       // DIRENDER, dan itu `kartuAnakDari` — mekanisme yang sama dengan Digital Media di
       // kamus Operation.
-      { kode: 'grup-lain', judul: 'Laporan Pendukung', ikon: 'bi-list-ul',
-        metrik: ['NPAT', 'OMZET REVENUE SHARING', 'EMPLOYEE COST',
-                 'ACCOUNT RECEIVABLE', 'RASIO', 'INCOME NETT'],
+      // **`RASIO` KELUAR 8 September 2026** — lihat `AKAR_TIDAK_DITAMPILKAN` di atas.
+      // Kelompok ini sekarang satu-satunya di halaman FA, jadi ia memuat SELURUH metrik akar
+      // yang ditampilkan. Urutan kartunya TIDAK diambil dari sini melainkan dari
+      // `URUTAN_KARTU_FA` — daftar ini yang menentukan kartu mana MASUK, bukan di mana.
+      // **Judulnya 'Laporan Financial Performance' sejak 8 September 2026** (permintaan
+      // pemilik), menggantikan 'Laporan Pendukung' yang dipakainya sejak 5 September. Nama
+      // 'Laporan Pendukung' sendiri TIDAK bebas: seksi donut halaman Leasing memakainya, dan
+      // keduanya tidak pernah muncul di halaman yang sama.
+      { kode: 'grup-lain', judul: 'Laporan Financial Performance', ikon: 'bi-list-ul',
+        metrik: ['REVENUE', 'EXPENSE', 'EBITDA', 'NPAT',
+                 'OMZET REVENUE SHARING', 'EMPLOYEE COST',
+                 'ACCOUNT RECEIVABLE', 'INCOME NETT'],
         kartuAnakDari: ['INCOME NETT'] },
     ],
     operation: [
@@ -3814,10 +4020,12 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
     GRUP_MALL, seksiRata,
     entitasDari, entitasDariNama, seksiUntuk, seksiRingkasanUntuk,
     unitBisnisDari, namaUnitBisnis, judulPilUnit, labelSubUnit, namaSemuaSubUnit,
+    NAMA_SEMUA_UNIT,
     namaSubUnit, metrikBanding, metrikBandingAwal, metrikBandingAda,
     aturanTahunan, ATURAN_TAHUNAN_NAMA,
     KARTU_FINANSIAL, kartuFinansialUntuk, KARTU_SEKSI, kartuChartSeksi,
     SEKSIDETAIL, judulSeksiDetail, halamanSumberSeksi, urutanKartuAkar,
+    AKAR_TIDAK_DITAMPILKAN, FORMAT_EXPORT,
     KELOMPOK_AKAR, kelompokAkar,
     DIMENSI_PENDUKUNG, PENDUKUNG, PENDUKUNG_SEKSI, UKURAN_PENDUKUNG,
     pendukungUntuk, pendukungDari, dimensiPendukung,
@@ -3855,7 +4063,7 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
  *   LEASING\Summarecon Samasta Jimbaran Bali.xlsx
  * di REKAP_DASHBOARD\DATA_PERIODE (di LUAR repo).
  *
- * Terakhir diimpor: 2026-09-07
+ * Terakhir diimpor: 2026-09-08
  * Cakupan keuangan: SMPS 2024-01…2026-06 · MKOJ 2024-01…2026-07 · SKGM 2024-01…2026-06 · SMBD 2024-01…2026-07 · SVJL 2024-01…2026-07 · SMTB 2024-01…2026-07 · SQPP 2024-01…2026-06 · SQPB 2024-01…2026-06
  * Cakupan hotel: HHKG 2024-01…2026-07 · PHKG 2024-01…2026-07 · HHBK 2024-01…2026-07 · HOPJ 2024-01…2026-07 · HHSP 2026-03…2026-07
  * Cakupan spm: PSBK 2024-01…2026-07 · SCBP 2024-01…2026-07
@@ -3881,7 +4089,7 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
 
   P.nyata = {
     META: {
-      "diimpor": "2026-09-07",
+      "diimpor": "2026-09-08",
       "berkas": [
         "Summarecon Mall Serpong.xlsx",
         "Summarecon Mall Bekasi.xlsx",
@@ -4041,34 +4249,34 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
     keuangan: {
         SMPS: {
           aktual: {
-            "REVENUE/Revenue Property Account/Revenue Rental Mall 1": {"2024-01":8105.7551,"2024-02":8321.3835,"2024-03":8127.4077,"2024-04":8490.6737,"2024-05":8571.1444,"2024-06":8050.4894,"2024-07":8432.7814,"2024-08":8521.814,"2024-09":8513.6966,"2024-10":8507.3422,"2024-11":8789.7271,"2024-12":8700.0842,"2025-01":8802.673,"2025-02":8420.0869,"2025-03":8594.3388,"2025-04":8896.1011,"2025-05":8431.7835,"2025-06":8459.4858,"2025-07":8536.3914,"2025-08":8511.8333,"2025-09":8751.5847,"2025-10":8234.0112,"2025-11":8629.6498,"2025-12":8748.593,"2026-01":9040.309,"2026-02":8688.3955,"2026-03":8385.402,"2026-04":9169.3653,"2026-05":8776.6055,"2026-06":8901.9147},
-            "REVENUE/Revenue Property Account/Revenue Rental Mall 2": {"2024-01":10008.1174,"2024-02":9545.3045,"2024-03":9543.8468,"2024-04":9756.678,"2024-05":9995.3463,"2024-06":10300.1585,"2024-07":9646.829,"2024-08":10340.783,"2024-09":10514.4317,"2024-10":10341.8267,"2024-11":10312.4601,"2024-12":10081.2523,"2025-01":11043.452,"2025-02":11017.1165,"2025-03":9941.3896,"2025-04":10985.1141,"2025-05":11183.1794,"2025-06":10592.1544,"2025-07":10486.912,"2025-08":10763.1254,"2025-09":10868.0997,"2025-10":10924.7906,"2025-11":10923.1008,"2025-12":11053.8037,"2026-01":10864.5827,"2026-02":11231.8602,"2026-03":10402.1802,"2026-04":11071.0733,"2026-05":10824.1196,"2026-06":11085.6224},
-            "REVENUE/Revenue Operation Account/Revenue Service Charge Mall 1": {"2024-01":3539.8983,"2024-02":3600.5484,"2024-03":3582.2493,"2024-04":3706.6445,"2024-05":3708.8899,"2024-06":3700.1994,"2024-07":3648.4286,"2024-08":3666.3445,"2024-09":3651.9607,"2024-10":3620.6265,"2024-11":3692.4871,"2024-12":3701.7425,"2025-01":3744.6458,"2025-02":3696.0206,"2025-03":3799.2996,"2025-04":3771.3996,"2025-05":3734.1194,"2025-06":3742.8833,"2025-07":3774.4611,"2025-08":3648.1346,"2025-09":3683.1566,"2025-10":3560.6755,"2025-11":3661.8862,"2025-12":3696.0115,"2026-01":3928.6521,"2026-02":3761.3859,"2026-03":4326.5262,"2026-04":4002.3897,"2026-05":4008.2266,"2026-06":4013.8256},
+            "REVENUE/Revenue Property Account/Revenue Rental Mall 1": {"2024-01":7954.4653,"2024-02":8241.5526,"2024-03":7961.8815,"2024-04":8223.9716,"2024-05":8360.5564,"2024-06":7791.9513,"2024-07":8197.6392,"2024-08":8316.2387,"2024-09":8290.0088,"2024-10":8280.9057,"2024-11":8533.6494,"2024-12":8442.4403,"2025-01":8585.3281,"2025-02":8280.1743,"2025-03":8374.29,"2025-04":8695.664,"2025-05":8198.0059,"2025-06":8242.5381,"2025-07":8309.631,"2025-08":8297.4692,"2025-09":8535.1587,"2025-10":8061.8623,"2025-11":8418.3322,"2025-12":8486.1053,"2026-01":8777.2221,"2026-02":8450.9688,"2026-03":8056.3314,"2026-04":8949.3489,"2026-05":8474.377,"2026-06":8643.1388},
+            "REVENUE/Revenue Property Account/Revenue Rental Mall 2": {"2024-01":9947.6954,"2024-02":9412.2955,"2024-03":9478.3658,"2024-04":9718.0592,"2024-05":9945.2122,"2024-06":10268.4369,"2024-07":9617.9674,"2024-08":10309.0614,"2024-09":10513.8536,"2024-10":10341.8267,"2024-11":10312.4601,"2024-12":10027.0401,"2025-01":11043.452,"2025-02":10984.377,"2025-03":9908.6501,"2025-04":10931.8765,"2025-05":11162.6813,"2025-06":10536.9524,"2025-07":10452.2082,"2025-08":10712.2267,"2025-09":10855.615,"2025-10":10860.4055,"2025-11":10886.9932,"2025-12":10992.0103,"2026-01":10819.7765,"2026-02":11187.054,"2026-03":10357.374,"2026-04":11013.616,"2026-05":10790.1145,"2026-06":11038.9659},
+            "REVENUE/Revenue Operation Account/Revenue Service Charge Mall 1": {"2024-01":3539.8983,"2024-02":3600.5484,"2024-03":3582.2493,"2024-04":3706.6445,"2024-05":3708.8899,"2024-06":3700.1994,"2024-07":3648.4286,"2024-08":3666.3445,"2024-09":3651.9607,"2024-10":3620.6265,"2024-11":3692.4871,"2024-12":3701.7425,"2025-01":3744.6458,"2025-02":3696.0206,"2025-03":3799.2996,"2025-04":3771.3996,"2025-05":3734.1194,"2025-06":3742.8833,"2025-07":3774.4611,"2025-08":3648.1346,"2025-09":3683.1566,"2025-10":3560.6755,"2025-11":3661.8862,"2025-12":3696.0115,"2026-01":3794.3637,"2026-02":3638.8324,"2026-03":4167.7297,"2026-04":3880.5332,"2026-05":3863.7973,"2026-06":3880.7041},
             "REVENUE/Revenue Operation Account/Revenue Service Charge Mall 2": {"2024-01":4088.3491,"2024-02":4068.3442,"2024-03":4085.8523,"2024-04":4472.3102,"2024-05":4347.4314,"2024-06":4493.7895,"2024-07":4578.8635,"2024-08":4293.7849,"2024-09":4519.6839,"2024-10":4504.2151,"2024-11":4557.5368,"2024-12":4569.9424,"2025-01":4862.4797,"2025-02":4939.7075,"2025-03":4880.7855,"2025-04":4952.5503,"2025-05":4894.831,"2025-06":4903.4626,"2025-07":4808.4714,"2025-08":4895.5042,"2025-09":4910.7425,"2025-10":4889.9028,"2025-11":4874.4794,"2025-12":4896.8084,"2026-01":4794.235,"2026-02":4728.5695,"2026-03":4723.3088,"2026-04":4730.8485,"2026-05":4697.6814,"2026-06":4698.7006},
-            "REVENUE/Revenue Operation Account/Marketing Department": {"2024-01":4457.9518,"2024-02":4059.3196,"2024-03":5394.8417,"2024-04":4393.2433,"2024-05":5682.1377,"2024-06":5054.597,"2024-07":4640.7309,"2024-08":6460.6834,"2024-09":5285.4393,"2024-10":4430.4974,"2024-11":5692.4847,"2024-12":5871.847,"2025-01":5823.7392,"2025-02":5200.3518,"2025-03":6424.2596,"2025-04":6142.991,"2025-05":5572.9661,"2025-06":5197.0475,"2025-07":5704.1793,"2025-08":4898.8078,"2025-09":8409.6594,"2025-10":3972.9791,"2025-11":4862.0554,"2025-12":6436.2136,"2026-01":6008.8697,"2026-02":4620.4967,"2026-03":6528.9728,"2026-04":4500.1938,"2026-05":5658.3292,"2026-06":5407.9973},
-            "REVENUE/Revenue Operation Account/Parking": {"2024-01":2906.6281,"2024-02":3267.0984,"2024-03":3257.7732,"2024-04":3490.2232,"2024-05":3447.9106,"2024-06":5176.0769,"2024-07":2961.5466,"2024-08":3917.2868,"2024-09":3594.3881,"2024-10":3471.953,"2024-11":3673.9621,"2024-12":3012.194,"2025-01":3711.6169,"2025-02":2996.9262,"2025-03":3849.9962,"2025-04":3525.5811,"2025-05":3698.3242,"2025-06":3508.6758,"2025-07":3563.6299,"2025-08":3623.3613,"2025-09":3314.4846,"2025-10":3171.5453,"2025-11":3410.849,"2025-12":4088.1012,"2026-01":3615.6698,"2026-02":3166.4317,"2026-03":3880.977,"2026-04":3339.0124,"2026-05":3881.1303,"2026-06":3516.7923},
-            "REVENUE/Revenue Operation Account/Other Operating Revenue": {"2024-01":722.7474,"2024-02":812.1663,"2024-03":561.7176,"2024-04":475.377,"2024-05":785.0259,"2024-06":599.1098,"2024-07":753.6432,"2024-08":594.795,"2024-09":504.5778,"2024-10":877.0331,"2024-11":528.2304,"2024-12":93.4682,"2025-01":561.3494,"2025-02":794.0781,"2025-03":648.2092,"2025-04":626.2926,"2025-05":1559.5708,"2025-06":957.5444,"2025-07":1007.9947,"2025-08":1226.5277,"2025-09":914.036,"2025-10":1030.1847,"2025-11":782.0245,"2025-12":1418.6796,"2026-01":772.625,"2026-02":771.7256,"2026-03":1023.3283,"2026-04":687.0816,"2026-05":924.6356,"2026-06":1411.8731},
+            "REVENUE/Revenue Operation Account/Marketing Department": {"2024-01":4586.9279,"2024-02":4059.3196,"2024-03":5394.8417,"2024-04":4393.2433,"2024-05":5682.1377,"2024-06":10688.9767,"2024-07":6063.7722,"2024-08":11630.4554,"2024-09":9073.0238,"2024-10":4921.9125,"2024-11":5692.4847,"2024-12":6107.8561,"2025-01":5823.7392,"2025-02":5200.3518,"2025-03":8246.6233,"2025-04":6150.691,"2025-05":5681.6661,"2025-06":5648.5475,"2025-07":6177.5793,"2025-08":5225.5639,"2025-09":13709.4133,"2025-10":5228.7309,"2025-11":5169.7632,"2025-12":7193.9662,"2026-01":6127.0644,"2026-02":4851.4629,"2026-03":6761.7675,"2026-04":4606.9789,"2026-05":5778.9239,"2026-06":5641.0539},
+            "REVENUE/Revenue Operation Account/Parking": {"2024-01":3851.382,"2024-02":4320.3105,"2024-03":4422.8925,"2024-04":4062.4159,"2024-05":4105.1164,"2024-06":4341.8645,"2024-07":4515.1685,"2024-08":4183.8474,"2024-09":4387.78,"2024-10":4164.3559,"2024-11":4318.2091,"2024-12":4646.155,"2025-01":4376.6109,"2025-02":3583.9741,"2025-03":4478.7341,"2025-04":4080.1876,"2025-05":4340.2387,"2025-06":4161.7568,"2025-07":4163.9005,"2025-08":4249.1545,"2025-09":3933.0636,"2025-10":3770.9959,"2025-11":3997.9064,"2025-12":4754.9136,"2026-01":4223.3141,"2026-02":3756.4868,"2026-03":4548.8505,"2026-04":3923.9323,"2026-05":4534.9395,"2026-06":4214.955},
+            "REVENUE/Revenue Operation Account/Other Operating Revenue": {"2024-01":1580.2151,"2024-02":1674.9413,"2024-03":1498.9226,"2024-04":1709.0311,"2024-05":1839.6359,"2024-06":1771.5466,"2024-07":1821.3277,"2024-08":1495.2527,"2024-09":1412.6928,"2024-10":1442.0371,"2024-11":1564.7918,"2024-12":1766.1756,"2025-01":1834.7344,"2025-02":1816.4445,"2025-03":1993.9712,"2025-04":2114.4999,"2025-05":2947.054,"2025-06":2176.4944,"2025-07":2136.8242,"2025-08":2522.0784,"2025-09":2047.9052,"2025-10":2281.1414,"2025-11":2000.3841,"2025-12":2650.154,"2026-01":2533.7985,"2026-02":2252.2353,"2026-03":3047.5803,"2026-04":2271.3071,"2026-05":2844.5053,"2026-06":3042.0442},
             "EXPENSE/Property Expense (Overhead)": {"2024-01":913.6479,"2024-02":772.371,"2024-03":910.8709,"2024-04":871.6948,"2024-05":873.4739,"2024-06":-1591.9659,"2024-07":495.0402,"2024-08":3542.9616,"2024-09":968.3403,"2024-10":799.3975,"2024-11":874.9188,"2024-12":755.3602,"2025-01":773.546,"2025-02":796.7715,"2025-03":950.5494,"2025-04":890.598,"2025-05":746.262,"2025-06":826.6557,"2025-07":825.7975,"2025-08":726.051,"2025-09":719.3162,"2025-10":746.583,"2025-11":723.1239,"2025-12":805.0248,"2026-01":783.5921,"2026-02":737.8452,"2026-03":814.998,"2026-04":732.4672,"2026-05":784.6379,"2026-06":784.4231},
-            "EXPENSE/Operation Expense/Departemen Exp": {"2024-01":4472.3918,"2024-02":4650.2815,"2024-03":5559.8519,"2024-04":6122.2127,"2024-05":5797.6513,"2024-06":1315.9303,"2024-07":4816.8307,"2024-08":3604.1518,"2024-09":4583.2935,"2024-10":4903.5888,"2024-11":3741.9931,"2024-12":6636.6198,"2025-01":3994.491,"2025-02":4611.4386,"2025-03":5640.6567,"2025-04":4140.1589,"2025-05":4761.5651,"2025-06":4692.7556,"2025-07":4379.6013,"2025-08":4270.0637,"2025-09":4231.3605,"2025-10":5250.0317,"2025-11":4444.4382,"2025-12":4204.3334,"2026-01":4112.8014,"2026-02":3997.2232,"2026-03":5773.5,"2026-04":5114.9162,"2026-05":5036.5189,"2026-06":4866.0258},
-            "EXPENSE/Operation Expense/Marketing Exp": {"2024-01":3736.7001,"2024-02":3269.1274,"2024-03":1694.2564,"2024-04":831.8795,"2024-05":811.0816,"2024-06":-1797.7411,"2024-07":5249.5646,"2024-08":2515.0923,"2024-09":4598.5748,"2024-10":2156.6717,"2024-11":2286.6458,"2024-12":1938.6769,"2025-01":2639.6756,"2025-02":2569.9401,"2025-03":1306.1988,"2025-04":1075.7493,"2025-05":730.1698,"2025-06":1122.9463,"2025-07":1704.2976,"2025-08":2314.5853,"2025-09":1245.5465,"2025-10":3477.1516,"2025-11":832.3833,"2025-12":1808.1496,"2026-01":870.8143,"2026-02":1923.7886,"2026-03":1216.1218,"2026-04":1330.6325,"2026-05":639.6043,"2026-06":720.3245},
-            "EXPENSE/Operation Expense/G & A Exp": {"2024-01":3886.9543,"2024-02":6044.1364,"2024-03":3207.806,"2024-04":3355.0551,"2024-05":2259.5674,"2024-06":3809.3595,"2024-07":4151.33,"2024-08":7981.2069,"2024-09":6258.542,"2024-10":3348.435,"2024-11":3457.1011,"2024-12":3314.6665,"2025-01":3261.5802,"2025-02":3232.2271,"2025-03":4498.8423,"2025-04":3201.6792,"2025-05":2266.6999,"2025-06":5073.256,"2025-07":4447.4559,"2025-08":4785.1463,"2025-09":5598.781,"2025-10":2599.1574,"2025-11":2776.6118,"2025-12":3427.1105,"2026-01":2996.8088,"2026-02":3168.1302,"2026-03":4590.008,"2026-04":4030.8376,"2026-05":2833.8948,"2026-06":2843.2727},
+            "EXPENSE/Operation Expense/Departemen Exp": {"2024-01":4875.5423,"2024-02":8230.0329,"2024-03":6258.9233,"2024-04":7025.2308,"2024-05":6634.9729,"2024-06":2196.2919,"2024-07":5655.7693,"2024-08":4462.8021,"2024-09":5318.1458,"2024-10":5463.5177,"2024-11":4527.1029,"2024-12":7459.7049,"2025-01":4963.8558,"2025-02":5376.0671,"2025-03":6603.5824,"2025-04":5265.8933,"2025-05":5965.1554,"2025-06":6139.6407,"2025-07":5516.3939,"2025-08":5636.5444,"2025-09":5249.36,"2025-10":6354.838,"2025-11":5611.1492,"2025-12":5713.9581,"2026-01":5570.3346,"2026-02":4896.1631,"2026-03":7504.9353,"2026-04":6423.1031,"2026-05":6610.4753,"2026-06":6305.9032},
+            "EXPENSE/Operation Expense/Marketing Exp": {"2024-01":3865.6762,"2024-02":3269.1274,"2024-03":1694.2564,"2024-04":831.8795,"2024-05":811.0816,"2024-06":3836.6387,"2024-07":6672.6059,"2024-08":7624.9642,"2024-09":8386.0093,"2024-10":2296.2354,"2024-11":2286.6458,"2024-12":2586.5875,"2025-01":2639.6756,"2025-02":2569.9401,"2025-03":2996.5436,"2025-04":1075.7493,"2025-05":730.1698,"2025-06":1122.9463,"2025-07":1704.2976,"2025-08":2314.5853,"2025-09":6276.6577,"2025-10":4541.5186,"2025-11":844.9485,"2025-12":1808.1496,"2026-01":870.8143,"2026-02":1923.7886,"2026-03":1216.1218,"2026-04":1330.6325,"2026-05":639.6043,"2026-06":720.3245},
+            "EXPENSE/Operation Expense/G & A Exp": {"2024-01":4129.5597,"2024-02":3114.32,"2024-03":3214.9324,"2024-04":3380.3702,"2024-05":2216.1337,"2024-06":3811.1751,"2024-07":4116.0721,"2024-08":7845.6176,"2024-09":6207.6889,"2024-10":3478.9251,"2024-11":3452.4749,"2024-12":3440.5311,"2025-01":3250.4288,"2025-02":3236.869,"2025-03":4647.6025,"2025-04":3201.3763,"2025-05":2188.7762,"2025-06":4900.2205,"2025-07":4532.8584,"2025-08":4657.4265,"2025-09":5651.9174,"2025-10":2596.9601,"2025-11":2767.8918,"2025-12":3441.1907,"2026-01":2975.8202,"2026-02":3575.3897,"2026-03":4584.0792,"2026-04":4014.3311,"2026-05":2819.7398,"2026-06":2828.0691},
             "EBITDA/EBITDA Property Account": {"2024-01":17200.2246,"2024-02":17094.3171,"2024-03":16760.3837,"2024-04":17375.657,"2024-05":17693.0169,"2024-06":19942.6137,"2024-07":17584.5703,"2024-08":15319.6353,"2024-09":18059.788,"2024-10":18049.7714,"2024-11":18227.2685,"2024-12":18025.9763,"2025-01":19072.5791,"2025-02":18640.432,"2025-03":17585.179,"2025-04":18990.6171,"2025-05":18868.7009,"2025-06":18224.9845,"2025-07":18197.5059,"2025-08":18548.9077,"2025-09":18900.3683,"2025-10":18412.2188,"2025-11":18829.6266,"2025-12":18997.3718,"2026-01":19121.2996,"2026-02":19182.4104,"2026-03":17972.5842,"2026-04":19507.9714,"2026-05":18816.0872,"2026-06":19203.1141},
             "EBITDA/EBITDA Operation Account": {"2024-01":3098.778,"2024-02":1154.6192,"2024-03":5656.6266,"2024-04":4474.5953,"2024-05":8795.9069,"2024-06":14793.8034,"2024-07":1044.5644,"2024-08":2550.5234,"2024-09":868.4776,"2024-10":5957.1265,"2024-11":7646.8627,"2024-12":4893.162,"2025-01":4181.0482,"2025-02":11314.0803,"2025-03":7454.8278,"2025-04":9613.137,"2025-05":7946.1782,"2025-06":9700.4672,"2025-07":7796.9567,"2025-08":6435.6002,"2025-09":9609.8243,"2025-10":4910.0874,"2025-11":9097.7287,"2025-12":10279.6716,"2026-01":10177.8535,"2026-02":7572.8016,"2026-03":8371.4268,"2026-04":5116.3782,"2026-05":10442.1022,"2026-06":9825.1654},
             "NPAT/PAT Property Account": {"2024-01":13068.1852,"2024-02":13013.005,"2024-03":12748.4496,"2024-04":13245.0839,"2024-05":13626.7628,"2024-06":15794.8986,"2024-07":13513.6033,"2024-08":11126.9685,"2024-09":13947.6801,"2024-10":13895.3571,"2024-11":13974.0162,"2024-12":13694.5895,"2025-01":14690.4497,"2025-02":14340.7543,"2025-03":13550.7114,"2025-04":14630.5434,"2025-05":14572.0343,"2025-06":13908.9102,"2025-07":13905.3558,"2025-08":14249.4499,"2025-09":14963.2578,"2025-10":14536.8567,"2025-11":14921.5264,"2025-12":15008.7594,"2026-01":15178.3749,"2026-02":15206.1752,"2026-03":14093.0319,"2026-04":15381.2621,"2026-05":14825.6241,"2026-06":15163.8391},
             "NPAT/PAT Property Account/Depreciation": {"2024-01":2462.2121,"2024-02":2481.3024,"2024-03":2474.2228,"2024-04":2461.2018,"2024-05":2471.5344,"2024-06":2481.9644,"2024-07":2482.7209,"2024-08":2624.6199,"2024-09":2479.1508,"2024-10":2612.6916,"2024-11":2624.7421,"2024-12":2615.7616,"2025-01":2605.6313,"2025-02":2606.4495,"2025-03":2375.6263,"2025-04":2558.8903,"2025-05":2558.6481,"2025-06":2619.1651,"2025-07":2617.3337,"2025-08":2618.991,"2025-09":2159.1919,"2025-10":2148.8037,"2025-11":2162.8547,"2025-12":2176.3355,"2026-01":2174.5427,"2026-02":2193.5699,"2026-03":2208.3571,"2026-04":2204.5671,"2026-05":2210.3832,"2026-06":2225.6641},
-            "NPAT/PAT Property Account/Finance Expense - Net": {"2024-01":120.3887,"2024-02":165.3751,"2024-03":206.3134,"2024-04":124.8318,"2024-05":235.8572,"2024-06":140.2881,"2024-07":193.3147,"2024-08":294.4831,"2024-09":247.4291,"2024-10":320.5506,"2024-11":256.1007,"2024-12":131.3228,"2025-01":186.3799,"2025-02":233.227,"2025-03":169.4527,"2025-04":161.5706,"2025-05":198.0503,"2025-06":181.04,"2025-07":201.3675,"2025-08":220.5027,"2025-09":161.1589,"2025-10":165.6685,"2025-11":185.287,"2025-12":135.5346,"2026-01":191.3179,"2026-02":181.137,"2026-03":170.1753,"2026-04":74.1542,"2026-05":146.3692,"2026-06":154.5996},
+            "NPAT/PAT Property Account/Finance Expense - Net": {"2024-01":120.3887,"2024-02":165.3751,"2024-03":206.3134,"2024-04":124.8318,"2024-05":235.8572,"2024-06":140.2881,"2024-07":193.3147,"2024-08":294.4831,"2024-09":247.4291,"2024-10":320.5506,"2024-11":256.1007,"2024-12":131.3228,"2025-01":186.3799,"2025-02":233.227,"2025-03":169.4527,"2025-04":161.5706,"2025-05":197.6973,"2025-06":180.3302,"2025-07":200.6677,"2025-08":220.1102,"2025-09":160.3655,"2025-10":165.0815,"2025-11":184.2302,"2025-12":134.7142,"2026-01":191.3179,"2026-02":181.137,"2026-03":170.1753,"2026-04":74.1542,"2026-05":146.3692,"2026-06":154.5996},
             "NPAT/PAT Property Account/Taxation": {"2024-01":1790.2161,"2024-02":1765.3848,"2024-03":1744.0247,"2024-04":1794.2031,"2024-05":1830.5769,"2024-06":1806.0388,"2024-07":1781.5607,"2024-08":1862.53,"2024-09":1880.3862,"2024-10":1862.2732,"2024-11":1884.611,"2024-12":1846.948,"2025-01":1962.878,"2025-02":1926.4551,"2025-03":1828.294,"2025-04":1962.754,"2025-05":1936.0687,"2025-06":1877.9491,"2025-07":1876.1839,"2025-08":1900.9696,"2025-09":1939.0774,"2025-10":1892.2268,"2025-11":1930.5325,"2025-12":1947.8116,"2026-01":1959.6999,"2026-02":1963.8023,"2026-03":1841.3705,"2026-04":1996.2965,"2026-05":1926.4492,"2026-06":1968.2105},
             "NPAT/PAT Operation Account": {"2024-01":883.8318,"2024-02":-970.7277,"2024-03":3409.367,"2024-04":2348.9547,"2024-05":6333.6669,"2024-06":12443.5474,"2024-07":-1280.2589,"2024-08":55.9142,"2024-09":-1532.89,"2024-10":3634.3593,"2024-11":5202.2262,"2024-12":2426.5238,"2025-01":2090.1462,"2025-02":8425.3404,"2025-03":4925.504,"2025-04":7101.5467,"2025-05":5332.0649,"2025-06":7228.9468,"2025-07":5207.9564,"2025-08":3992.4333,"2025-09":6973.1822,"2025-10":2319.7948,"2025-11":6590.5954,"2025-12":7533.2965,"2026-01":7553.6746,"2026-02":5100.0375,"2026-03":5625.7742,"2026-04":2707.0339,"2026-05":7757.129,"2026-06":7176.3017},
             "NPAT/PAT Operation Account/Depreciation": {"2024-01":514.6809,"2024-02":513.2866,"2024-03":517.0176,"2024-04":519.7994,"2024-05":527.9733,"2024-06":551.2156,"2024-07":553.7587,"2024-08":564.7615,"2024-09":566.0934,"2024-10":567.3525,"2024-11":571.7472,"2024-12":589.4831,"2025-01":589.2656,"2025-02":590.0371,"2025-03":591.3864,"2025-04":593.3727,"2025-05":599.5683,"2025-06":604.8306,"2025-07":614.1085,"2025-08":615.0236,"2025-09":630.6326,"2025-10":641.7188,"2025-11":641.2172,"2025-12":642.8339,"2026-01":643.7641,"2026-02":647.4239,"2026-03":648.803,"2026-04":650.6637,"2026-05":658.0062,"2026-06":654.0315},
             "NPAT/PAT Operation Account/Taxation": {"2024-01":1700.2652,"2024-02":1612.0603,"2024-03":1730.2419,"2024-04":1605.8412,"2024-05":1934.2666,"2024-06":1799.0404,"2024-07":1771.0646,"2024-08":1929.8478,"2024-09":1835.2742,"2024-10":1755.4147,"2024-11":1872.8893,"2024-12":1877.1551,"2025-01":1501.6363,"2025-02":2298.7027,"2025-03":1937.9374,"2025-04":1918.2177,"2025-05":2014.5451,"2025-06":1866.6899,"2025-07":1974.8917,"2025-08":1828.1433,"2025-09":2006.0095,"2025-10":1948.5738,"2025-11":1865.916,"2025-12":2103.5412,"2026-01":1980.4149,"2026-02":1825.3402,"2026-03":2096.8495,"2026-04":1758.6806,"2026-05":2026.9671,"2026-06":1994.8322},
-            "INCOME NETT/Nett Marketing/Inc Sponsorship": {"2024-01":2765.1126,"2024-02":2648.826,"2024-03":3963.3942,"2024-04":2895.9718,"2024-05":4254.2448,"2024-06":3283.4398,"2024-07":2941.681,"2024-08":4942.463,"2024-09":3835.9796,"2024-10":2792.5657,"2024-11":4277.3236,"2024-12":4040.1266,"2025-01":3831.5934,"2025-02":3829.9427,"2025-03":4279.2963,"2025-04":3866.505,"2025-05":4556.1927,"2025-06":3091.6632,"2025-07":3754.9449,"2025-08":2746.8159,"2025-09":4373.6215,"2025-10":3735.4508,"2025-11":3375.7213,"2025-12":4455.1918,"2026-01":3788.4674,"2026-02":2710.1836,"2026-03":3934.2424,"2026-04":2933.6242,"2026-05":3912.2254,"2026-06":3518.1102},
-            "REVENUE/Inc Sponsorship": {"2024-01":2765.1126,"2024-02":2648.826,"2024-03":3963.3942,"2024-04":2895.9718,"2024-05":4254.2448,"2024-06":3283.4398,"2024-07":2941.681,"2024-08":4942.463,"2024-09":3835.9796,"2024-10":2792.5657,"2024-11":4277.3236,"2024-12":4040.1266,"2025-01":3831.5934,"2025-02":3829.9427,"2025-03":4279.2963,"2025-04":3866.505,"2025-05":4556.1927,"2025-06":3091.6632,"2025-07":3754.9449,"2025-08":2746.8159,"2025-09":4373.6215,"2025-10":3735.4508,"2025-11":3375.7213,"2025-12":4455.1918,"2026-01":3788.4674,"2026-02":2710.1836,"2026-03":3934.2424,"2026-04":2933.6242,"2026-05":3912.2254,"2026-06":3518.1102},
-            "INCOME NETT/Nett Marketing/Inc Casual Leasing": {"2024-01":1692.8392,"2024-02":1410.4937,"2024-03":1431.4474,"2024-04":1497.2714,"2024-05":1427.8929,"2024-06":1771.1572,"2024-07":1699.0499,"2024-08":1518.2205,"2024-09":1449.4597,"2024-10":1637.9317,"2024-11":1415.1611,"2024-12":1831.7204,"2025-01":1992.1458,"2025-02":1370.4091,"2025-03":2144.9633,"2025-04":2276.486,"2025-05":1016.7734,"2025-06":2105.3843,"2025-07":1949.2344,"2025-08":2151.9919,"2025-09":4036.0379,"2025-10":237.5283,"2025-11":1486.3342,"2025-12":1981.0218,"2026-01":2220.4023,"2026-02":1910.3131,"2026-03":2594.7305,"2026-04":1566.5696,"2026-05":1746.1039,"2026-06":1889.8871},
-            "REVENUE/Inc Casual Leasing": {"2024-01":1692.8392,"2024-02":1410.4937,"2024-03":1431.4474,"2024-04":1497.2714,"2024-05":1427.8929,"2024-06":1771.1572,"2024-07":1699.0499,"2024-08":1518.2205,"2024-09":1449.4597,"2024-10":1637.9317,"2024-11":1415.1611,"2024-12":1831.7204,"2025-01":1992.1458,"2025-02":1370.4091,"2025-03":2144.9633,"2025-04":2276.486,"2025-05":1016.7734,"2025-06":2105.3843,"2025-07":1949.2344,"2025-08":2151.9919,"2025-09":4036.0379,"2025-10":237.5283,"2025-11":1486.3342,"2025-12":1981.0218,"2026-01":2220.4023,"2026-02":1910.3131,"2026-03":2594.7305,"2026-04":1566.5696,"2026-05":1746.1039,"2026-06":1889.8871},
-            "INCOME NETT/Nett Marketing/Biaya Marketing/Biaya non event": {"2024-01":910.0122,"2024-02":1472.5728,"2024-03":946.058,"2024-04":512.3606,"2024-05":708.0714,"2024-06":953.6649,"2024-07":804.3492,"2024-08":1539.9632,"2024-09":806.2075,"2024-10":895.5863,"2024-11":984.4962,"2024-12":579.8025,"2025-01":1541.7854,"2025-02":1511.6504,"2025-03":-691.6584,"2025-04":513.3186,"2025-05":533.1457,"2025-06":865.3046,"2025-07":1304.7608,"2025-08":1583.7519,"2025-09":580.7539,"2025-10":583.5699,"2025-11":387.7868,"2025-12":1316.7169,"2026-01":870.8143,"2026-02":1923.7886,"2026-03":1216.1218,"2026-04":1330.6325,"2026-05":639.6043,"2026-06":720.3245},
-            "EXPENSE/Operation Expense/Marketing Exp/Biaya non event": {"2024-01":910.0122,"2024-02":1472.5728,"2024-03":946.058,"2024-04":512.3606,"2024-05":708.0714,"2024-06":953.6649,"2024-07":804.3492,"2024-08":1539.9632,"2024-09":806.2075,"2024-10":895.5863,"2024-11":984.4962,"2024-12":579.8025,"2025-01":1541.7854,"2025-02":1511.6504,"2025-03":-691.6584,"2025-04":513.3186,"2025-05":533.1457,"2025-06":865.3046,"2025-07":1304.7608,"2025-08":1583.7519,"2025-09":580.7539,"2025-10":583.5699,"2025-11":387.7868,"2025-12":1316.7169,"2026-01":870.8143,"2026-02":1923.7886,"2026-03":1216.1218,"2026-04":1330.6325,"2026-05":639.6043,"2026-06":720.3245},
-            "INCOME NETT/Nett Marketing/Biaya Marketing/Biaya Event": {"2024-01":2826.6879,"2024-02":1796.5547,"2024-03":748.1983,"2024-04":319.5188,"2024-05":103.0101,"2024-06":-2751.4059,"2024-07":4445.2154,"2024-08":975.1291,"2024-09":3792.3673,"2024-10":1261.0854,"2024-11":1302.1496,"2024-12":1358.8744,"2025-01":1097.8902,"2025-02":1058.2897,"2025-03":1997.8572,"2025-04":562.4307,"2025-05":197.0241,"2025-06":257.6418,"2025-07":399.5368,"2025-08":730.8334,"2025-09":664.7926,"2025-10":2893.5817,"2025-11":444.5965,"2025-12":491.4327},
-            "EXPENSE/Operation Expense/Marketing Exp/Biaya Event": {"2024-01":2826.6879,"2024-02":1796.5547,"2024-03":748.1983,"2024-04":319.5188,"2024-05":103.0101,"2024-06":-2751.4059,"2024-07":4445.2154,"2024-08":975.1291,"2024-09":3792.3673,"2024-10":1261.0854,"2024-11":1302.1496,"2024-12":1358.8744,"2025-01":1097.8902,"2025-02":1058.2897,"2025-03":1997.8572,"2025-04":562.4307,"2025-05":197.0241,"2025-06":257.6418,"2025-07":399.5368,"2025-08":730.8334,"2025-09":664.7926,"2025-10":2893.5817,"2025-11":444.5965,"2025-12":491.4327},
+            "INCOME NETT/Nett Marketing/Inc Sponsorship": {"2024-01":2765.1126,"2024-02":2648.826,"2024-03":3963.3942,"2024-04":2895.9718,"2024-05":4254.2448,"2024-06":3283.4398,"2024-07":2941.681,"2024-08":4942.463,"2024-09":3835.9796,"2024-10":2792.5657,"2024-11":4277.3236,"2024-12":4040.1266,"2025-01":3713.4343,"2025-02":3829.9427,"2025-03":4279.2963,"2025-04":3866.505,"2025-05":4556.1927,"2025-06":3091.6632,"2025-07":3754.9449,"2025-08":2746.8159,"2025-09":4373.6215,"2025-10":3735.4508,"2025-11":3375.7213,"2025-12":4455.1918,"2026-01":3788.4674,"2026-02":2710.1836,"2026-03":3934.2424,"2026-04":2933.6242,"2026-05":3912.2254,"2026-06":3518.1102},
+            "REVENUE/Inc Sponsorship": {"2024-01":2765.1126,"2024-02":2648.826,"2024-03":3963.3942,"2024-04":2895.9718,"2024-05":4254.2448,"2024-06":3283.4398,"2024-07":2941.681,"2024-08":4942.463,"2024-09":3835.9796,"2024-10":2792.5657,"2024-11":4277.3236,"2024-12":4040.1266,"2025-01":3713.4343,"2025-02":3829.9427,"2025-03":4279.2963,"2025-04":3866.505,"2025-05":4556.1927,"2025-06":3091.6632,"2025-07":3754.9449,"2025-08":2746.8159,"2025-09":4373.6215,"2025-10":3735.4508,"2025-11":3375.7213,"2025-12":4455.1918,"2026-01":3788.4674,"2026-02":2710.1836,"2026-03":3934.2424,"2026-04":2933.6242,"2026-05":3912.2254,"2026-06":3518.1102},
+            "INCOME NETT/Nett Marketing/Inc Casual Leasing": {"2024-01":1626.7392,"2024-02":1396.8937,"2024-03":1345.5474,"2024-04":1473.2714,"2024-05":1380.1929,"2024-06":1692.1572,"2024-07":1519.3915,"2024-08":1281.6464,"2024-09":1311.7413,"2024-10":1545.8344,"2024-11":1334.4476,"2024-12":1716.5231,"2025-01":1927.0268,"2025-02":1351.7091,"2025-03":1806.196,"2025-04":2276.486,"2025-05":1016.7734,"2025-06":1819.4366,"2025-07":1677.3958,"2025-08":1347.9888,"2025-09":1609.1431,"2025-10":1761.0016,"2025-11":1476.9585,"2025-12":1981.0218,"2026-01":1908.5623,"2026-02":1757.9135,"2026-03":2171.7305,"2026-04":1875.0239,"2026-05":1659.6583,"2026-06":1703.3955},
+            "REVENUE/Inc Casual Leasing": {"2024-01":1626.7392,"2024-02":1396.8937,"2024-03":1345.5474,"2024-04":1473.2714,"2024-05":1380.1929,"2024-06":1692.1572,"2024-07":1519.3915,"2024-08":1281.6464,"2024-09":1311.7413,"2024-10":1545.8344,"2024-11":1334.4476,"2024-12":1716.5231,"2025-01":1927.0268,"2025-02":1351.7091,"2025-03":1806.196,"2025-04":2276.486,"2025-05":1016.7734,"2025-06":1819.4366,"2025-07":1677.3958,"2025-08":1347.9888,"2025-09":1609.1431,"2025-10":1761.0016,"2025-11":1476.9585,"2025-12":1981.0218,"2026-01":1908.5623,"2026-02":1757.9135,"2026-03":2171.7305,"2026-04":1875.0239,"2026-05":1659.6583,"2026-06":1703.3955},
+            "INCOME NETT/Nett Marketing/Biaya Marketing/Biaya non event": {"2024-01":1000.4322,"2024-02":1472.5728,"2024-03":946.058,"2024-04":512.3606,"2024-05":708.0714,"2024-06":953.6649,"2024-07":804.3492,"2024-08":1480.0632,"2024-09":806.0575,"2024-10":543.7348,"2024-11":984.4962,"2024-12":991.704,"2025-01":882.484,"2025-02":1511.6504,"2025-03":998.6864,"2025-04":513.3186,"2025-05":533.1457,"2025-06":865.3046,"2025-07":761.0836,"2025-08":1583.7519,"2025-09":758.0757,"2025-10":1647.9369,"2025-11":381.6005,"2025-12":1316.7169,"2026-01":555.3039,"2026-02":1426.9125,"2026-03":841.8784,"2026-04":801.5459,"2026-05":545.9404,"2026-06":623.2442},
+            "EXPENSE/Operation Expense/Marketing Exp/Biaya non event": {"2024-01":1000.4322,"2024-02":1472.5728,"2024-03":946.058,"2024-04":512.3606,"2024-05":708.0714,"2024-06":953.6649,"2024-07":804.3492,"2024-08":1480.0632,"2024-09":806.0575,"2024-10":543.7348,"2024-11":984.4962,"2024-12":991.704,"2025-01":882.484,"2025-02":1511.6504,"2025-03":998.6864,"2025-04":513.3186,"2025-05":533.1457,"2025-06":865.3046,"2025-07":761.0836,"2025-08":1583.7519,"2025-09":758.0757,"2025-10":1647.9369,"2025-11":381.6005,"2025-12":1316.7169,"2026-01":555.3039,"2026-02":1426.9125,"2026-03":841.8784,"2026-04":801.5459,"2026-05":545.9404,"2026-06":623.2442},
+            "INCOME NETT/Nett Marketing/Biaya Marketing/Biaya Event": {"2024-01":2865.244,"2024-02":1796.5547,"2024-03":748.1983,"2024-04":319.5188,"2024-05":103.0101,"2024-06":2882.9738,"2024-07":5868.2567,"2024-08":6144.9011,"2024-09":7579.9518,"2024-10":1752.5006,"2024-11":1302.1496,"2024-12":1594.8835,"2025-01":1757.1916,"2025-02":1058.2897,"2025-03":1997.8572,"2025-04":562.4307,"2025-05":197.0241,"2025-06":257.6418,"2025-07":943.2141,"2025-08":730.8334,"2025-09":5518.5821,"2025-10":2893.5817,"2025-11":463.3479,"2025-12":491.4327,"2026-01":315.5104,"2026-02":496.8761,"2026-03":374.2434,"2026-04":529.0866,"2026-05":93.6639,"2026-06":97.0803},
+            "EXPENSE/Operation Expense/Marketing Exp/Biaya Event": {"2024-01":2865.244,"2024-02":1796.5547,"2024-03":748.1983,"2024-04":319.5188,"2024-05":103.0101,"2024-06":2882.9738,"2024-07":5868.2567,"2024-08":6144.9011,"2024-09":7579.9518,"2024-10":1752.5006,"2024-11":1302.1496,"2024-12":1594.8835,"2025-01":1757.1916,"2025-02":1058.2897,"2025-03":1997.8572,"2025-04":562.4307,"2025-05":197.0241,"2025-06":257.6418,"2025-07":943.2141,"2025-08":730.8334,"2025-09":5518.5821,"2025-10":2893.5817,"2025-11":463.3479,"2025-12":491.4327,"2026-01":315.5104,"2026-02":496.8761,"2026-03":374.2434,"2026-04":529.0866,"2026-05":93.6639,"2026-06":97.0803},
             "INCOME NETT/Nett Parkir/Inc Parkir": {"2024-01":3851.382,"2024-02":4320.3105,"2024-03":4422.8925,"2024-04":4062.4159,"2024-05":4105.1164,"2024-06":4341.8645,"2024-07":4515.1685,"2024-08":4183.8474,"2024-09":4387.78,"2024-10":4164.3559,"2024-11":4318.2091,"2024-12":4646.155,"2025-01":4376.6109,"2025-02":3583.9741,"2025-03":4478.7341,"2025-04":4080.1876,"2025-05":4340.2387,"2025-06":4161.7568,"2025-07":4163.9005,"2025-08":4249.1545,"2025-09":3933.0636,"2025-10":3770.9959,"2025-11":3997.9064,"2025-12":4754.9136,"2026-01":4223.3141,"2026-02":3756.4868,"2026-03":4548.8505,"2026-04":3923.9323,"2026-05":4534.9395,"2026-06":4214.955},
             "REVENUE/Inc Parkir": {"2024-01":3851.382,"2024-02":4320.3105,"2024-03":4422.8925,"2024-04":4062.4159,"2024-05":4105.1164,"2024-06":4341.8645,"2024-07":4515.1685,"2024-08":4183.8474,"2024-09":4387.78,"2024-10":4164.3559,"2024-11":4318.2091,"2024-12":4646.155,"2025-01":4376.6109,"2025-02":3583.9741,"2025-03":4478.7341,"2025-04":4080.1876,"2025-05":4340.2387,"2025-06":4161.7568,"2025-07":4163.9005,"2025-08":4249.1545,"2025-09":3933.0636,"2025-10":3770.9959,"2025-11":3997.9064,"2025-12":4754.9136,"2026-01":4223.3141,"2026-02":3756.4868,"2026-03":4548.8505,"2026-04":3923.9323,"2026-05":4534.9395,"2026-06":4214.955},
             "INCOME NETT/Nett Parkir/Biaya Dept Parkir": {"2024-01":99.8034,"2024-02":117.8111,"2024-03":189.5329,"2024-04":42.3519,"2024-05":121.4166,"2024-06":103.9846,"2024-07":160.7156,"2024-08":118.8403,"2024-09":254.4694,"2024-10":128.4737,"2024-11":119.6883,"2024-12":-192.6844,"2025-01":124.9019,"2025-02":133.9104,"2025-03":171.3066,"2025-04":117.8133,"2025-05":155.1521,"2025-06":192.1144,"2025-07":131.7388,"2025-08":147.2424,"2025-09":173.4954,"2025-10":172.9943,"2025-11":136.2243,"2025-12":131.8413,"2026-01":135.8617,"2026-02":169.9083,"2026-03":158.5368,"2026-04":50.8705,"2026-05":231.3194,"2026-06":218.8644},
@@ -4097,28 +4305,28 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
             "ACCOUNT RECEIVABLE/Aging > 60": {"2024-01":32.19,"2024-02":26.37,"2024-03":16.71,"2024-04":15.25,"2024-05":33.74,"2024-06":32.17,"2024-07":16.55,"2024-08":24.16,"2024-09":29.53,"2024-10":17.78,"2024-11":39.37,"2024-12":32.55,"2025-01":16.12,"2025-02":16.5,"2025-03":32.82,"2025-04":21.12,"2025-05":20.16,"2025-06":24.07,"2025-07":10.33,"2025-08":19.85,"2025-09":11.48,"2025-10":2.17,"2025-11":23.14,"2025-12":4.33,"2026-01":11.9,"2026-02":15.45,"2026-03":14.52,"2026-04":11.15,"2026-05":3.5,"2026-06":7.97},
             "OMZET REVENUE SHARING/Food Court": {"2024-01":2521.6819,"2024-02":2533.8381,"2024-03":2691.8475,"2024-04":3264.3297,"2024-05":2766.4818,"2024-06":3047.6296,"2024-07":2783.7355,"2024-08":2528.3218,"2024-09":2379.8377,"2024-10":2403.4582,"2024-11":2631.9673,"2024-12":3101.7173,"2025-01":2967.5986,"2025-02":2270.78,"2025-03":3126.19,"2025-04":3170.3564,"2025-05":3023.0718,"2025-06":3108.4505,"2025-07":2987.53,"2025-08":3019.3068,"2025-09":2637.695,"2025-10":2712.8777,"2025-11":2760.0809,"2025-12":3538.4476,"2026-01":3285.6795,"2026-02":2870.0458,"2026-03":3840.8466,"2026-04":2889.8129,"2026-05":3461.1807,"2026-06":3230.5204},
             "OMZET REVENUE SHARING/Tenant Revenue Sharing": {"2024-01":44078.5556,"2024-02":42700.2681,"2024-03":44262.7174,"2024-04":43458.727,"2024-05":36705.0037,"2024-06":38491.9391,"2024-07":36571.4637,"2024-08":40400.7302,"2024-09":37355.2991,"2024-10":37599.8746,"2024-11":42102.4121,"2024-12":56619.0959,"2025-01":51893.324,"2025-02":31703.8566,"2025-03":53328.4308,"2025-04":34554.9759,"2025-05":37504.5734,"2025-06":36237.2256,"2025-07":36857.6997,"2025-08":42914.9558,"2025-09":36187.1127,"2025-10":39602.3177,"2025-11":46601.5242,"2025-12":55387.43,"2026-01":45938.7333,"2026-02":47480.2346,"2026-03":56085.9275,"2026-04":34644.6244,"2026-05":43619.624,"2026-06":39019.4773},
-            "EXPENSE/Finance Expense - Net": {"2024-01":-120.3887,"2024-02":-165.3751,"2024-03":-206.3134,"2024-04":-124.8318,"2024-05":-235.8572,"2024-06":-140.2881,"2024-07":-193.3147,"2024-08":-294.4831,"2024-09":-247.4291,"2024-10":-320.5506,"2024-11":-256.1007,"2024-12":-131.3228,"2025-01":-186.3799,"2025-02":-233.227,"2025-03":-169.4527,"2025-04":-161.5706,"2025-05":-198.0503,"2025-06":-181.04,"2025-07":-201.3675,"2025-08":-220.5027,"2025-09":-161.1589,"2025-10":-165.6685,"2025-11":-185.287,"2025-12":-135.5346,"2026-01":-191.3179,"2026-02":-181.137,"2026-03":-170.1753,"2026-04":-74.1542,"2026-05":-146.3692,"2026-06":-154.5996},
+            "EXPENSE/Finance Expense - Net": {"2024-01":-120.3887,"2024-02":-165.3751,"2024-03":-206.3134,"2024-04":-124.8318,"2024-05":-235.8572,"2024-06":-140.2881,"2024-07":-193.3147,"2024-08":-294.4831,"2024-09":-247.4291,"2024-10":-320.5506,"2024-11":-256.1007,"2024-12":-131.3228,"2025-01":-186.3799,"2025-02":-233.227,"2025-03":-169.4527,"2025-04":-161.5706,"2025-05":-197.6973,"2025-06":-180.3302,"2025-07":-200.6677,"2025-08":-220.1102,"2025-09":-160.3655,"2025-10":-165.0815,"2025-11":-184.2302,"2025-12":-134.7142,"2026-01":-191.3179,"2026-02":-181.137,"2026-03":-170.1753,"2026-04":-74.1542,"2026-05":-146.3692,"2026-06":-154.5996},
             "NPAT": {"2024-01":13952.017,"2024-02":12042.2773,"2024-03":16157.8166,"2024-04":15594.0386,"2024-05":19960.4298,"2024-06":28238.4459,"2024-07":12233.3444,"2024-08":11182.8827,"2024-09":12414.7902,"2024-10":17529.7164,"2024-11":19176.2424,"2024-12":16121.1133,"2025-01":16780.5959,"2025-02":22766.0947,"2025-03":18476.2154,"2025-04":21732.09,"2025-05":19904.0992,"2025-06":21137.857,"2025-07":19113.3122,"2025-08":18241.8832,"2025-09":21936.44,"2025-10":16856.6515,"2025-11":21512.1218,"2025-12":22542.0558,"2026-01":22732.0495,"2026-02":20306.2127,"2026-03":19718.8061,"2026-04":18088.296,"2026-05":22582.7531,"2026-06":22340.1408},
-            "RASIO/Rasio Property Account/Revenue PA / Avg NLA / PA": {"2024-01":239178.1175,"2024-02":235871.3411,"2024-03":233255.1274,"2024-04":240694.0818,"2024-05":244795.2998,"2024-06":241884.3895,"2024-07":238229.2475,"2024-08":248349.06,"2024-09":250365.5331,"2024-10":247881.2758,"2024-11":251104.2136,"2024-12":246803.2298,"2025-01":260052.3639,"2025-02":254536.4109,"2025-03":242658.2888,"2025-04":260225.7641,"2025-05":256733.759,"2025-06":249396.5607,"2025-07":249050.6454,"2025-08":251937.4877,"2025-09":256076.8391,"2025-10":249774.5181,"2025-11":254659.0293,"2025-12":257669.9699,"2026-01":256632.0728,"2026-02":256830.1596,"2026-03":239631.2928,"2026-04":256800.7977,"2026-05":247716.4622,"2026-06":251956.8986},
+            "RASIO/Rasio Property Account/Revenue PA / Avg NLA / PA": {"2024-01":236382.6452,"2024-02":233061.4845,"2024-03":230205.9033,"2024-04":236666.7065,"2024-05":241357.7334,"2024-06":238058.4052,"2024-07":234750.5538,"2024-08":245224.7573,"2024-09":247414.7199,"2024-10":244903.4592,"2024-11":247737.9923,"2024-12":242705.1672,"2025-01":257204.3997,"2025-02":252275.4763,"2025-03":239348.9407,"2025-04":256905.4091,"2025-05":253405.6285,"2025-06":245833.9699,"2025-07":245627.5896,"2025-08":248470.3133,"2025-09":253089.0883,"2025-10":246690.8093,"2025-11":251436.5128,"2025-12":253450.4049,"2026-01":252662.4333,"2026-02":253191.3548,"2026-03":234862.5801,"2026-04":253280.3469,"2026-05":243467.0992,"2026-06":248106.7094},
             "RASIO/Rasio Property Account/EBITDA PA / Avg NLA": {"2024-01":227114.1823,"2024-02":225674.7026,"2024-03":221231.9128,"2024-04":229195.8787,"2024-05":233278.7303,"2024-06":262868.4811,"2024-07":231706.2623,"2024-08":201701.6547,"2024-09":237624.4462,"2024-10":237368.5751,"2024-11":239603.1342,"2024-12":236877.1345,"2025-01":249916.2573,"2025-02":244102.434,"2025-03":230214.2841,"2025-04":248568.7015,"2025-05":246966.1826,"2025-06":238575.1781,"2025-07":238239.4105,"2025-08":242447.4822,"2025-09":246688.2991,"2025-10":240041.268,"2025-11":245240.9142,"2025-12":247194.9378,"2026-01":246529.2866,"2026-02":247317.183,"2026-03":229236.1806,"2026-04":247507.6116,"2026-05":237800.1085,"2026-06":242068.6975},
-            "RASIO/Rasio Property Account/EBITDA PA Margin": {"2024-01":94.96,"2024-02":95.68,"2024-03":94.85,"2024-04":95.22,"2024-05":95.3,"2024-06":108.68,"2024-07":97.26,"2024-08":81.22,"2024-09":94.91,"2024-10":95.76,"2024-11":95.42,"2024-12":95.98,"2025-01":96.1,"2025-02":95.9,"2025-03":94.87,"2025-04":95.52,"2025-05":96.2,"2025-06":95.66,"2025-07":95.66,"2025-08":96.23,"2025-09":96.33,"2025-10":96.1,"2025-11":96.3,"2025-12":95.93,"2026-01":96.06,"2026-02":96.3,"2026-03":95.66,"2026-04":96.38,"2026-05":96,"2026-06":96.08},
+            "RASIO/Rasio Property Account/EBITDA PA Margin": {"2024-01":96.08,"2024-02":96.83,"2024-03":96.1,"2024-04":96.84,"2024-05":96.65,"2024-06":110.42,"2024-07":98.7,"2024-08":82.25,"2024-09":96.04,"2024-10":96.92,"2024-11":96.72,"2024-12":97.6,"2025-01":97.17,"2025-02":96.76,"2025-03":96.18,"2025-04":96.75,"2025-05":97.46,"2025-06":97.05,"2025-07":96.99,"2025-08":97.58,"2025-09":97.47,"2025-10":97.3,"2025-11":97.54,"2025-12":97.53,"2026-01":97.57,"2026-02":97.68,"2026-03":97.6,"2026-04":97.72,"2026-05":97.67,"2026-06":97.57},
             "RASIO/Rasio Property Account/PAT PA / Avg NLA": {"2024-01":172554.1535,"2024-02":171794.2879,"2024-03":168275.6159,"2024-04":174711.0134,"2024-05":179666.0198,"2024-06":208196.4313,"2024-07":178064.4314,"2024-08":146500.0905,"2024-09":183518.7523,"2024-10":182734.7861,"2024-11":183692.805,"2024-12":179958.914,"2025-01":192495.3195,"2025-02":187796.7758,"2025-03":177397.5303,"2025-04":191499.5787,"2025-05":190728.5352,"2025-06":182075.3663,"2025-07":182047.1326,"2025-08":186250.4955,"2025-09":195300.9887,"2025-10":189517.9258,"2025-11":194341.0166,"2025-12":195294.8747,"2026-01":195693.4944,"2026-02":196051.9213,"2026-03":179753.3827,"2026-04":195149.9399,"2026-05":187368.1271,"2026-06":191150.8082},
-            "RASIO/Rasio Property Account/PAT PA Margin": {"2024-01":72.14,"2024-02":72.83,"2024-03":72.14,"2024-04":72.59,"2024-05":73.39,"2024-06":86.07,"2024-07":74.74,"2024-08":58.99,"2024-09":73.3,"2024-10":73.72,"2024-11":73.15,"2024-12":72.92,"2025-01":74.02,"2025-02":73.78,"2025-03":73.11,"2025-04":73.59,"2025-05":74.29,"2025-06":73.01,"2025-07":73.1,"2025-08":73.93,"2025-09":76.27,"2025-10":75.88,"2025-11":76.31,"2025-12":75.79,"2026-01":76.25,"2026-02":76.34,"2026-03":75.01,"2026-04":75.99,"2026-05":75.64,"2026-06":75.87},
+            "RASIO/Rasio Property Account/PAT PA Margin": {"2024-01":73,"2024-02":73.71,"2024-03":73.1,"2024-04":73.82,"2024-05":74.44,"2024-06":87.46,"2024-07":75.85,"2024-08":59.74,"2024-09":74.17,"2024-10":74.62,"2024-11":74.15,"2024-12":74.15,"2025-01":74.84,"2025-02":74.44,"2025-03":74.12,"2025-04":74.54,"2025-05":75.27,"2025-06":74.06,"2025-07":74.12,"2025-08":74.96,"2025-09":77.17,"2025-10":76.82,"2025-11":77.29,"2025-12":77.05,"2026-01":77.45,"2026-02":77.43,"2026-03":76.54,"2026-04":77.05,"2026-05":76.96,"2026-06":77.04},
             "RASIO/Ratio Operation Account/Service Charge / Avg NLA / PA": {"2024-01":0,"2024-02":0,"2024-03":0,"2024-04":0,"2024-05":0,"2024-06":0,"2024-07":0,"2024-08":0,"2024-09":0,"2024-10":0,"2024-11":0,"2024-12":0,"2025-01":0,"2025-02":0,"2025-03":0,"2025-04":0,"2025-05":0,"2025-06":0,"2025-07":0,"2025-08":0,"2025-09":0,"2025-10":0,"2025-11":0,"2025-12":0,"2026-01":0,"2026-02":0,"2026-03":0,"2026-04":0,"2026-05":0,"2026-06":0},
-            "RASIO/Ratio Employee Cost/Employee Costs/Revenue Ratio": {"2024-01":11.53,"2024-02":9.24,"2024-03":14.83,"2024-04":11.97,"2024-05":8.88,"2024-06":12.4,"2024-07":15.64,"2024-08":9.27,"2024-09":13.77,"2024-10":10.18,"2024-11":9.76,"2024-12":10.46,"2025-01":9.61,"2025-02":9.15,"2025-03":16.44,"2025-04":9.94,"2025-05":8.31,"2025-06":16.4,"2025-07":13.31,"2025-08":10.16,"2025-09":13.65,"2025-10":7.51,"2025-11":10.05,"2025-12":9.65,"2026-01":10.13,"2026-02":10.84,"2026-03":13.28,"2026-04":13.11,"2026-05":10.2,"2026-06":9.12},
-            "RASIO/Ratio Employee Cost/Outsource Costs/Revenue Ratio": {"2024-01":4.73,"2024-02":5.33,"2024-03":4.95,"2024-04":7.97,"2024-05":5.16,"2024-06":0.07,"2024-07":5.52,"2024-08":3.36,"2024-09":4.18,"2024-10":4.91,"2024-11":4.88,"2024-12":11.1,"2025-01":4.52,"2025-02":4.8,"2025-03":5.88,"2025-04":5.91,"2025-05":6.35,"2025-06":5.02,"2025-07":4.8,"2025-08":4.82,"2025-09":4.45,"2025-10":5.08,"2025-11":4.89,"2025-12":4.52,"2026-01":5.12,"2026-02":5.34,"2026-03":6.59,"2026-04":7.23,"2026-05":6.1,"2026-06":5.83},
+            "RASIO/Ratio Employee Cost/Employee Costs/Revenue Ratio": {"2024-01":10.98,"2024-02":8.8,"2024-03":14.07,"2024-04":11.48,"2024-05":8.54,"2024-06":10.76,"2024-07":14.1,"2024-08":7.98,"2024-09":12.04,"2024-10":9.76,"2024-11":9.4,"2024-12":9.6,"2025-01":9.2,"2025-02":8.81,"2025-03":15.04,"2025-04":9.5,"2025-05":7.93,"2025-06":15.55,"2025-07":12.67,"2025-08":9.65,"2025-09":11.7,"2025-10":6.95,"2025-11":9.57,"2025-12":9.13,"2026-01":9.63,"2026-02":10.32,"2026-03":12.52,"2026-04":12.49,"2026-05":9.65,"2026-06":8.65},
+            "RASIO/Ratio Employee Cost/Outsource Costs/Revenue Ratio": {"2024-01":4.5,"2024-02":5.07,"2024-03":4.7,"2024-04":7.64,"2024-05":4.96,"2024-06":0.06,"2024-07":4.97,"2024-08":2.89,"2024-09":3.66,"2024-10":4.71,"2024-11":4.7,"2024-12":10.19,"2025-01":4.33,"2025-02":4.62,"2025-03":5.38,"2025-04":5.65,"2025-05":6.06,"2025-06":4.76,"2025-07":4.57,"2025-08":4.58,"2025-09":3.81,"2025-10":4.7,"2025-11":4.65,"2025-12":4.27,"2026-01":4.86,"2026-02":5.08,"2026-03":6.21,"2026-04":6.89,"2026-05":5.77,"2026-06":5.52},
           },
           budget: {
-            "REVENUE/Revenue Property Account/Revenue Rental Mall 1": {"2024-01":7740.4811,"2024-02":7595.9281,"2024-03":7724.9592,"2024-04":8411.1043,"2024-05":7757.5973,"2024-06":7737.0253,"2024-07":7859.8534,"2024-08":7969.6648,"2024-09":7868.3285,"2024-10":7922.6143,"2024-11":7824.2797,"2024-12":8143.3702,"2025-01":7948.328,"2025-02":8095.234,"2025-03":8251.9199,"2025-04":8222.8337,"2025-05":8190.2909,"2025-06":8149.728,"2025-07":7912.6389,"2025-08":8211.3835,"2025-09":8274.7708,"2025-10":8616.105,"2025-11":8497.6022,"2025-12":8894.2627,"2026-01":8828.3354,"2026-02":8312.0876,"2026-03":9008.8868,"2026-04":8766.6661,"2026-05":8892.4424,"2026-06":8880.9419,"2026-07":8592.6073,"2026-08":8687.0873,"2026-09":8623.9183,"2026-10":8529.5328,"2026-11":18713.8018,"2026-12":9541.8317},
-            "REVENUE/Revenue Property Account/Revenue Rental Mall 2": {"2024-01":9890.5085,"2024-02":9390.589,"2024-03":9490.7975,"2024-04":9890.9466,"2024-05":9740.8896,"2024-06":9952.4287,"2024-07":10438.3874,"2024-08":10546.1351,"2024-09":10602.5071,"2024-10":10589.6881,"2024-11":10403.6491,"2024-12":10807.1669,"2025-01":10204.2767,"2025-02":10378.9499,"2025-03":10570.9427,"2025-04":10683.8134,"2025-05":10815.8732,"2025-06":10742.282,"2025-07":10587.9867,"2025-08":10808.9336,"2025-09":10988.6404,"2025-10":10834.1076,"2025-11":10568.3962,"2025-12":10827.6816,"2026-01":10967.1867,"2026-02":10739.7134,"2026-03":10965.4545,"2026-04":10557.5452,"2026-05":10663.639,"2026-06":10688.5613,"2026-07":10876.1981,"2026-08":11163.2002,"2026-09":11349.1327,"2026-10":11371.5375,"2026-11":1094.7219,"2026-12":11309.2787},
-            "REVENUE/Revenue Operation Account/Revenue Service Charge Mall 1": {"2024-01":3527.6725,"2024-02":3536.391,"2024-03":3630.6049,"2024-04":3594.411,"2024-05":3570.2449,"2024-06":3396.2105,"2024-07":3397.9341,"2024-08":3476.443,"2024-09":3453.1056,"2024-10":3493.5314,"2024-11":3487.535,"2024-12":3650.3784,"2025-01":3723.576,"2025-02":3784.6039,"2025-03":3805.477,"2025-04":3860.9156,"2025-05":3827.7489,"2025-06":3831.3404,"2025-07":3492.4682,"2025-08":3721.5478,"2025-09":3751.8634,"2025-10":3964.6237,"2025-11":3936.177,"2025-12":3997.1506,"2026-01":3770.9351,"2026-02":3689.9908,"2026-03":3827.3153,"2026-04":4065.5157,"2026-05":4066.1362,"2026-06":4085.8147,"2026-07":3990.1002,"2026-08":3920.3954,"2026-09":3884.4824,"2026-10":3851.094,"2026-11":3977.381,"2026-12":4090.0812},
+            "REVENUE/Revenue Property Account/Revenue Rental Mall 1": {"2024-01":7683.2942,"2024-02":7574.2215,"2024-03":7737.3909,"2024-04":8583.9917,"2024-05":7553.2747,"2024-06":7421.017,"2024-07":8680.2734,"2024-08":8206.7385,"2024-09":7956.9821,"2024-10":8170.4757,"2024-11":7915.4687,"2024-12":8923.497,"2025-01":7109.1527,"2025-02":7489.8069,"2025-03":8914.2126,"2025-04":7974.7706,"2025-05":7843.4828,"2025-06":8355.0576,"2025-07":8048.4174,"2025-08":8308.0904,"2025-09":8407.7962,"2025-10":8589.8071,"2025-11":8179.0052,"2025-12":8729.934,"2026-01":9043.4587,"2026-02":7917.6321,"2026-03":9688.4044,"2026-04":8383.2323,"2026-05":8835.8022,"2026-06":8601.898,"2026-07":8592.6073,"2026-08":8687.0873,"2026-09":8623.9183,"2026-10":8529.5328,"2026-11":18713.8018,"2026-12":9541.8317},
+            "REVENUE/Revenue Property Account/Revenue Rental Mall 2": {"2024-01":9947.6954,"2024-02":9412.2955,"2024-03":9478.3658,"2024-04":9718.0592,"2024-05":9945.2122,"2024-06":10268.4369,"2024-07":9617.9674,"2024-08":10309.0614,"2024-09":10513.8536,"2024-10":10341.8267,"2024-11":10312.4601,"2024-12":10027.0401,"2025-01":11043.452,"2025-02":10984.377,"2025-03":9908.6501,"2025-04":10931.8765,"2025-05":11162.6813,"2025-06":10536.9524,"2025-07":10452.2082,"2025-08":10712.2267,"2025-09":10855.615,"2025-10":10860.4055,"2025-11":10886.9932,"2025-12":10992.0103,"2026-01":10819.7765,"2026-02":11187.054,"2026-03":10357.374,"2026-04":11013.616,"2026-05":10790.1145,"2026-06":11038.9659,"2026-07":10876.1981,"2026-08":11163.2002,"2026-09":11349.1327,"2026-10":11371.5375,"2026-11":1094.7219,"2026-12":11309.2787},
+            "REVENUE/Revenue Operation Account/Revenue Service Charge Mall 1": {"2024-01":3527.6725,"2024-02":3536.391,"2024-03":3630.6049,"2024-04":3594.411,"2024-05":3570.2449,"2024-06":3396.2105,"2024-07":3397.9341,"2024-08":3476.443,"2024-09":3453.1056,"2024-10":3493.5314,"2024-11":3487.535,"2024-12":3650.3784,"2025-01":3723.576,"2025-02":3784.6039,"2025-03":3805.477,"2025-04":3860.9156,"2025-05":3827.7489,"2025-06":3831.3404,"2025-07":3492.4682,"2025-08":3721.5478,"2025-09":3751.8634,"2025-10":3964.6237,"2025-11":3936.177,"2025-12":3997.1506,"2026-01":3703.5309,"2026-02":3636.9971,"2026-03":3755.6131,"2026-04":3992.5991,"2026-05":3996.526,"2026-06":4014.1797,"2026-07":3990.1002,"2026-08":3920.3954,"2026-09":3884.4824,"2026-10":3851.094,"2026-11":3977.381,"2026-12":4090.0812},
             "REVENUE/Revenue Operation Account/Revenue Service Charge Mall 2": {"2024-01":4263.2929,"2024-02":4193.1348,"2024-03":4204.65,"2024-04":4182.1445,"2024-05":4193.9305,"2024-06":4285.2737,"2024-07":4662.1122,"2024-08":4693.3644,"2024-09":4725.5112,"2024-10":4655.4709,"2024-11":4614.5231,"2024-12":4691.6437,"2025-01":4771.3508,"2025-02":4824.5245,"2025-03":4860.1648,"2025-04":4916.6686,"2025-05":4959.886,"2025-06":4922.7982,"2025-07":4907.8585,"2025-08":4902.5062,"2025-09":4952.9989,"2025-10":4742.0446,"2025-11":4615.287,"2025-12":4588.1074,"2026-01":4864.2031,"2026-02":4821.5255,"2026-03":4830.1047,"2026-04":4618.4912,"2026-05":4602.9218,"2026-06":4561.8293,"2026-07":4669.5065,"2026-08":4823.614,"2026-09":4962.5696,"2026-10":4996.7909,"2026-11":4877.5028,"2026-12":4893.6214},
-            "REVENUE/Revenue Operation Account/Marketing Department": {"2024-01":3497.7042,"2024-02":3528.7842,"2024-03":4325.2442,"2024-04":3928.1242,"2024-05":3943.1042,"2024-06":4885.1042,"2024-07":3548.1042,"2024-08":4782.2042,"2024-09":3956.5442,"2024-10":3910.1442,"2024-11":4202.2542,"2024-12":3557.2242,"2025-01":4247.7042,"2025-02":4260.3042,"2025-03":5997.8942,"2025-04":4668.0892,"2025-05":5304.3042,"2025-06":5836.1992,"2025-07":4880.4242,"2025-08":11844.4792,"2025-09":10345.8242,"2025-10":4801.4242,"2025-11":5451.0542,"2025-12":4739.6042,"2026-01":5208.358,"2026-02":5701.9842,"2026-03":6273.3342,"2026-04":5234.3932,"2026-05":5482.9551,"2026-06":5547.9212},
-            "REVENUE/Revenue Operation Account/Parking": {"2024-01":2581.0948,"2024-02":2232.9865,"2024-03":2396.5525,"2024-04":2600.6216,"2024-05":2559.9707,"2024-06":2708.8696,"2024-07":2712.4057,"2024-08":2714.6107,"2024-09":2792.3336,"2024-10":3051.9522,"2024-11":2975.1487,"2024-12":3378.2025,"2025-01":3996.1866,"2025-02":3554.3451,"2025-03":3714.5601,"2025-04":4043.4292,"2025-05":3791.0174,"2025-06":3770.8353,"2025-07":4027.57,"2025-08":3896.6979,"2025-09":4069.4136,"2025-10":4414.1231,"2025-11":4317.0975,"2025-12":4224.1894,"2026-01":3950.7524,"2026-02":3608.5125,"2026-03":4197.0394,"2026-04":3585.1002,"2026-05":3829.2035,"2026-06":3762.6086},
-            "REVENUE/Revenue Operation Account/Other Operating Revenue": {"2024-01":490.183,"2024-02":475.3047,"2024-03":472.5549,"2024-04":478.1222,"2024-05":477.3811,"2024-06":481.3144,"2024-07":485.2967,"2024-08":486.7754,"2024-09":486.0587,"2024-10":485.4183,"2024-11":475.2447,"2024-12":477.3258,"2025-01":422.173,"2025-02":421.045,"2025-03":420.7765,"2025-04":413.9358,"2025-05":420.4142,"2025-06":416.6323,"2025-07":421.231,"2025-08":422.4911,"2025-09":422.888,"2025-10":423.9516,"2025-11":421.0988,"2025-12":415.1949,"2026-01":479.9521,"2026-02":443.2337,"2026-03":534.8,"2026-04":456.801,"2026-05":479.9527,"2026-06":523.2133},
+            "REVENUE/Revenue Operation Account/Marketing Department": {"2024-01":3517.7042,"2024-02":3548.7842,"2024-03":4345.2442,"2024-04":3948.1242,"2024-05":10963.1042,"2024-06":5905.1042,"2024-07":3568.1042,"2024-08":8802.2042,"2024-09":11976.5442,"2024-10":4930.1442,"2024-11":5222.2542,"2024-12":4577.2242,"2025-01":4282.7042,"2025-02":4295.3042,"2025-03":6032.8942,"2025-04":4703.0892,"2025-05":5339.3042,"2025-06":5871.1992,"2025-07":4915.4242,"2025-08":11879.4792,"2025-09":10380.8242,"2025-10":4836.4242,"2025-11":5486.0542,"2025-12":4774.6042,"2026-01":5208.358,"2026-02":5701.9842,"2026-03":6273.3342,"2026-04":5234.3932,"2026-05":5482.9551,"2026-06":5547.9212},
+            "REVENUE/Revenue Operation Account/Parking": {"2024-01":3934.0415,"2024-02":3423.6263,"2024-03":3698.5201,"2024-04":3997.2703,"2024-05":3906.7414,"2024-06":4134.2124,"2024-07":4130.0894,"2024-08":4132.9539,"2024-09":4247.1998,"2024-10":4627.2272,"2024-11":4515.0609,"2024-12":5105.2496,"2025-01":4640.4829,"2025-02":4165.6411,"2025-03":4363.5959,"2025-04":4715.9092,"2025-05":4408.4929,"2025-06":4411.0189,"2025-07":4699.5677,"2025-08":4532.3966,"2025-09":4723.757,"2025-10":5106.5718,"2025-11":4993.9759,"2025-12":4891.0601,"2026-01":4566.5656,"2026-02":4204.8535,"2026-03":4907.1005,"2026-04":4184.9174,"2026-05":4441.5616,"2026-06":4358.3531},
+            "REVENUE/Revenue Operation Account/Other Operating Revenue": {"2024-01":470.183,"2024-02":455.3047,"2024-03":452.5549,"2024-04":458.1222,"2024-05":457.3811,"2024-06":461.3144,"2024-07":465.2967,"2024-08":466.7754,"2024-09":466.0587,"2024-10":465.4183,"2024-11":455.2447,"2024-12":457.3258,"2025-01":387.173,"2025-02":386.045,"2025-03":385.7765,"2025-04":378.9358,"2025-05":385.4142,"2025-06":381.6323,"2025-07":386.231,"2025-08":387.4911,"2025-09":387.888,"2025-10":388.9516,"2025-11":386.0988,"2025-12":380.1949,"2026-01":479.9521,"2026-02":443.2337,"2026-03":534.8,"2026-04":456.801,"2026-05":479.9527,"2026-06":523.2133},
             "EXPENSE/Property Expense (Overhead)": {"2024-01":802.967,"2024-02":782.967,"2024-03":809.427,"2024-04":808.9095,"2024-05":780.4905,"2024-06":780.4905,"2024-07":780.4905,"2024-08":780.4905,"2024-09":780.4905,"2024-10":785.3815,"2024-11":780.4905,"2024-12":780.4905,"2025-01":813.3767,"2025-02":815.3767,"2025-03":848.2398,"2025-04":817.5572,"2025-05":815.5572,"2025-06":818.8165,"2025-07":846.967,"2025-08":815.5572,"2025-09":815.5572,"2025-10":820.3893,"2025-11":815.5572,"2025-12":815.5572,"2026-01":805.8238,"2026-02":806.6238,"2026-03":846.8385,"2026-04":808.4934,"2026-05":806.4934,"2026-06":809.7528,"2026-07":844.3793,"2026-08":806.4934,"2026-09":806.4934,"2026-10":811.3255,"2026-11":806.4934,"2026-12":806.4934},
             "EXPENSE/Operation Expense/Departemen Exp": {"2024-01":4652.2333,"2024-02":4679.5291,"2024-03":6511.3755,"2024-04":6026.3554,"2024-05":4366.3795,"2024-06":4443.6458,"2024-07":4596.1577,"2024-08":4553.9626,"2024-09":4604.4479,"2024-10":4962.8477,"2024-11":4313.3204,"2024-12":4229.4128,"2025-01":5069.1393,"2025-02":5652.3741,"2025-03":6894.3635,"2025-04":4376.9835,"2025-05":4498.3654,"2025-06":4659.5572,"2025-07":5296.516,"2025-08":4922.7235,"2025-09":5103.8582,"2025-10":4466.9697,"2025-11":4382.79,"2025-12":4354.2234,"2026-01":4860.4154,"2026-02":5782.2761,"2026-03":5656.0558,"2026-04":5472.3805,"2026-05":4855.4755,"2026-06":4517.6607,"2026-07":5073.3527,"2026-08":4755.4639,"2026-09":4767.5048,"2026-10":4829.4998,"2026-11":4347.467,"2026-12":4431.6659},
-            "EXPENSE/Operation Expense/Marketing Exp": {"2024-01":1721.5829,"2024-02":2697.1014,"2024-03":1369.6149,"2024-04":925.5632,"2024-05":545.7487,"2024-06":2503.4251,"2024-07":2533.3466,"2024-08":-2238.2513,"2024-09":5269.7487,"2024-10":4712.7487,"2024-11":382.5213,"2024-12":2110.7487,"2025-01":2064.8022,"2025-02":2037.8002,"2025-03":1013.2402,"2025-04":807.8337,"2025-05":759.8337,"2025-06":814.6658,"2025-07":1369.9359,"2025-08":6886.8337,"2025-09":8445.8337,"2025-10":1482.8337,"2025-11":919.8337,"2025-12":1499.8337,"2026-01":1349.4008,"2026-02":2255.4913,"2026-03":1725.6471,"2026-04":1097.1571,"2026-05":1142.8871,"2026-06":1142.8871,"2026-07":2111.7292,"2026-08":3947.9295,"2026-09":1842.8871,"2026-10":1642.8871,"2026-11":1352.8871,"2026-12":1946.2797},
+            "EXPENSE/Operation Expense/Marketing Exp": {"2024-01":1721.5829,"2024-02":2697.1014,"2024-03":1369.6149,"2024-04":925.5632,"2024-05":7545.7487,"2024-06":3503.4251,"2024-07":2533.3466,"2024-08":1761.7487,"2024-09":13269.7487,"2024-10":5712.7487,"2024-11":1382.5213,"2024-12":3110.7487,"2025-01":2064.8022,"2025-02":2037.8002,"2025-03":1013.2402,"2025-04":807.8337,"2025-05":759.8337,"2025-06":814.6658,"2025-07":1369.9359,"2025-08":6886.8337,"2025-09":8445.8337,"2025-10":1482.8337,"2025-11":919.8337,"2025-12":1499.8337,"2026-01":1349.4008,"2026-02":2255.4913,"2026-03":1725.6471,"2026-04":1097.1571,"2026-05":1142.8871,"2026-06":1142.8871,"2026-07":2111.7292,"2026-08":3947.9295,"2026-09":1842.8871,"2026-10":1642.8871,"2026-11":1352.8871,"2026-12":1946.2797},
             "EXPENSE/Operation Expense/G & A Exp": {"2024-01":2517.9042,"2024-02":2269.6881,"2024-03":3735.3449,"2024-04":4493.662,"2024-05":2277.5993,"2024-06":2364.0993,"2024-07":2286.2221,"2024-08":2432.4903,"2024-09":2376.2741,"2024-10":2374.5892,"2024-11":2277.5993,"2024-12":2397.7525,"2025-01":2604.9563,"2025-02":2626.0222,"2025-03":4739.346,"2025-04":2723.9692,"2025-05":2726.8383,"2025-06":2719.3877,"2025-07":8307.2925,"2025-08":7033.5869,"2025-09":2775.8877,"2025-10":2754.8877,"2025-11":3019.8877,"2025-12":2719.3877,"2026-01":3405.5501,"2026-02":3389.6859,"2026-03":5144.2593,"2026-04":2954.1365,"2026-05":2950.055,"2026-06":3102.6756,"2026-07":7714.0829,"2026-08":6034.9454,"2026-09":3011.2756,"2026-10":3052.2895,"2026-11":3250.055,"2026-12":2995.2017},
             "EBITDA/EBITDA Property Account": {"2024-01":16828.0225,"2024-02":16203.55,"2024-03":16406.3297,"2024-04":17493.1413,"2024-05":16717.9963,"2024-06":16908.9634,"2024-07":17517.7502,"2024-08":17735.3094,"2024-09":17690.3451,"2024-10":17726.9208,"2024-11":17447.4383,"2024-12":18170.0465,"2025-01":17339.228,"2025-02":17658.8072,"2025-03":17974.6229,"2025-04":18089.09,"2025-05":18190.6069,"2025-06":18073.1935,"2025-07":17653.6586,"2025-08":18204.7599,"2025-09":18447.8541,"2025-10":18629.8234,"2025-11":18250.4412,"2025-12":18906.3872,"2026-01":18989.6983,"2026-02":18245.1772,"2026-03":19127.5028,"2026-04":18515.7179,"2026-05":18749.588,"2026-06":18759.7504,"2026-07":18624.4261,"2026-08":19043.7941,"2026-09":19166.5576,"2026-10":19089.7447,"2026-11":19002.0302,"2026-12":20044.617},
             "EBITDA/EBITDA Operation Account": {"2024-01":4584.2515,"2024-02":3521.853,"2024-03":2529.2955,"2024-04":2482.3825,"2024-05":6670.9284,"2024-06":5590.142,"2024-07":4506.1508,"2024-08":10521.2205,"2024-09":2307.6223,"2024-10":2662.3559,"2024-11":7925.8046,"2024-12":6132.8851,"2025-01":6542.3393,"2025-02":5734.0101,"2025-03":5272.1693,"2025-04":9142.8775,"2025-05":9438.5797,"2025-06":9732.8203,"2025-07":1876.0537,"2025-08":5064.8246,"2025-09":6366.0341,"2025-10":8761.7224,"2025-11":9566.8286,"2025-12":8511.048,"2026-01":7907.7018,"2026-02":6159.3886,"2026-03":6385.5406,"2026-04":7709.7651,"2026-05":8761.6608,"2026-06":8991.3016,"2026-07":2778.5716,"2026-08":5006.7533,"2026-09":9286.9421,"2026-10":7940.7197,"2026-11":9795.4411,"2026-12":9526.2241},
@@ -4131,12 +4339,12 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
             "NPAT/PAT Operation Account/Taxation": {"2024-01":1539.0138,"2024-02":1498.1389,"2024-03":1624.434,"2024-04":1567.2917,"2024-05":1579.5946,"2024-06":1653.8018,"2024-07":1570.4733,"2024-08":1705.0073,"2024-09":1611.1335,"2024-10":1615.5851,"2024-11":1626.9672,"2024-12":1598.7858,"2025-01":1727.5657,"2025-02":1699.5459,"2025-03":1919.5166,"2025-04":1783.5172,"2025-05":1862.3206,"2025-06":1898.2533,"2025-07":1761.2835,"2025-08":2000.1878,"2025-09":1804.9137,"2025-10":1804.2897,"2025-11":1839.918,"2025-12":1765.091},
             "INCOME NETT/Nett Marketing/Inc Sponsorship": {"2024-01":2356.1442,"2024-02":2553.5442,"2024-03":3100.5242,"2024-04":2481.0142,"2024-05":2801.5442,"2024-06":3458.1542,"2024-07":2406.5442,"2024-08":3355.2542,"2024-09":2898.1442,"2024-10":2851.7442,"2024-11":2933.8542,"2024-12":2301.1442,"2025-01":2846.4442,"2025-02":3063.4442,"2025-03":4640.7342,"2025-04":2978.8142,"2025-05":3975.8442,"2025-06":4146.5042,"2025-07":3322.8442,"2025-08":5147.5042,"2025-09":3690.4442,"2025-10":3546.0442,"2025-11":3831.2542,"2025-12":3076.6042,"2026-01":3538.7242,"2026-02":3776.5242,"2026-03":4186.2342,"2026-04":3466.0542,"2026-05":3968.1242,"2026-06":3628.3542,"2026-07":3565.1242,"2026-08":4429.3542,"2026-09":3982.7242,"2026-10":3448.3242,"2026-11":4120.8042,"2026-12":3995.2242},
             "REVENUE/Inc Sponsorship": {"2024-01":2356.1442,"2024-02":2553.5442,"2024-03":3100.5242,"2024-04":2481.0142,"2024-05":2801.5442,"2024-06":3458.1542,"2024-07":2406.5442,"2024-08":3355.2542,"2024-09":2898.1442,"2024-10":2851.7442,"2024-11":2933.8542,"2024-12":2301.1442,"2025-01":2846.4442,"2025-02":3063.4442,"2025-03":4640.7342,"2025-04":2978.8142,"2025-05":3975.8442,"2025-06":4146.5042,"2025-07":3322.8442,"2025-08":5147.5042,"2025-09":3690.4442,"2025-10":3546.0442,"2025-11":3831.2542,"2025-12":3076.6042,"2026-01":3538.7242,"2026-02":3776.5242,"2026-03":4186.2342,"2026-04":3466.0542,"2026-05":3968.1242,"2026-06":3628.3542,"2026-07":3565.1242,"2026-08":4429.3542,"2026-09":3982.7242,"2026-10":3448.3242,"2026-11":4120.8042,"2026-12":3995.2242},
-            "INCOME NETT/Nett Marketing/Inc Casual Leasing": {"2024-01":1141.56,"2024-02":975.24,"2024-03":1224.72,"2024-04":1447.11,"2024-05":1141.56,"2024-06":1426.95,"2024-07":1141.56,"2024-08":1426.95,"2024-09":1058.4,"2024-10":1058.4,"2024-11":1268.4,"2024-12":1256.08,"2025-01":1401.26,"2025-02":1196.86,"2025-03":1357.16,"2025-04":1689.275,"2025-05":1328.46,"2025-06":1689.695,"2025-07":1557.58,"2025-08":6696.975,"2025-09":6655.38,"2025-10":1255.38,"2025-11":1619.8,"2025-12":1663,"2026-01":1669.6338,"2026-02":1925.46,"2026-03":2087.1,"2026-04":1768.339,"2026-05":1514.8309,"2026-06":1919.567,"2026-07":1773.48,"2026-08":2868.975,"2026-09":2585.78,"2026-10":1545.78,"2026-11":1691.8,"2026-12":2039.2},
-            "REVENUE/Inc Casual Leasing": {"2024-01":1141.56,"2024-02":975.24,"2024-03":1224.72,"2024-04":1447.11,"2024-05":1141.56,"2024-06":1426.95,"2024-07":1141.56,"2024-08":1426.95,"2024-09":1058.4,"2024-10":1058.4,"2024-11":1268.4,"2024-12":1256.08,"2025-01":1401.26,"2025-02":1196.86,"2025-03":1357.16,"2025-04":1689.275,"2025-05":1328.46,"2025-06":1689.695,"2025-07":1557.58,"2025-08":6696.975,"2025-09":6655.38,"2025-10":1255.38,"2025-11":1619.8,"2025-12":1663,"2026-01":1669.6338,"2026-02":1925.46,"2026-03":2087.1,"2026-04":1768.339,"2026-05":1514.8309,"2026-06":1919.567,"2026-07":1773.48,"2026-08":2868.975,"2026-09":2585.78,"2026-10":1545.78,"2026-11":1691.8,"2026-12":2039.2},
-            "INCOME NETT/Nett Marketing/Biaya Marketing/Biaya non event": {"2024-01":1721.5829,"2024-02":2697.1014,"2024-03":1369.6149,"2024-04":925.5632,"2024-05":-854.2513,"2024-06":2303.4251,"2024-07":2533.3466,"2024-08":-3038.2513,"2024-09":3669.7487,"2024-10":4512.7487,"2024-11":182.5213,"2024-12":3893.7487,"2025-01":2064.8022,"2025-02":2037.8002,"2025-03":1013.2402,"2025-04":807.8337,"2025-05":759.8337,"2025-06":814.6658,"2025-07":1169.9359,"2025-08":1886.8337,"2025-09":3045.8337,"2025-10":1482.8337,"2025-11":919.8337,"2025-12":1299.8337,"2026-01":1349.4008,"2026-02":2255.4913,"2026-03":1725.6471,"2026-04":1097.1571,"2026-05":1142.8871,"2026-06":1142.8871,"2026-07":2111.7292,"2026-08":3147.9295,"2026-09":1042.8871,"2026-10":1642.8871,"2026-11":1352.8871,"2026-12":1746.2797},
-            "EXPENSE/Operation Expense/Marketing Exp/Biaya non event": {"2024-01":1721.5829,"2024-02":2697.1014,"2024-03":1369.6149,"2024-04":925.5632,"2024-05":-854.2513,"2024-06":2303.4251,"2024-07":2533.3466,"2024-08":-3038.2513,"2024-09":3669.7487,"2024-10":4512.7487,"2024-11":182.5213,"2024-12":3893.7487,"2025-01":2064.8022,"2025-02":2037.8002,"2025-03":1013.2402,"2025-04":807.8337,"2025-05":759.8337,"2025-06":814.6658,"2025-07":1169.9359,"2025-08":1886.8337,"2025-09":3045.8337,"2025-10":1482.8337,"2025-11":919.8337,"2025-12":1299.8337,"2026-01":1349.4008,"2026-02":2255.4913,"2026-03":1725.6471,"2026-04":1097.1571,"2026-05":1142.8871,"2026-06":1142.8871,"2026-07":2111.7292,"2026-08":3147.9295,"2026-09":1042.8871,"2026-10":1642.8871,"2026-11":1352.8871,"2026-12":1746.2797},
-            "INCOME NETT/Nett Marketing/Biaya Marketing/Biaya Event": {"2024-01":0,"2024-02":0,"2024-03":0,"2024-04":0,"2024-05":1400,"2024-06":200,"2024-07":0,"2024-08":800,"2024-09":1600,"2024-10":200,"2024-11":200,"2024-12":-1783,"2025-01":0,"2025-02":0,"2025-03":0,"2025-04":0,"2025-05":0,"2025-06":0,"2025-07":200,"2025-08":5000,"2025-09":5400,"2025-10":0,"2025-11":0,"2025-12":200,"2026-01":0,"2026-02":0,"2026-03":0,"2026-04":0,"2026-05":0,"2026-06":0,"2026-07":0,"2026-08":800,"2026-09":800,"2026-10":0,"2026-11":0,"2026-12":200},
-            "EXPENSE/Operation Expense/Marketing Exp/Biaya Event": {"2024-01":0,"2024-02":0,"2024-03":0,"2024-04":0,"2024-05":1400,"2024-06":200,"2024-07":0,"2024-08":800,"2024-09":1600,"2024-10":200,"2024-11":200,"2024-12":-1783,"2025-01":0,"2025-02":0,"2025-03":0,"2025-04":0,"2025-05":0,"2025-06":0,"2025-07":200,"2025-08":5000,"2025-09":5400,"2025-10":0,"2025-11":0,"2025-12":200,"2026-01":0,"2026-02":0,"2026-03":0,"2026-04":0,"2026-05":0,"2026-06":0,"2026-07":0,"2026-08":800,"2026-09":800,"2026-10":0,"2026-11":0,"2026-12":200},
+            "INCOME NETT/Nett Marketing/Inc Casual Leasing": {"2024-01":1141.56,"2024-02":975.24,"2024-03":1224.72,"2024-04":1447.11,"2024-05":1141.56,"2024-06":1426.95,"2024-07":1141.56,"2024-08":1426.95,"2024-09":1058.4,"2024-10":1058.4,"2024-11":1268.4,"2024-12":1256.08,"2025-01":1401.26,"2025-02":1196.86,"2025-03":1357.16,"2025-04":1689.275,"2025-05":1328.46,"2025-06":1689.695,"2025-07":1357.58,"2025-08":1696.975,"2025-09":1255.38,"2025-10":1255.38,"2025-11":1619.8,"2025-12":1463,"2026-01":1592.6338,"2026-02":1838.46,"2026-03":2000.1,"2026-04":1681.339,"2026-05":1421.8309,"2026-06":1764.567,"2026-07":1773.48,"2026-08":2868.975,"2026-09":2585.78,"2026-10":1545.78,"2026-11":1691.8,"2026-12":2039.2},
+            "REVENUE/Inc Casual Leasing": {"2024-01":1141.56,"2024-02":975.24,"2024-03":1224.72,"2024-04":1447.11,"2024-05":1141.56,"2024-06":1426.95,"2024-07":1141.56,"2024-08":1426.95,"2024-09":1058.4,"2024-10":1058.4,"2024-11":1268.4,"2024-12":1256.08,"2025-01":1401.26,"2025-02":1196.86,"2025-03":1357.16,"2025-04":1689.275,"2025-05":1328.46,"2025-06":1689.695,"2025-07":1357.58,"2025-08":1696.975,"2025-09":1255.38,"2025-10":1255.38,"2025-11":1619.8,"2025-12":1463,"2026-01":1592.6338,"2026-02":1838.46,"2026-03":2000.1,"2026-04":1681.339,"2026-05":1421.8309,"2026-06":1764.567,"2026-07":1773.48,"2026-08":2868.975,"2026-09":2585.78,"2026-10":1545.78,"2026-11":1691.8,"2026-12":2039.2},
+            "INCOME NETT/Nett Marketing/Biaya Marketing/Biaya non event": {"2024-01":811.5829,"2024-02":1927.1014,"2024-03":979.6149,"2024-04":915.5632,"2024-05":795.7487,"2024-06":803.4251,"2024-07":823.3466,"2024-08":1751.7487,"2024-09":794.7487,"2024-10":802.7487,"2024-11":1102.5213,"2024-12":800.7487,"2025-01":764.8022,"2025-02":1537.8002,"2025-03":1013.2402,"2025-04":807.8337,"2025-05":759.8337,"2025-06":814.6658,"2025-07":869.9359,"2025-08":1732.8337,"2025-09":899.8337,"2025-10":759.8337,"2025-11":919.8337,"2025-12":799.8337,"2026-01":849.4008,"2026-02":1755.4913,"2026-03":1225.6471,"2026-04":697.1571,"2026-05":1142.8871,"2026-06":542.8871,"2026-07":961.7292,"2026-08":1747.9295,"2026-09":1842.8871,"2026-10":-157.1129,"2026-11":1152.8871,"2026-12":746.2797},
+            "EXPENSE/Operation Expense/Marketing Exp/Biaya non event": {"2024-01":811.5829,"2024-02":1927.1014,"2024-03":979.6149,"2024-04":915.5632,"2024-05":795.7487,"2024-06":803.4251,"2024-07":823.3466,"2024-08":1751.7487,"2024-09":794.7487,"2024-10":802.7487,"2024-11":1102.5213,"2024-12":800.7487,"2025-01":764.8022,"2025-02":1537.8002,"2025-03":1013.2402,"2025-04":807.8337,"2025-05":759.8337,"2025-06":814.6658,"2025-07":869.9359,"2025-08":1732.8337,"2025-09":899.8337,"2025-10":759.8337,"2025-11":919.8337,"2025-12":799.8337,"2026-01":849.4008,"2026-02":1755.4913,"2026-03":1225.6471,"2026-04":697.1571,"2026-05":1142.8871,"2026-06":542.8871,"2026-07":961.7292,"2026-08":1747.9295,"2026-09":1842.8871,"2026-10":-157.1129,"2026-11":1152.8871,"2026-12":746.2797},
+            "INCOME NETT/Nett Marketing/Biaya Marketing/Biaya Event": {"2024-01":910,"2024-02":770,"2024-03":390,"2024-04":10,"2024-05":6750,"2024-06":2700,"2024-07":1710,"2024-08":10,"2024-09":12475,"2024-10":4910,"2024-11":280,"2024-12":2310,"2025-01":1300,"2025-02":500,"2025-03":0,"2025-04":0,"2025-05":0,"2025-06":0,"2025-07":500,"2025-08":5154,"2025-09":7546,"2025-10":723,"2025-11":0,"2025-12":700,"2026-01":500,"2026-02":500,"2026-03":500,"2026-04":400,"2026-05":0,"2026-06":600,"2026-07":1150,"2026-08":2200,"2026-09":0,"2026-10":1800,"2026-11":200,"2026-12":1200},
+            "EXPENSE/Operation Expense/Marketing Exp/Biaya Event": {"2024-01":910,"2024-02":770,"2024-03":390,"2024-04":10,"2024-05":6750,"2024-06":2700,"2024-07":1710,"2024-08":10,"2024-09":12475,"2024-10":4910,"2024-11":280,"2024-12":2310,"2025-01":1300,"2025-02":500,"2025-03":0,"2025-04":0,"2025-05":0,"2025-06":0,"2025-07":500,"2025-08":5154,"2025-09":7546,"2025-10":723,"2025-11":0,"2025-12":700,"2026-01":500,"2026-02":500,"2026-03":500,"2026-04":400,"2026-05":0,"2026-06":600,"2026-07":1150,"2026-08":2200,"2026-09":0,"2026-10":1800,"2026-11":200,"2026-12":1200},
             "INCOME NETT/Nett Parkir/Inc Parkir": {"2024-01":3934.0415,"2024-02":3423.6263,"2024-03":3698.5201,"2024-04":3997.2703,"2024-05":3906.7414,"2024-06":4134.2124,"2024-07":4130.0894,"2024-08":4132.9539,"2024-09":4247.1998,"2024-10":4627.2272,"2024-11":4515.0609,"2024-12":5105.2496,"2025-01":4640.4829,"2025-02":4165.6411,"2025-03":4363.5959,"2025-04":4715.9092,"2025-05":4408.4929,"2025-06":4411.0189,"2025-07":4699.5677,"2025-08":4532.3966,"2025-09":4723.757,"2025-10":5106.5718,"2025-11":4993.9759,"2025-12":4891.0601,"2026-01":4566.5656,"2026-02":4204.8535,"2026-03":4907.1005,"2026-04":4184.9174,"2026-05":4441.5616,"2026-06":4358.3531,"2026-07":4581.334,"2026-08":4609.3291,"2026-09":4337.7319,"2026-10":4373.1904,"2026-11":4950.3298,"2026-12":4787.4759},
             "REVENUE/Inc Parkir": {"2024-01":3934.0415,"2024-02":3423.6263,"2024-03":3698.5201,"2024-04":3997.2703,"2024-05":3906.7414,"2024-06":4134.2124,"2024-07":4130.0894,"2024-08":4132.9539,"2024-09":4247.1998,"2024-10":4627.2272,"2024-11":4515.0609,"2024-12":5105.2496,"2025-01":4640.4829,"2025-02":4165.6411,"2025-03":4363.5959,"2025-04":4715.9092,"2025-05":4408.4929,"2025-06":4411.0189,"2025-07":4699.5677,"2025-08":4532.3966,"2025-09":4723.757,"2025-10":5106.5718,"2025-11":4993.9759,"2025-12":4891.0601,"2026-01":4566.5656,"2026-02":4204.8535,"2026-03":4907.1005,"2026-04":4184.9174,"2026-05":4441.5616,"2026-06":4358.3531,"2026-07":4581.334,"2026-08":4609.3291,"2026-09":4337.7319,"2026-10":4373.1904,"2026-11":4950.3298,"2026-12":4787.4759},
             "INCOME NETT/Nett Parkir/Biaya Dept Parkir": {"2024-01":28.8885,"2024-02":28.6385,"2024-03":52.6875,"2024-04":52.5154,"2024-05":31.3803,"2024-06":37.7303,"2024-07":31.3803,"2024-08":31.1303,"2024-09":31.3803,"2024-10":31.1303,"2024-11":31.3803,"2024-12":31.1303,"2025-01":129.8636,"2025-02":138.2953,"2025-03":159.6573,"2025-04":146.152,"2025-05":124.3795,"2025-06":144.4522,"2025-07":147.5999,"2025-08":129.7608,"2025-09":127.2455,"2025-10":128.8105,"2025-11":124.6458,"2025-12":125.0803,"2026-01":139.1384,"2026-02":148.6787,"2026-03":199.4141,"2026-04":158.4294,"2026-05":146.5668,"2026-06":136.3775,"2026-07":155.7706,"2026-08":136.3066,"2026-09":128.76,"2026-10":125.7149,"2026-11":128.7283,"2026-12":136.2874},
@@ -4163,14 +4371,14 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
             "ACCOUNT RECEIVABLE/Aging > 60": {"2024-01":32.19,"2024-02":26.37,"2024-03":16.71,"2024-04":15.25,"2024-05":33.74,"2024-06":32.17,"2024-07":16.55,"2024-08":24.16,"2024-09":29.53,"2024-10":17.78,"2024-11":39.37,"2024-12":32.55,"2025-01":16.12,"2025-02":16.5,"2025-03":32.82,"2025-04":21.12,"2025-05":20.16,"2025-06":24.07,"2025-07":10.33,"2025-08":19.85,"2025-09":11.48,"2025-10":2.17,"2025-11":23.14,"2025-12":4.33,"2026-01":5,"2026-02":5,"2026-03":5,"2026-04":5,"2026-05":5,"2026-06":5,"2026-07":5,"2026-08":5,"2026-09":5,"2026-10":5,"2026-11":5,"2026-12":5},
             "EXPENSE/Finance Expense - Net": {"2024-01":-65,"2024-02":-65,"2024-03":-65,"2024-04":-65,"2024-05":-65,"2024-06":-65,"2024-07":-65,"2024-08":-65,"2024-09":-65,"2024-10":-65,"2024-11":-65,"2024-12":-65,"2025-01":-191,"2025-02":-191,"2025-03":-191,"2025-04":-191,"2025-05":-191,"2025-06":-191,"2025-07":-191,"2025-08":-191,"2025-09":-191,"2025-10":-191,"2025-11":-191,"2025-12":-191,"2026-01":-188,"2026-02":-188,"2026-03":-188,"2026-04":-188,"2026-05":-188,"2026-06":-188,"2026-07":-188,"2026-08":-188,"2026-09":-188,"2026-10":-188,"2026-11":-188,"2026-12":-188},
             "NPAT": {"2024-01":15446.4602,"2024-02":13856.5977,"2024-03":12882.8251,"2024-04":13865.8824,"2024-05":17343.5867,"2024-06":16357.7448,"2024-07":15900.8236,"2024-08":21973.6209,"2024-09":13811.1369,"2024-10":14193.8481,"2024-11":19194.8693,"2024-12":18080.4787,"2025-01":17416.7249,"2025-02":16896.9991,"2025-03":16480.0672,"2025-04":20631.4246,"2025-05":20929.9253,"2025-06":21082.886,"2025-07":12985.4354,"2025-08":16437.0209,"2025-09":18163.4673,"2025-10":20739.0908,"2025-11":21169.6674,"2025-12":20779.3107,"2026-01":19963.2991,"2026-02":17561.1631,"2026-03":18433.667,"2026-04":19262.3471,"2026-05":20473.8251,"2026-06":20720.701,"2026-07":14402.0899,"2026-08":16899.4527,"2026-09":21363.4296,"2026-10":19982.9945,"2026-11":21702.9928,"2026-12":22358.8894},
-            "RASIO/Rasio Property Account/Revenue PA / Avg NLA / PA": {"2024-01":233051.1911,"2024-02":224496.6807,"2024-03":227506.2548,"2024-04":241847.7505,"2024-05":231219.8263,"2024-06":233736.0258,"2024-07":241774.277,"2024-08":244644.1094,"2024-09":244046.0671,"2024-10":244590.6145,"2024-11":240830.5656,"2024-12":250375.2559,"2025-01":237613.1852,"2025-02":241822.5788,"2025-03":246386.6982,"2025-04":247483.417,"2025-05":248786.0703,"2025-06":247291.8209,"2025-07":242168.6942,"2025-08":248971.3297,"2025-09":252153.3724,"2025-10":254598.5573,"2025-11":249569.2868,"2025-12":258155.4592,"2026-01":255221.9799,"2026-02":245633.2471,"2026-03":254768.1323,"2026-04":245176.1533,"2026-05":247152.2495,"2026-06":246687.2886,"2026-07":286320.9094,"2026-08":333635.6951,"2026-09":377661.4367,"2026-10":418111.5401,"2026-11":457783.9005,"2026-12":525685.6893},
+            "RASIO/Rasio Property Account/Revenue PA / Avg NLA / PA": {"2024-01":233051.1911,"2024-02":224496.6794,"2024-03":227506.2548,"2024-04":241847.7505,"2024-05":231219.8263,"2024-06":233736.0244,"2024-07":241774.277,"2024-08":244644.1094,"2024-09":244046.0684,"2024-10":244590.6145,"2024-11":240830.5656,"2024-12":250375.2559,"2025-01":237613.1852,"2025-02":241822.5788,"2025-03":246386.6995,"2025-04":247483.417,"2025-05":248786.0703,"2025-06":247291.8209,"2025-07":242168.6942,"2025-08":248971.3297,"2025-09":252153.3724,"2025-10":254598.5573,"2025-11":249569.2868,"2025-12":258155.4592,"2026-01":256094.9991,"2026-02":246315.0902,"2026-03":255679.2961,"2026-04":246097.736,"2026-05":248034.8369,"2026-06":247586.8402,"2026-07":286320.9094,"2026-08":333635.6951,"2026-09":377661.4367,"2026-10":418111.5401,"2026-11":457783.9005,"2026-12":525685.6893},
             "RASIO/Rasio Property Account/EBITDA PA / Avg NLA": {"2024-01":222437.3547,"2024-02":214148.8552,"2024-03":216809.6756,"2024-04":231158.6224,"2024-05":220906.6545,"2024-06":223423.1709,"2024-07":231461.6709,"2024-08":234331.7057,"2024-09":233733.8299,"2024-10":234213.8951,"2024-11":230518.5894,"2024-12":240063.3828,"2025-01":226966.2818,"2025-02":231149.4959,"2025-03":235283.4466,"2025-04":236781.7932,"2025-05":238110.6247,"2025-06":236573.7119,"2025-07":231082.1019,"2025-08":238295.8841,"2025-09":241477.9281,"2025-10":243859.862,"2025-11":238893.8412,"2025-12":247480.015,"2026-01":244832.5623,"2026-02":235233.5152,"2026-03":243966.9019,"2026-04":234918.3839,"2026-05":236959.6831,"2026-06":236479.7877,"2026-07":273902.9185,"2026-08":320080.4765,"2026-09":362411.8158,"2026-10":401065.9947,"2026-11":439145.4726,"2026-12":505352.8614},
-            "RASIO/Rasio Property Account/EBITDA PA Margin": {"2024-01":95.45,"2024-02":95.39,"2024-03":95.3,"2024-04":95.58,"2024-05":95.54,"2024-06":95.59,"2024-07":95.73,"2024-08":95.78,"2024-09":95.77,"2024-10":95.76,"2024-11":95.72,"2024-12":95.88,"2025-01":95.52,"2025-02":95.59,"2025-03":95.49,"2025-04":95.68,"2025-05":95.71,"2025-06":95.67,"2025-07":95.42,"2025-08":95.71,"2025-09":95.77,"2025-10":95.78,"2025-11":95.72,"2025-12":95.86,"2026-01":95.93,"2026-02":95.77,"2026-03":95.76,"2026-04":95.82,"2026-05":95.88,"2026-06":95.86,"2026-07":95.66,"2026-08":95.94,"2026-09":95.96,"2026-10":95.92,"2026-11":95.93,"2026-12":96.13},
+            "RASIO/Rasio Property Account/EBITDA PA Margin": {"2024-01":95.45,"2024-02":95.39,"2024-03":95.3,"2024-04":95.58,"2024-05":95.54,"2024-06":95.59,"2024-07":95.73,"2024-08":95.78,"2024-09":95.77,"2024-10":95.76,"2024-11":95.72,"2024-12":95.88,"2025-01":95.52,"2025-02":95.59,"2025-03":95.49,"2025-04":95.68,"2025-05":95.71,"2025-06":95.67,"2025-07":95.42,"2025-08":95.71,"2025-09":95.77,"2025-10":95.78,"2025-11":95.72,"2025-12":95.86,"2026-01":95.6,"2026-02":95.5,"2026-03":95.42,"2026-04":95.46,"2026-05":95.53,"2026-06":95.51,"2026-07":95.66,"2026-08":95.94,"2026-09":95.96,"2026-10":95.92,"2026-11":95.93,"2026-12":96.13},
             "RASIO/Rasio Property Account/PAT PA / Avg NLA": {"2024-01":168991.0806,"2024-02":161526.2043,"2024-03":163564.9641,"2024-04":176481.5121,"2024-05":167293.5807,"2024-06":169550.4676,"2024-07":176785.8789,"2024-08":179339.2445,"2024-09":178771.3879,"2024-10":179197.4157,"2024-11":175878.4696,"2024-12":184469.1052,"2025-01":172438.0269,"2025-02":176080.1445,"2025-03":179615.1813,"2025-04":181508.5309,"2025-05":182600.4051,"2025-06":181219.7237,"2025-07":176305.7739,"2025-08":182856.1724,"2025-09":185854.2438,"2025-10":188184.7285,"2025-11":183742.5165,"2025-12":191473.2865,"2026-01":188638.6358,"2026-02":179989.3814,"2026-03":188264.2709,"2026-04":179403.8804,"2026-05":181297.8563,"2026-06":180963.1032,"2026-07":209169.0949,"2026-08":245397.4448,"2026-09":278164.1523,"2026-10":307651.2398,"2026-11":336703.8262,"2026-12":391507.9222},
-            "RASIO/Rasio Property Account/PAT PA Margin": {"2024-01":72.51,"2024-02":71.95,"2024-03":71.89,"2024-04":72.97,"2024-05":72.35,"2024-06":72.54,"2024-07":73.12,"2024-08":73.31,"2024-09":73.25,"2024-10":73.26,"2024-11":73.03,"2024-12":73.68,"2025-01":72.57,"2025-02":72.81,"2025-03":72.9,"2025-04":73.34,"2025-05":73.4,"2025-06":73.28,"2025-07":72.8,"2025-08":73.44,"2025-09":73.71,"2025-10":73.91,"2025-11":73.62,"2025-12":74.17,"2026-01":73.91,"2026-02":73.28,"2026-03":73.9,"2026-04":73.17,"2026-05":73.35,"2026-06":73.36,"2026-07":73.05,"2026-08":73.55,"2026-09":73.65,"2026-10":73.58,"2026-11":73.55,"2026-12":74.48},
+            "RASIO/Rasio Property Account/PAT PA Margin": {"2024-01":72.51,"2024-02":71.95,"2024-03":71.89,"2024-04":72.97,"2024-05":72.35,"2024-06":72.54,"2024-07":73.12,"2024-08":73.31,"2024-09":73.25,"2024-10":73.26,"2024-11":73.03,"2024-12":73.68,"2025-01":72.57,"2025-02":72.81,"2025-03":72.9,"2025-04":73.34,"2025-05":73.4,"2025-06":73.28,"2025-07":72.8,"2025-08":73.44,"2025-09":73.71,"2025-10":73.91,"2025-11":73.62,"2025-12":74.17,"2026-01":73.66,"2026-02":73.07,"2026-03":73.63,"2026-04":72.9,"2026-05":73.09,"2026-06":73.09,"2026-07":73.05,"2026-08":73.55,"2026-09":73.65,"2026-10":73.58,"2026-11":73.55,"2026-12":74.48},
             "RASIO/Ratio Operation Account/Service Charge / Avg NLA / PA": {"2024-01":0,"2024-02":0,"2024-03":0,"2024-04":0,"2024-05":0,"2024-06":0,"2024-07":0,"2024-08":0,"2024-09":0,"2024-10":0,"2024-11":0,"2024-12":0,"2025-01":0,"2025-02":0,"2025-03":0,"2025-04":0,"2025-05":0,"2025-06":0,"2025-07":0,"2025-08":0,"2025-09":0,"2025-10":0,"2025-11":0,"2025-12":0,"2026-01":0,"2026-02":0,"2026-03":0,"2026-04":0,"2026-05":0,"2026-06":0,"2026-07":0,"2026-08":0,"2026-09":0,"2026-10":0,"2026-11":0,"2026-12":0},
-            "RASIO/Ratio Employee Cost/Employee Costs/Revenue Ratio": {"2024-01":9.88,"2024-02":10.14,"2024-03":16.9,"2024-04":18.74,"2024-05":10.06,"2024-06":9.73,"2024-07":9.79,"2024-08":8.2,"2024-09":10.78,"2024-10":9.55,"2024-11":9.53,"2024-12":9.31,"2025-01":10.91,"2025-02":10.41,"2025-03":17.25,"2025-04":10.62,"2025-05":10.08,"2025-06":10.22,"2025-07":17.26,"2025-08":11.39,"2025-09":8.91,"2025-10":10.18,"2025-11":10.11,"2025-12":10.15,"2026-01":10.65,"2026-02":10.61,"2026-03":17.66,"2026-04":10.67,"2026-05":9.9,"2026-06":11.82,"2026-07":23.96,"2026-08":17.6,"2026-09":14.22,"2026-10":14.38,"2026-11":14.32,"2026-12":14.4},
-            "RASIO/Ratio Employee Cost/Outsource Costs/Revenue Ratio": {"2024-01":5.4,"2024-02":5.58,"2024-03":5.37,"2024-04":5.23,"2024-05":5.37,"2024-06":5.17,"2024-07":5.23,"2024-08":4.99,"2024-09":5.11,"2024-10":5.07,"2024-11":5.09,"2024-12":4.99,"2025-01":4.56,"2025-02":8.21,"2025-03":8.27,"2025-04":4.38,"2025-05":4.32,"2025-06":4.28,"2025-07":4.68,"2025-08":3.68,"2025-09":3.77,"2025-10":4.26,"2025-11":4.26,"2025-12":4.28,"2026-01":5.04,"2026-02":8.79,"2026-03":5.47,"2026-04":7.97,"2026-05":5.04,"2026-06":5.04,"2026-07":6.82,"2026-08":7.51,"2026-09":6.65,"2026-10":7.74,"2026-11":6.69,"2026-12":6.57},
+            "RASIO/Ratio Employee Cost/Employee Costs/Revenue Ratio": {"2024-01":9.48,"2024-02":9.76,"2024-03":16.24,"2024-04":17.98,"2024-05":7.99,"2024-06":9.07,"2024-07":9.39,"2024-08":7.09,"2024-09":8.43,"2024-10":8.88,"2024-11":8.86,"2024-12":8.64,"2025-01":10.71,"2025-02":10.23,"2025-03":16.96,"2025-04":10.43,"2025-05":9.91,"2025-06":10.05,"2025-07":16.95,"2025-08":11.23,"2025-09":8.78,"2025-10":10,"2025-11":9.93,"2025-12":9.97,"2026-01":10.49,"2026-02":10.44,"2026-03":17.35,"2026-04":10.5,"2026-05":9.74,"2026-06":11.64,"2026-07":23.96,"2026-08":17.6,"2026-09":14.22,"2026-10":14.38,"2026-11":14.32,"2026-12":14.4},
+            "RASIO/Ratio Employee Cost/Outsource Costs/Revenue Ratio": {"2024-01":5.18,"2024-02":5.37,"2024-03":5.16,"2024-04":5.02,"2024-05":4.26,"2024-06":4.82,"2024-07":5.01,"2024-08":4.32,"2024-09":3.99,"2024-10":4.72,"2024-11":4.74,"2024-12":4.62,"2025-01":4.48,"2025-02":8.07,"2025-03":8.13,"2025-04":4.3,"2025-05":4.25,"2025-06":4.21,"2025-07":4.59,"2025-08":3.63,"2025-09":3.71,"2025-10":4.19,"2025-11":4.19,"2025-12":4.2,"2026-01":4.96,"2026-02":8.65,"2026-03":5.38,"2026-04":7.84,"2026-05":4.96,"2026-06":4.96,"2026-07":6.82,"2026-08":7.51,"2026-09":6.65,"2026-10":7.74,"2026-11":6.69,"2026-12":6.57},
           },
         },
         MKOJ: {
@@ -8961,8 +9169,12 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
    *     interaksi yang tidak bisa dibuktikan tampil bukan taruhan yang pantas untuk berkas
    *     yang dikirim ke Tim Manajemen.
    *
-   *  Di KARTU penanda bantunya tetap dipakai: di sana tidak ada wadah yang memotong, dan
-   *  ruangnya memang tidak cukup untuk kalimat penuh. */
+   *  Di KARTU penanda bantunya tetap dipakai, karena ruangnya memang tidak cukup untuk
+   *  kalimat penuh. **Tetapi alasan "di sana tidak ada wadah yang memotong" TERBUKTI SALAH**
+   *  (8 September 2026, foto layar pemilik): `.pr-cv-seksi` ber-`overflow: hidden` untuk sudut
+   *  tumpulnya dan `html, body` ber-`overflow-x: hidden`, jadi kotak yang DIPUSATKAN pada ikon
+   *  `?` di tepi kiri baris terpotong sisi kirinya. Kotaknya kini dijangkar ke KIRI supaya
+   *  tumbuh ke dalam kartunya — lihat `.pr-bantu::after` di prototype.css. */
   //  **DIHAPUS 6 September 2026**, permintaan pemilik: *"seperti di DATA Info semua halaman
   //  VAR% dibanding budget periode yang sama. Hilangkan saja ya"* — bagian dari permintaan
   //  yang lebih besar hari itu, membuang keterangan dari seluruh halaman.
@@ -9005,7 +9217,8 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
    *  23 Agustus, menggantikan "ALL" yang dipakai sejak 21 Agustus. Sebabnya: kata itu harus sama
    *  dengan yang tertulis di filter Unit Bisnis tepat di atasnya. "ALL" memaksa pembaca
    *  menerjemahkan sendiri bahwa itu pilihan filter yang sedang aktif. */
-  const NAMA_SEMUA_UNIT = 'Semua Unit Bisnis';
+  // Literalnya di KAMUS sejak 8 September — lihat `D.NAMA_SEMUA_UNIT` di sana.
+  const NAMA_SEMUA_UNIT = D.NAMA_SEMUA_UNIT;
   const judulTotalRevenue = (namaUnitBisnis) =>
     `${NAMA_REVENUE} ${namaUnitBisnis || NAMA_SEMUA_UNIT}`;
 
@@ -9104,13 +9317,15 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
       `<span><i class="pr-legend-key pr-legend-budget"></i>Budget</span>` +
     `</div>`;
 
-  /** Dipakai kalau seri budget-nya kosong seluruhnya — lihat `kartuTren()`. Keterangannya
-   *  MENYEBUT sebabnya, bukan cuma menghilangkan satu baris legenda: pembaca yang biasa
-   *  melihat dua garis perlu tahu ke mana yang satu pergi. */
+  /** Dipakai kalau seri budget-nya kosong seluruhnya — lihat `kartuTren()`.
+   *
+   *  **Kalimat sebabnya DIBUANG 8 September 2026** ("Budget belum tersedia untuk metrik ini"),
+   *  bagian dari permintaan pemilik membuang keterangan dari kartu. Yang tinggal legenda
+   *  berkunci warna untuk satu seri yang benar-benar digambar — dan itu tetap jujur: legenda
+   *  tanpa entri Budget memang berarti tidak ada garis budget di sana. */
   const LEGENDA_TREN_TANPA_BUDGET =
     `<div class="pr-chart-legend">` +
       `<span><i class="pr-legend-key pr-legend-aktual"></i>Aktual</span>` +
-      `<span>Budget belum tersedia untuk metrik ini</span>` +
     `</div>`;
 
   /** Judul rentang chart tren, DIHITUNG dari label chart-nya sendiri — bukan ditulis tetap dan
@@ -9193,6 +9408,41 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
         `${collapseNyala(state) ? ' checked' : ''}>` +
       `<label class="form-check-label" for="swCollapseView">Collapse View</label>` +
     `</div>`;
+
+  /** ── Tombol Export (8 September 2026) ──────────────────────────────────────────────────
+   *
+   *  Permintaan pemilik: *"tambahakan di setiap halaman Dashboard button Export file nanti
+   *  format pilihannya PDF, Power Point. Buat button pilihannya sj dlu"*.
+   *
+   *  **Kedua pilihannya dirender MATI**, dan itu aturan proyek ini yang sudah ditetapkan untuk
+   *  keadaan yang sama: seksi yang belum punya halaman detail memajang tombolnya dalam keadaan
+   *  mati, bukan menghilangkannya, karena *"tombol hidup yang tidak membuka apa pun lebih
+   *  membingungkan daripada yang jelas belum aktif"*. Pemilik meminta tombol dan pilihannya
+   *  DULU; membuatnya tampak hidup lalu diam waktu diklik adalah kekosongan yang TIDAK jujur.
+   *  Sebabnya ikut tertulis di panelnya, bukan cuma tersirat dari warna abu.
+   *
+   *  `<details>`/`<summary>`, pola yang SAMA dengan dropdown ceklist metrik Dashboard
+   *  Perbandingan — buka-tutupnya bawaan browser, jadi tidak ada penangan baru yang bisa lepas
+   *  saat halaman digambar ulang. Tidak ada state: panelnya menutup sendiri tiap render, dan
+   *  itu benar karena tak satu pun pilihannya mengubah halaman.
+   *
+   *  Formatnya di KAMUS (`D.FORMAT_EXPORT`), bukan ditulis di sini: begitu salah satunya aktif,
+   *  yang mengaktifkannya perlu daftar yang sama, dan dua daftar untuk satu maksud selalu bisa
+   *  berpisah. */
+  const tombolExport = () =>
+    `<details class="pr-ex" id="menuExport">` +
+      `<summary class="ds-btn ds-btn-sm ds-btn-secondary pr-ex-tombol">` +
+        `<i class="bi bi-download" aria-hidden="true"></i><span>Export</span>` +
+        `<i class="bi bi-chevron-down pr-ex-tanda" aria-hidden="true"></i>` +
+      `</summary>` +
+      `<div class="pr-ex-isi" role="group" aria-label="Format export">` +
+        D.FORMAT_EXPORT.map((f) =>
+          `<button class="pr-ex-opsi" type="button" data-ex-format="${esc(f.kode)}" disabled>` +
+            `<i class="bi ${f.ikon}" aria-hidden="true"></i><span>${esc(f.nama)}</span>` +
+          `</button>`).join('') +
+        `<p class="pr-ex-nota">Belum aktif — tombol dan pilihannya dipasang lebih dulu.</p>` +
+      `</div>` +
+    `</details>`;
 
   /** Filter periode: **Bulan + Tahun**, dua kontrol bersambung yang dibaca sebagai satu
    *  kendali (permintaan pemilik 21 Agustus: "buatkan yg bagus dan profesional. Kriterianya
@@ -9432,7 +9682,7 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
 
     const filterUnit = ringkasan
       ? fieldFilter('filterUnitBisnis', 'Unit Bisnis', state.unitBisnis || 'SEMUA',
-                    [{ kode: 'SEMUA', nama: 'Semua Unit Bisnis' }, ...D.UNIT_BISNIS])
+                    [{ kode: 'SEMUA', nama: D.NAMA_SEMUA_UNIT }, ...D.UNIT_BISNIS])
       : '';
     // Halaman awal: unit bisnis yang sedang difilter. Halaman modul: unit bisnis pemilik halaman.
     const unitPilih = state.unitBisnis || 'SEMUA';
@@ -9444,7 +9694,7 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
     return `<section class="ds-section"><div class="pr-filter">` +
       filterUnit + filterSub +
       filterPeriode(state) +
-      `<div class="pr-filter-spacer"></div>` +
+      `<div class="pr-filter-spacer"></div>` + tombolExport() +
       `${denganCollapse ? sakelarCollapse(state) : ''}` +
     `</div></section>`;
   }
@@ -9643,40 +9893,66 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
    *  Sengaja TIDAK menyebut persentase bagian yang baru: untuk metrik yang dirata-rata (persen,
    *  tarif) porsi besaran tidak punya arti, dan satu kalimat yang benar untuk kedua jenis
    *  metrik lebih baik daripada dua kalimat yang harus dipilih dengan benar. */
+  /** **DIBUANG 8 September 2026**, permintaan pemilik: *"untuk keterangan-keterangan di
+   *  card-card tolong di hilangkan saja"* — foto layarnya menandai nota *"Budget belum memuat
+   *  Finance Expense - Net …"* di kartu EXPENSE.
+   *
+   *  Ketiga kalimatnya ikut, bukan cuma yang ditandai: ketiganya menempati slot yang sama,
+   *  bentuknya sama, dan menahan sebagian diam-diam bukan pilihan yang beliau kehendaki.
+   *  **Dua di antaranya dipasang atas permintaan beliau sendiri** (4 dan 5 September: '—'
+   *  tanpa keterangan "cuma memindahkan pertanyaannya") — jadi keduanya dilaporkan waktu
+   *  dibuang, dan bisa kembali dengan satu baris:
+   *
+   *   - "Budget belum memuat …, jadi VAR% sedikit lebih baik daripada yang sebenarnya."
+   *   - "Tidak dibandingkan: periode pembandingnya merugi, …" (5 September)
+   *   - "Tidak dibandingkan: N dari M bagian belum ada di periode pembandingnya." (4 September)
+   *
+   *  Fungsinya DITAHAN, tidak dihapus: `node.budgetKurangPorsi`, `node.yoyBasisNegatif` dan
+   *  `node.yoyTanpaBanding` tetap dihitung agregatnya dan tetap diuji, jadi keterangannya bisa
+   *  dipasang lagi tanpa menyusun ulang apa pun. */
   function notaBanding(node) {
-    if (!node) return '';
-    const nota = (isi) => `<p class="pr-fp-nota-banding">`
-      + `<i class="bi bi-info-circle" aria-hidden="true"></i> ${isi}</p>`;
-
-    // **Budget yang belum menutup seluruh aktualnya (7 September 2026).** Sampai hari itu
-    // keadaan ini selalu berarti kolom budget DIKOSONGKAN, jadi tidak ada yang perlu disebut.
-    // Sejak `budgetSepadan()` punya ambang materialitas (lihat aggregate.js), budget di bawah
-    // ambang TETAP DIPAJANG — dan justru karena itu sebabnya wajib ikut: VAR% yang dihitung
-    // darinya optimis sebesar porsi yang belum tertutup, dan angka optimis tanpa keterangan
-    // adalah yang paling mahal di rapat.
-    //
-    // Ditaruh di slot yang SAMA dengan keterangan YoY, bukan slot baru: keduanya menjawab
-    // pertanyaan yang sama bentuknya — "kenapa perbandingan di kartu ini tidak utuh".
-    const notaBudget = node.budgetKurangPorsi
-      ? nota(`Budget belum memuat ${esc(rangkaiNama(node.budgetKurangNama || []))} `
-        + `(${esc(F.nilai(node.budgetKurangPorsi * 100, 'persen'))} dari nilainya), `
-        + 'jadi VAR% sedikit lebih baik daripada yang sebenarnya.')
-      : '';
-
-    if (node.yoy !== null) return notaBudget;
-    // **Sebab kedua, 5 September 2026: pembandingnya MERUGI.** Persentase terhadap basis
-    // negatif membalik arahnya — Bandung 2025 yang berbalik dari rugi 6.806 juta jadi untung
-    // 69.065 juta dipajang '−1.114,8%' sebelum ini. Yang dipilih: dikosongkan, dan sebabnya
-    // disebut. Didahulukan dari sebab pertama karena lebih spesifik: kalau keduanya berlaku,
-    // basis yang merugi tetap membuat persentasenya tak terbaca berapa pun bagian yang lengkap.
-    if (typeof node.yoyBasisNegatif === 'number') {
-      return notaBudget + nota('Tidak dibandingkan: periode pembandingnya merugi, jadi persentase '
-        + 'pertumbuhan terhadapnya akan terbaca terbalik arah.');
-    }
-    if (!node.yoyTanpaBanding) return notaBudget;
-    return notaBudget + nota(`Tidak dibandingkan: ${node.yoyTanpaBanding} dari ${node.yoyMenyumbang} bagian `
-      + 'belum ada di periode pembandingnya.');
+    return '';
   }
+
+  //  **Bentuk lamanya ditinggalkan di komentar**, pola yang sama dengan `KAKI_VARYOY` di
+  //  atas: kalau keterangannya diminta kembali, susunan sebab-berjenjangnya (basis negatif
+  //  didahulukan dari bagian yang belum lengkap, karena ia berlaku berapa pun bagian yang
+  //  lengkap) masih berlaku persis seperti waktu itu.
+  //
+  //  function notaBandingLama(node) {
+  //    if (!node) return '';
+  //    const nota = (isi) => `<p class="pr-fp-nota-banding">`
+  //      + `<i class="bi bi-info-circle" aria-hidden="true"></i> ${isi}</p>`;
+  //
+  //    // **Budget yang belum menutup seluruh aktualnya (7 September 2026).** Sampai hari itu
+  //    // keadaan ini selalu berarti kolom budget DIKOSONGKAN, jadi tidak ada yang perlu disebut.
+  //    // Sejak `budgetSepadan()` punya ambang materialitas (lihat aggregate.js), budget di bawah
+  //    // ambang TETAP DIPAJANG — dan justru karena itu sebabnya wajib ikut: VAR% yang dihitung
+  //    // darinya optimis sebesar porsi yang belum tertutup, dan angka optimis tanpa keterangan
+  //    // adalah yang paling mahal di rapat.
+  //    //
+  //    // Ditaruh di slot yang SAMA dengan keterangan YoY, bukan slot baru: keduanya menjawab
+  //    // pertanyaan yang sama bentuknya — "kenapa perbandingan di kartu ini tidak utuh".
+  //    const notaBudget = node.budgetKurangPorsi
+  //      ? nota(`Budget belum memuat ${esc(rangkaiNama(node.budgetKurangNama || []))} `
+  //        + `(${esc(F.nilai(node.budgetKurangPorsi * 100, 'persen'))} dari nilainya), `
+  //        + 'jadi VAR% sedikit lebih baik daripada yang sebenarnya.')
+  //      : '';
+  //
+  //    if (node.yoy !== null) return notaBudget;
+  //    // **Sebab kedua, 5 September 2026: pembandingnya MERUGI.** Persentase terhadap basis
+  //    // negatif membalik arahnya — Bandung 2025 yang berbalik dari rugi 6.806 juta jadi untung
+  //    // 69.065 juta dipajang '−1.114,8%' sebelum ini. Yang dipilih: dikosongkan, dan sebabnya
+  //    // disebut. Didahulukan dari sebab pertama karena lebih spesifik: kalau keduanya berlaku,
+  //    // basis yang merugi tetap membuat persentasenya tak terbaca berapa pun bagian yang lengkap.
+  //    if (typeof node.yoyBasisNegatif === 'number') {
+  //      return notaBudget + nota('Tidak dibandingkan: periode pembandingnya merugi, jadi persentase '
+  //        + 'pertumbuhan terhadapnya akan terbaca terbalik arah.');
+  //    }
+  //    if (!node.yoyTanpaBanding) return notaBudget;
+  //    return notaBudget + nota(`Tidak dibandingkan: ${node.yoyTanpaBanding} dari ${node.yoyMenyumbang} bagian `
+  //      + 'belum ada di periode pembandingnya.');
+  //  }
 
   function porsiAnak(anak) {
     const ada = (v) => v !== null && v !== undefined && !Number.isNaN(v);
@@ -10534,6 +10810,9 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
     const filter = `<section class="ds-section"><div class="pr-filter">` +
         (unitFilter ? fieldSubUnit(state, unitFilter) : '') +
         filterPeriode(state) +
+        // Tombol Export ikut di sini juga — pemilik meminta "di setiap halaman Dashboard",
+        // dan halaman ini salah satu yang paling sering dibawa ke rapat.
+        `<div class="pr-filter-spacer"></div>` + tombolExport() +
       `</div></section>`;
 
     if (!kodeHalaman) {
@@ -10659,7 +10938,18 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
       // menambahkan " Detail" di ujungnya, jadi memakainya menghasilkan "Laporan Financial
       // Performance Detail".
       const namaSeksi = D.SEKSI_DETAIL.find((x) => x.kode === kodeSeksi)?.judul || judul;
-      const seksiLaporan = { kode: 'laporan', judul: `Laporan ${namaSeksi}`, ikon: 'bi-table' };
+      // **Judulnya 'Laporan Rincian' sejak 8 September 2026**, permintaan pemilik: *"Colpase
+      // Laporan Financial Performance yg di bawah rubah jadi Laporan Rincian"*. Beliau
+      // menyebutnya dari halaman FA, dan judul ini GENERIK untuk kelima halaman seksi detail —
+      // jadi keempat halaman lain ikut berubah ("Laporan Leasing" → "Laporan Rincian" dan
+      // seterusnya). Dilaporkan ke beliau; kalau yang lain harus kembali menyebut seksinya,
+      // judulnya dibuat per seksi di sini.
+      //
+      // Nama lamanya `Laporan ${namaSeksi}` sengaja ditinggalkan di komentar: ia yang menjaga
+      // judul tidak berbunyi "Laporan Financial Performance Detail" (`judulSeksiDetail()` sudah
+      // menambahkan " Detail" di ujungnya), dan jebakan itu masih berlaku kalau nama per seksi
+      // dipakai lagi.
+      const seksiLaporan = { kode: 'laporan', judul: 'Laporan Rincian', ikon: 'bi-table' };
       // Kartu chart seksi ini, sama dengan yang ada di halaman awal / detail entitas
       // (permintaan pemilik 24 Agustus) — lihat blokChartSeksi().
       const seksiChart = { kode: 'chart', judul: `Chart ${namaSeksi}`, ikon: 'bi-graph-up' };
@@ -11122,25 +11412,27 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
       : CH.kolom({ ...opsi, ...ukuran }));
     const biaya = !!node.biaya;
     if (def.chart === 'kuartal') {
+      // Legenda prosa DIBUANG 8 September 2026 (permintaan pemilik, lihat `notaBanding()`):
+      // "Batang = aktual, penanda tegak = budget". Judul chart-nya sudah menyebut kedua seri.
       return { judulChart: 'Aktual vs Budget per Kuartal',
                kanvas: kuartalKartu(tren, biaya, node.satuan, ukuranKanvas),
-               legenda: `<div class="pr-chart-legend"><span>Batang = aktual, penanda tegak = ` +
-                        `budget</span></div>` };
+               legenda: '' };
     }
     if (def.chart === 'komposisi') {
       const anak = node.children || [];
       return { judulChart: `Komposisi · ${anak.length} bagian`,
                kanvas: porsiKartu(anak.map((a) => ({ label: a.nama, nilai: a.aktual })),
                                   node.satuan),
-               legenda: `<div class="pr-chart-legend"><span>Panjang batang dibanding bagian ` +
-                        `terbesar</span></div>` };
+               // "Panjang batang dibanding bagian terbesar" — DIBUANG 8 September 2026,
+               // salah satu dari tiga keterangan yang ditandai pemilik di foto layarnya.
+               legenda: '' };
     }
     if (def.chart === 'subunit') {
       return { judulChart: 'Perbandingan antar Sub Unit',
                kanvas: porsiKartu(G.perSubUnit(def.halaman, state.periode, def.metrik),
                                   node.satuan),
-               legenda: `<div class="pr-chart-legend"><span>Panjang batang dibanding sub unit ` +
-                        `tertinggi</span></div>` };
+               // "Panjang batang dibanding sub unit tertinggi" — DIBUANG 8 September 2026.
+               legenda: '' };
     }
     if (def.chart === 'kolom') {
       // Selisih, bukan nilai aktual — lihat alasannya di chart.kolom().
@@ -11161,8 +11453,11 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
                  kanvas: kanvasKolom({ labels: tren.labels, nilai: tren.aktual,
                                        aktual: tren.aktual, budget: tren.budget,
                                        satuan: node.satuan }),
-                 legenda: `<div class="pr-chart-legend"><span>Budget belum tersedia untuk ` +
-                          `metrik ini, jadi yang dipajang nilai aktualnya</span></div>` };
+                 // "Budget belum tersedia untuk metrik ini, jadi yang dipajang nilai
+                 // aktualnya" — DIBUANG 8 September 2026. Judul chart-nya sudah menyebut
+                 // seri yang digambar ("… · Aktual"), jadi yang hilang keterangannya saja,
+                 // bukan informasinya.
+                 legenda: '' };
       }
       return { judulChart: `Selisih terhadap Budget · ${rentangTren(tren.labels)}`,
                // aktual & budget ikut dikirim untuk TOOLTIPNYA saja, bukan untuk digambar:
@@ -11488,8 +11783,37 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
       : G.pohonOrganisasiTahun(
           mode === 'banding3' ? G.tigaTahun()[2] : state.periode.slice(0, 4), 'SEMUA');
     const node = ent.unitBisnis ? akar.children.find((c) => c.nama === ent.nama) : akar;
-    const anak = node?.children || [];
+    const anakSemua = node?.children || [];
     const judulAnak = ent.unitBisnis ? 'Sub Unit' : 'Unit Bisnis';
+
+    /** ── Filter Sub Unit di halaman ini (8 September 2026) ────────────────────────────────
+     *
+     *  Permintaan pemilik: *"Di halaman Dashboard Management Detail untuk Filter Sub Unit
+     *  Bisnis contoh jika Unit Bisnis Mall tampil filter Sub Unit Bisnis Mall"*, dengan foto
+     *  layar kontrol yang sudah ada di halaman awal sebagai contohnya. Sampai hari itu halaman
+     *  ini cuma punya filter periode, jadi angkanya selalu konsolidasi seluruh unit.
+     *
+     *  **`state.subUnit` di sini bisa MILIK HALAMAN SEBELUMNYA, dan itu bahaya nyata.**
+     *  Halaman ini dibuka dari kartu yang diklik, bukan dari filter — jadi membuka detail MALL
+     *  sesudah memfilter HOTEL ke 'HHKG' akan membawa kode sub unit HOTEL ke halaman MALL.
+     *  Komentar `akar` di atas mencatat kenapa dulu dipaksa 'SEMUA': tanpa penyaringan,
+     *  hasilnya angka kosong tanpa sebab yang terlihat.
+     *
+     *  Jadi kodenya DISARING terhadap katalog sub unit unit bisnis ini, bukan dipercaya.
+     *  Kode yang tidak berlaku jatuh ke 'SEMUA' — konsolidasi, keadaan yang sama seperti
+     *  sebelum filter ini ada. */
+    const subPilih = (ent.unitBisnis
+      && (D.SUB_UNIT[ent.unitBisnis] || []).some((s) => s.kode === state.subUnit))
+      ? state.subUnit : 'SEMUA';
+    const subNama = subPilih === 'SEMUA' ? null : D.namaSubUnit(subPilih);
+    // Simpul yang dipajang Overview: sub unit yang dipilih, atau unit bisnisnya kalau
+    // konsolidasi. Dicari dari NAMA simpulnya karena pohon organisasi bernama, bukan berkode.
+    const nodeTampil = subNama
+      ? (anakSemua.find((c) => c.nama === subNama) || node)
+      : node;
+    // Kartu KPI turunan tidak punya arti kalau yang dipajang SATU sub unit — turunannya sudah
+    // bukan daftar sub unit lagi. Dikosongkan, bukan disembunyikan lewat CSS.
+    const anak = subNama ? [] : anakSemua;
     // Subjudulnya menyebut kata "Perbandingan" di mode banding3 — sama dengan halaman awal.
     // Tanpa itu, "2024–2026" di kepala halaman terbaca sebagai rentang yang DIJUMLAHKAN.
     const namaPeriode = mode === 'banding3'
@@ -11505,24 +11829,30 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
       // yang diam-diam berbeda.
       if (mode === 'banding3') {
         if (s.kode === 'overview') {
-          // Halaman ini SELALU konsolidasi penuh (lihat catatan `akar` di atas), jadi sub
-          // unitnya 'SEMUA' — bukan `state.subUnit`, yang di sini milik halaman sebelumnya.
-          return bandingOverview(state, ent.unitBisnis || 'SEMUA', 'SEMUA');
+          // `subPilih`, bukan 'SEMUA' telanjang seperti sampai 7 September: sejak filter sub
+          // unit ada di halaman ini, memaksa 'SEMUA' berarti filternya diam-diam tidak
+          // berlaku di mode perbandingan — satu halaman dengan dua arti untuk satu kontrol.
+          // Kodenya sudah DISARING di atas, jadi ia tidak bisa membawa sub unit unit lain.
+          return bandingOverview(state, ent.unitBisnis || 'SEMUA', subPilih);
         }
         const kamus = D.halamanSumberSeksi(s.kode, ent.kode);
-        return kamus ? blokBandingTahun(kamus, 'SEMUA') : isiSeksiMenyusul(s);
+        return kamus ? blokBandingTahun(kamus, subPilih) : isiSeksiMenyusul(s);
       }
       if (s.kode === 'overview') {
         // Chart kontribusi hanya di halaman yang turunannya UNIT BISNIS (PT SMIP). Pemilik
         // meminta "Kontribusi per Sub Unit" dihilangkan (21 Agustus): di halaman satu unit
         // bisnis, kartu tiap sub unit tepat di atasnya sudah memuat angka yang sama.
-        return isiOverview(node, anak, judulAnak, {
-          judulUtama: judulTotalRevenue(ent.unitBisnis ? ent.nama : null),
-          denganKontribusi: !ent.unitBisnis,
+        //
+        // Judulnya menyebut SUB UNIT yang dipilih, bukan unit bisnisnya: angka besar yang
+        // isinya satu mall dengan judul "Total Revenue MALL" membantah dirinya sendiri —
+        // cacat yang sama sudah dibetulkan 21 Agustus untuk tingkat di atasnya.
+        return isiOverview(nodeTampil, anak, judulAnak, {
+          judulUtama: judulTotalRevenue(subNama || (ent.unitBisnis ? ent.nama : null)),
+          denganKontribusi: !ent.unitBisnis && !subNama,
         });
       }
-      if (s.kode === 'finansial') return isiFinansial(state, ent);
-      return isiSeksiKartu(state, s, ent);
+      if (s.kode === 'finansial') return isiFinansial(state, ent, subPilih);
+      return isiSeksiKartu(state, s, ent, subPilih);
     };
     const seksi = D.seksiUntuk(ent.kode)
       .map((s) => seksiCollapse(s, isiSeksi(s), terbuka.has(s.kode)))
@@ -11563,8 +11893,21 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
         `<button class="ds-btn ds-btn-sm ds-btn-secondary" type="button" data-detail-kembali>` +
           `<i class="bi bi-arrow-left"></i><span>Dashboard Management</span></button>`, state) +
       `<section class="ds-section"><div class="pr-filter">` +
+        // Kontrol sub unit DI DEPAN periode, urutan yang sama dengan halaman awal — pemakainya
+        // sudah mencarinya di sana. Dirender hanya kalau entitasnya punya sub unit: halaman
+        // PT SMIP turunannya UNIT BISNIS, dan kontrol berisi satu opsi mati cuma menambah
+        // barang di layar (aturan yang sama dengan `toolbar()`).
+        //
+        // `state` yang dikirim SUDAH DINORMALKAN ke `subPilih`: kalau tidak, kontrolnya akan
+        // memajang kode sub unit halaman sebelumnya sebagai pilihan aktif — dan `<select>`
+        // dengan nilai yang tidak ada di opsinya jatuh ke opsi PERTAMA di layar sementara
+        // `state` masih memegang yang lain. Layar dan state berbeda tanpa satu pun gejala.
+        (ent.unitBisnis
+          ? fieldSubUnit({ ...state, subUnit: subPilih }, ent.unitBisnis, { bermerek: true })
+          : '') +
         filterPeriode(state) +
-        `<div class="pr-filter-spacer"></div>` + bandingkan + sakelarCollapse(state) +
+        `<div class="pr-filter-spacer"></div>` + bandingkan + tombolExport()
+          + sakelarCollapse(state) +
       `</div></section>` +
       `<div class="pr-cv">${seksi}</div>`;
   }
@@ -11626,9 +11969,13 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
   }
 
   /** Seksi yang berdata nyata tetapi CAKUPAN sub unitnya belum lengkap, mis.
-   *  "Financial Performance 2 dari 6 mall". Dipakai keterangan halaman Management begitu
-   *  seluruh seksinya berdata nyata: yang tersisa untuk disampaikan bukan lagi "yang mana
-   *  yang nyata" melainkan "yang mana yang belum lengkap". */
+   *  "Financial Performance 2 dari 6 mall".
+   *
+   *  **TANPA PEMANGGIL sejak 8 September 2026** — pemilik meminta keterangan cakupan di
+   *  subjudul halaman Management dihilangkan (lihat `labelCakupanSubUnit()`). Dibiarkan utuh
+   *  dengan sengaja: ia satu-satunya tempat yang menurunkan "seksi mana yang belum lengkap"
+   *  dari KAMUS, bukan dari daftar tulisan tangan, dan itu pengetahuan yang mahal dibangun.
+   *  Kalau keterangannya diminta kembali, pemanggilnya satu baris. */
   function seksiBelumLengkap() {
     const keluar = [];
     for (const seksi of D.SEKSI_DETAIL) {
@@ -11782,10 +12129,15 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
       // pun. Yang masih perlu diketahui pembaca justru sebaliknya: seksi mana yang angkanya
       // nyata tetapi belum mencakup seluruh sub unitnya, karena angka gabungan di halaman ini
       // tidak menyebutkan cakupannya sendiri.
-      if (penandaSumber(state) === 'nyata') {
-        const belum = seksiBelumLengkap();
-        return belum.length ? `${belum.join(' · ')} — sisanya belum berdata` : null;
-      }
+      // **DIHILANGKAN 8 September 2026**, permintaan pemilik: foto layarnya menggarisi
+      // "Operation, Marketing, HRD 6 dari 8 mall — sisanya belum berdata" di subjudul halaman
+      // ini dan memintanya dihilangkan.
+      //
+      // `seksiBelumLengkap()` DITINGGALKAN UTUH tetapi tidak lagi dipanggil dari sini — lihat
+      // catatan di fungsinya. Bentuk lamanya satu baris:
+      //     const belum = seksiBelumLengkap();
+      //     return belum.length ? `${belum.join(' · ')} — sisanya belum berdata` : null;
+      if (penandaSumber(state) === 'nyata') return null;
       const seksi = seksiNyata();
       if (!seksi.length) return null;
       return `${rangkaiNama(seksi)} berdata nyata`;
@@ -11950,7 +12302,7 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
           ?.find((s) => s.kode === kodeSub)?.nama) || simpulUnit;
     const anak = simpul.children || [];
     // Nama yang dipakai subjudul halaman dan judul kartu angka: yang PALING DALAM yang dipilih.
-    const namaSub = semuaUnit ? 'Semua Unit Bisnis' : (semuaSub ? ent.nama : simpul.nama);
+    const namaSub = semuaUnit ? D.NAMA_SEMUA_UNIT : (semuaSub ? ent.nama : simpul.nama);
 
     const isiSeksi = (s) => {
       // Mode perbandingan tiga tahun: bentuk halamannya berbeda, dan itu memang perlu — chart
@@ -12186,6 +12538,9 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
           `<div class="pr-bd-met-isi">${cipMetrik}</div>` +
         `</details></div>` +
       filterPeriode(state, { modeTersedia: MODE_BANDING }) +
+      // Tombol Export ikut di halaman ini juga — pemilik meminta "di setiap halaman
+      // Dashboard", dan halaman inilah yang dipresentasikan ke BOD.
+      `<div class="pr-filter-spacer"></div>` + tombolExport() +
       `</div><div class="pr-bd-pilih">` +
         `<div class="pr-bd-pilih-kepala"><span class="ds-label">Bandingkan</span>` +
           // Hitungannya dari daftar yang SAMA dengan chip-nya, bukan dihitung ulang: dua
@@ -12263,8 +12618,21 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
       // `rangkaiNama`, BUKAN `join(' & ')`: tiga mall tanpa data memberi "Kelapa Gading &
       // Villagio & Samasta Jimbaran Bali", yang terbaca seperti satu nama panjang.
       if (belum.length) bagian.push(`${esc(rangkaiNama(belum))} belum berdata`);
+      // **Dibungkus BADGE HIJAU sejak 8 September 2026**, permintaan pemilik: *"Untuk
+      // keterangan hasil peringkat … Ini kasih badge hijau saja"*, dengan foto layar menggarisi
+      // kalimat ini.
+      //
+      // Memakai `ds-badge ds-badge-success` portal-ui, bukan warna sendiri — hijaunya jadi
+      // hijau yang SAMA dengan badge lain di prototipe ini, dan ikut tema gelap tanpa aturan
+      // tambahan. Yang disesuaikan tiga sifat yang membuat pil portal-ui tidak cocok untuk
+      // KALIMAT: ia `inline-flex` yang tidak membungkus, hurufnya 10,5 px, dan tebal 600 —
+      // yang terakhir akan menebalkan seluruh kalimat sehingga `<strong>` di dalamnya (nama
+      // sub unit terbesar) tidak lagi menonjol. Lihat `.pr-bd-kesimpulan-badge`.
       const kesimpulan = bagian.length
-        ? `<p class="pr-bd-kesimpulan">${bagian.join('. ')}.</p>` : '';
+        ? `<p class="pr-bd-kesimpulan">`
+          + `<span class="ds-badge ds-badge-success pr-bd-kesimpulan-badge">`
+          + `${bagian.join('. ')}.</span></p>`
+        : '';
 
       // **Bukan kanvas lagi sejak 7 September 2026** — `CH.barDaftar()`, baris HTML.
       //
@@ -12415,14 +12783,21 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
           if (!b) return `<td class="pr-num">${esc(F.KOSONG)}</td>`.repeat(4);
           const nmm = (v) => F.nilai(v, hh.metrik.satuan);
           return `<td class="pr-num">${esc(nmm(b.nilai))}</td>` +
-            `<td class="pr-num">${esc(F.persenDelta(b.yoy))}` +
-              // Keterangan YoY ikut terbawa dari simpulnya, TIDAK dihitung ulang di sini —
-              // simpul yang sama dibaca dashboard aslinya, dan tanpa ini Perbandingan memajang
-              // '—' telanjang sementara halaman sebelahnya menjelaskan sebabnya.
-              (b.yoyTanpaBanding
-                ? `<span class="pr-bd-nota-yoy">Tidak dibandingkan: ${b.yoyTanpaBanding} dari `
-                  + `${b.yoyMenyumbang} bagian belum ada di periode pembandingnya.</span>`
-                : '') + `</td>` +
+            // **Keterangan YoY DIBUANG 8 September 2026**, permintaan pemilik: foto layarnya
+            // menandai kedelapan kalimat "Tidak dibandingkan: N dari N bagian belum ada di
+            // periode pembandingnya." di kolom ini dan memintanya dihilangkan. Sekeluarga
+            // dengan `notaBanding()` yang dibuang dari kartu pagi ini — kalimat yang sama,
+            // penyaji yang berbeda.
+            //
+            // Bentuk lamanya:
+            //   (b.yoyTanpaBanding
+            //     ? `<span class="pr-bd-nota-yoy">Tidak dibandingkan: ${b.yoyTanpaBanding} dari `
+            //       + `${b.yoyMenyumbang} bagian belum ada di periode pembandingnya.</span>`
+            //     : '')
+            //
+            // `b.yoyTanpaBanding` tetap DIHITUNG dan tetap terbawa dari simpulnya, jadi
+            // keterangannya bisa dipasang lagi dengan satu baris.
+            `<td class="pr-num">${esc(F.persenDelta(b.yoy))}</td>` +
             `<td class="pr-num">${esc(b.porsi === null ? F.KOSONG : F.nilai(b.porsi, 'persen'))}</td>` +
             `<td class="pr-num">${esc(b.peringkat === null ? F.KOSONG : String(b.peringkat))}</td>`;
         }).join('') + `</tr>`;
@@ -12669,7 +13044,13 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
     // menyisipkan KODE unit bisnisnya (`Semua ${h.unitBisnis}`) sehingga pil memajang
     // "Semua SPM" walau nama unitnya sudah dipendekkan — dan penjaga test tidak bisa melihatnya,
     // karena app.js butuh DOM dan tidak dimuat suite itu. Ketemu di browser.
-    const pil = D.judulPilUnit(h.unitBisnis, state.subUnit);
+    // **Argumen ketiga sejak 8 September 2026**: filter Unit Bisnis halaman gabungan. Sampai
+    // hari itu pil di halaman Management selalu berbunyi "PT SMIP" berapa pun filternya —
+    // memfilter ke HOTEL memberi layar penuh angka HOTEL dengan pil yang menyebut seluruh
+    // perusahaan. Permintaan pemilik, dengan foto layar berpanah dari filternya ke pil ini.
+    // Keputusan teksnya ada di `D.judulPilUnit`, bukan di sini: teks yang lahir di app.js
+    // tidak terjangkau penjaga test, dan cacat itu sudah pernah menggigit (27 Agustus).
+    const pil = D.judulPilUnit(h.unitBisnis, state.subUnit, state.unitBisnis);
     document.getElementById('unitPillIcon').textContent = pil.ikon;
     document.getElementById('unitPillTitle').textContent = pil.judul;
     document.getElementById('unitPillSubtitle').textContent =
@@ -13087,6 +13468,18 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
         } else {
           return;   // bukan salah satu yang terpilih — tidak ada yang perlu diubah
         }
+        // ── Kuota PENUH → panelnya menutup sendiri (8 September 2026) ────────────────────
+        //
+        // Permintaan pemilik: *"jika dipilih lebih dari satu langsung ke tutup saja gak perlu
+        // di klik lg tanda panahnya"*. Maksimumnya dua, jadi "lebih dari satu" berarti tidak
+        // ada lagi yang bisa dipilih — dan panel yang tetap terbuka di atas hasil justru
+        // menutupi hasil yang baru saja diminta pengguna.
+        //
+        // Ditaruh SESUDAH seluruh cabang di atas, bukan di dalam cabang `checked`: yang
+        // menentukan bukan "baru saja mencentang" melainkan KEADAAN AKHIRnya penuh. Melepas
+        // satu centang membuat kuotanya longgar lagi, dan di sana panelnya memang harus tetap
+        // terbuka — pengguna sedang menukar pilihan, bukan selesai memilih.
+        if (state.bandingMetrik && state.bandingMetrik2) state.bandingMetrikBuka = false;
         gambar();
       }
       if (e.target.name === 'bandingPilih') {

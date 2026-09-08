@@ -18,8 +18,11 @@ Dibuka langsung di browser, termasuk dari HP dan tablet.
 > | OFFICE | 2 dari 2 gedung |
 >
 > Yang berkasnya belum dikirim memajang **`—` berpenanda "BELUM ADA DATA"** — bukan angka
-> karangan sebagai penambal. Penanda di kepala tiap halaman menyebutkan cakupannya, dan
-> kaki halaman menyebutkannya juga.
+> karangan sebagai penambal. Cakupan yang belum lengkap disebutkan di **subjudul halaman
+> dashboard-nya sendiri** (Dashboard Operation berbunyi "6 dari 8 mall"); halaman Dashboard
+> Management, yang menggabungkan kelimanya, tidak lagi menyebutkannya sejak 8 September 2026
+> atas permintaan pemilik. Penanda di kepala tiap halaman berbunyi **MOCKUP** — ia menyatakan
+> APA BENDANYA, bukan asal angkanya.
 >
 > **Karena itu: perlakukan berkas ini sebagai materi internal PT SMIP.** Jangan diteruskan ke
 > luar perusahaan, dan jangan dikutip sebagai laporan resmi Summarecon — bentuk halamannya masih
