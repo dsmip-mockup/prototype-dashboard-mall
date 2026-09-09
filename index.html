@@ -1655,7 +1655,7 @@ html, body { overflow-x: hidden; }
          untuk seluruh prototype &mdash; dan salinan statis itulah yang pernah MEMBANTAH
          penandanya (lihat catatan di atas). -->
     <span>Prototype Dashboard Data Management</span>
-    <span class="pr-versi">Versi 8 September 2026, 16.10</span>
+    <span class="pr-versi">Versi 9 September 2026, 15.07</span>
   </footer>
 </div>
 </div>
@@ -9190,8 +9190,12 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
    *  (m2)"), tidak diganti angka pangkat — supaya nama di layar sama dengan nama di berkas asalnya.
    *
    *  `rp_mn` diturunkan dari notasi kamus sendiri, `Rp'mn` (lihat metrik "Employee Costs/Head
-   *  (Rp'mn)"), jadi ditulis "Rp jt". Ini satu-satunya label di sini yang merupakan tafsiran;
-   *  kalau pemilik memakai satuan lain, ini tempat menggantinya. */
+   *  (Rp'mn)"). Ini satu-satunya label di sini yang merupakan tafsiran; kalau pemilik memakai
+   *  satuan lain, ini tempat menggantinya — **dan itu memang terjadi 8 September 2026: ia
+   *  ditulis "Rp jt" sampai pemilik menanyakan satuan angkanya sendiri, lalu jadi "Rp juta".**
+   *  Kalimat ini dibetulkan bersamaan; komentar yang menyebut label lama sesudah labelnya
+   *  berubah adalah kesimpulan tertulis yang sudah kedaluwarsa, dan itu keluarga jebakan yang
+   *  baru menggigit hari yang sama (lihat `konvensiRevenueBerkas()` di tools/impor-data.mjs). */
   /** Keterangan VAR% dan YoY% (26 Agustus 2026). Pemilik sendiri sempat menanyakan bedanya, jadi
    *  Tim Manajemen hampir pasti juga — dan keduanya memang tidak bisa ditebak dari namanya.
    *
@@ -9585,7 +9589,12 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
    *  `D.CUTOFF_TAHUNAN`. "Year to date" berarti "sampai hari ini", dan itu berhenti benar begitu
    *  batasnya DIDEKLARASIKAN: hari ini September sementara yang dijumlah berhenti di Juni.
    *  Menyebut rentangnya apa adanya lebih pendek DAN lebih tepat. */
-  function labelRentangTahunan(state = null) {
+  /*  `denganCakupan: false` untuk tempat yang RUANGNYA TERBATAS — subtitle pil kanan atas.
+   *  Bawaannya `true` DENGAN SENGAJA: keempat pemanggil yang sudah ada harus tetap berperilaku
+   *  persis seperti sebelumnya. Menambah argumen ke fungsi berpemanggil banyak sudah pernah
+   *  menggigit di proyek ini — jendela tahunan yang mengabaikan tahunnya, 5 September, waktu
+   *  enam pemanggil masih memakai bentuk lama tanpa satu pun error. */
+  function labelRentangTahunan(state = null, { denganCakupan = true } = {}) {
     const bulan = G.bulanTahunan(state?.periode?.slice(0, 4));
     // `D.SINGKAT_BULAN`, bukan `NAMA_BULAN.slice(0,3)`: potongan tiga huruf memberi 'Agu'
     // sementara label chart di halaman yang sama menulis 'Ags'. Terlihat 3 September sore,
@@ -9593,7 +9602,7 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
     const nama = (kode) => D.SINGKAT_BULAN[Number(kode) - 1];
     if (!bulan.length) return '';
     const dasar = `${nama(bulan[0])}–${nama(bulan[bulan.length - 1])}`;
-    return dasar + cakupanLebihPendek(state);
+    return dasar + (denganCakupan ? cakupanLebihPendek(state) : '');
   }
 
   /** Keterangan tambahan kalau data NYATA sub unit yang dipilih **lebih pendek** daripada
@@ -9669,13 +9678,26 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
   /** Label periode yang dipakai kartu dan kaki seksi. WAJIB ikut mode: kartu bertuliskan
    *  "886.649 / Juli 2026" padahal angkanya setahun adalah dua keterangan yang saling membantah
    *  di satu kartu — dan justru jenis cacat yang tidak memunculkan error. */
-  const labelPeriode = (state) => {
+  const labelPeriode = (state, opsi) => {
     const mode = modePeriode(state);
     if (mode === 'bulan') return D.PERIODE.find((p) => p.kode === state.periode).nama;
-    if (mode === 'tahun') return `${state.periode.slice(0, 4)} · ${labelRentangTahunan(state)}`;
+    if (mode === 'tahun') return `${state.periode.slice(0, 4)} · ${labelRentangTahunan(state, opsi)}`;
     const t = G.tigaTahun();
-    return `${t[0]}–${t[t.length - 1]} · ${labelRentangTahunan(state)}`;
+    return `${t[0]}–${t[t.length - 1]} · ${labelRentangTahunan(state, opsi)}`;
   };
+
+  /** Subtitle pil unit di kanan atas. **Ia lahir DI SINI, bukan di `app.js`** — dan itu bukan
+   *  soal selera: `app.js` butuh DOM, tidak dimuat suite test, jadi teks yang disusun di sana
+   *  tidak terjangkau penjaga apa pun. Cacat itu sudah dua kali menggigit — pil "Semua SPM"
+   *  (27 Agustus, teksnya lalu pindah ke `D.judulPilUnit`) dan pil ini sendiri, yang menulis
+   *  "Juni 2024" sementara halamannya berbunyi "2024 · Jan–Des" sampai 9 September.
+   *
+   *  Bunyinya PERSIS bagian periode subjudul halamannya — keputusan pemilik 9 September 2026 —
+   *  **kecuali keterangan cakupan `(2026: …)`**, yang dibuang karena ruangnya. Subtitle pil
+   *  lebarnya 150 px dengan `text-overflow: ellipsis`; bentuk berkakupan mencapai 175 px di mode
+   *  Perbandingan dan akan terpotong, bentuk tanpa cakupan mentok 99 px. Keterangan itu tetap
+   *  terbaca di subjudul halaman, tempatnya sekarang, jadi tidak ada informasi yang hilang. */
+  const labelPilPeriode = (state) => labelPeriode(state, { denganCakupan: false });
 
   /** `denganMode: false` untuk halaman yang MENGABAIKAN mode periode — halaman detail entitas dan
    *  halaman detail seksi (dan lewat itu kelima halaman modul). Di sana angkanya selalu bulanan,
@@ -13074,7 +13096,7 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
                halamanSumberData, kartuSummary, sidebar,
                halamanDetail, halamanRingkasan, seksiCollapse, isiFinansial,
                isiSeksiKartu, kartuFinansial, keKuartal, porsiKartu,
-               halamanSeksiDetail, blokTelusur, halamanPerbandingan };
+               halamanSeksiDetail, blokTelusur, halamanPerbandingan, labelPilPeriode };
 })(globalThis.PROTO = globalThis.PROTO || {});
 
 /* ── src/js/app.js ── */
@@ -13150,8 +13172,11 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
       document.getElementById('unitPillIcon').textContent =
         (ent.kode === 'SMIP' ? 'SM' : ent.kode).slice(0, 2).toUpperCase();
       document.getElementById('unitPillTitle').textContent = ent.nama;
-      document.getElementById('unitPillSubtitle').textContent =
-        D.PERIODE.find((p) => p.kode === state.periode).nama;
+      // Lewat `R.labelPilPeriode`, BUKAN disusun di sini — lihat catatan di baris kembarnya di
+      // bawah. Halaman detail ikut kena: sampai 9 September baris ini dianggap benar karena
+      // halaman detail "selalu bulanan" (Ruling F-5), dan ruling itu sudah DICABUT — keempat
+      // halaman berkontrol Mode sekarang ikut modenya, halaman detail termasuk.
+      document.getElementById('unitPillSubtitle').textContent = R.labelPilPeriode(state);
       return;
     }
     // Halaman Sumber Data tidak punya filter sub unit; pill cukup menunjuk unit bisnisnya.
@@ -13176,8 +13201,17 @@ var R="top",W="bottom",j="right",V="left",he="auto",kt=[R,W,j,V],mt="start",Ct="
     const pil = D.judulPilUnit(h.unitBisnis, state.subUnit, state.unitBisnis);
     document.getElementById('unitPillIcon').textContent = pil.ikon;
     document.getElementById('unitPillTitle').textContent = pil.judul;
-    document.getElementById('unitPillSubtitle').textContent =
-      D.PERIODE.find((p) => p.kode === state.periode).nama;
+    // **Subtitle-nya dari `R.labelPilPeriode`, bukan disusun di sini** (9 September 2026).
+    // Sampai pagi itu baris ini selalu memakai nama BULAN — `D.PERIODE.find(...).nama` —
+    // sehingga pil berbunyi "Juni 2024" di atas halaman yang subjudulnya "2024 · Jan–Des":
+    // dua keterangan tentang rentang yang sama, saling membantah, di satu layar. Berlaku
+    // untuk mode Tahunan (ketiga tahunnya) dan mode Perbandingan 3 Tahun — empat dari tujuh
+    // kombinasi mode × tahun.
+    //
+    // Sebabnya sama dengan pil "Semua SPM" 27 Agustus: teks yang lahir di app.js tidak
+    // terjangkau penjaga test, karena berkas ini butuh DOM dan tidak dimuat suite. Jadi
+    // keputusan teksnya ada di penyaji — di sana ia dijaga `tests/tahunan.test.js`.
+    document.getElementById('unitPillSubtitle').textContent = R.labelPilPeriode(state);
   }
 
   function sinkronBreadcrumb() {
